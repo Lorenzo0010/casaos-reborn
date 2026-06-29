@@ -26,38 +26,38 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         const info = res.data;
         
         // Parse data
-        const parsedEnv = (info.Config.Env || []).map(e => {
+        const parsedEnv = (info?.Config?.Env || []).map(e => {
           const idx = e.indexOf('=');
           return { key: e.substring(0, idx), value: e.substring(idx + 1) };
         });
 
         const parsedPorts = [];
-        const portBindings = info.HostConfig.PortBindings || {};
+        const portBindings = info?.HostConfig?.PortBindings || {};
         for (const [key, valArray] of Object.entries(portBindings)) {
           const [cPort, proto] = key.split('/');
           if (valArray && valArray.length > 0) {
             parsedPorts.push({
-              hostPort: valArray[0].HostPort,
+              hostPort: valArray[0].HostPort || '',
               containerPort: cPort,
               protocol: proto
             });
           }
         }
 
-        const parsedVolumes = (info.HostConfig.Binds || []).map(b => {
+        const parsedVolumes = (info?.HostConfig?.Binds || []).map(b => {
           const parts = b.split(':');
-          return { hostPath: parts[0], containerPath: parts[1] };
+          return { hostPath: parts[0] || '', containerPath: parts[1] || '' };
         });
 
         setData({
-          image: info.Config.Image,
-          name: info.Name.replace('/', ''),
+          image: info?.Config?.Image || '',
+          name: (info?.Name || '').replace('/', ''),
           env: parsedEnv,
           ports: parsedPorts,
           volumes: parsedVolumes,
-          restartPolicy: info.HostConfig.RestartPolicy.Name || 'unless-stopped',
-          privileged: !!info.HostConfig.Privileged,
-          memory: info.HostConfig.Memory || 0
+          restartPolicy: info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped',
+          privileged: !!info?.HostConfig?.Privileged,
+          memory: info?.HostConfig?.Memory || 0
         });
       } catch (err) {
         console.error(err);
