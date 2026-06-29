@@ -193,29 +193,43 @@ router.post('/containers/:id/recreate', async (req, res) => {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Removing old container...");
             await request('DELETE', '/containers/${id}?force=true');
-            console.log("Waiting for Docker to release the container name...");
-            await new Promise(r => setTimeout(r, 2000));
-            console.log("Creating new container...");
-            const createRes = await request('POST', '/containers/create?name=${containerName}', ${JSON.stringify(createOptions)});
-            const newId = JSON.parse(createRes).Id;
+            
+            let createRes;
+            let newId;
+            for (let i = 0; i < 5; i++) {
+              console.log("Waiting for Docker to release the container name (attempt " + (i+1) + ")...");
+              await new Promise(r => setTimeout(r, 1500));
+              console.log("Creating new container...");
+              createRes = await request('POST', '/containers/create?name=${containerName}', ${JSON.stringify(createOptions)});
+              newId = JSON.parse(createRes).Id;
+              if (newId) break;
+              console.log("Create failed (might be 409 Conflict), retrying...");
+            }
+            
             if (newId) {
               console.log("Starting new container...");
               await request('POST', '/containers/' + newId + '/start');
             } else {
-              console.error("Failed to create container:", createRes);
+              console.error("Failed to create container after 5 retries:", createRes);
             }
           } catch(e) {
-            console.error(e);
+            console.error("Exception in updater script:", e);
           }
         })();
       `;
 
+      // Try to remove old updater if it exists
+      try {
+        const oldUpdater = docker.getContainer('casaos-reborn-updater');
+        await oldUpdater.remove({ force: true });
+      } catch (e) {}
+
       const updaterContainer = await docker.createContainer({
         Image: image, 
+        name: 'casaos-reborn-updater',
         Cmd: ['node', '-e', updaterScript],
         HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
-          AutoRemove: true
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock']
         }
       });
 
