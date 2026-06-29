@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, RotateCw, Trash2, Settings, ExternalLink } from 'lucide-react';
+import { Play, Square, RotateCw, Trash2, Settings, ExternalLink, Loader } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
+import { io } from 'socket.io-client';
 
 export default function Containers() {
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingContainerId, setEditingContainerId] = useState(null);
+  const [recreating, setRecreating] = useState({});
 
   const fetchContainers = async () => {
     try {
@@ -21,6 +23,37 @@ export default function Containers() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const socket = io({
+      query: { token }
+    });
+    
+    socket.on('container.recreate.progress', (data) => {
+      setRecreating(prev => ({ ...prev, [data.id]: data }));
+    });
+
+    socket.on('container.recreate.success', (data) => {
+      setRecreating(prev => {
+        const p = { ...prev };
+        delete p[data.oldId];
+        return p;
+      });
+      fetchContainers();
+    });
+
+    socket.on('container.recreate.error', (data) => {
+      setRecreating(prev => {
+        const p = { ...prev };
+        delete p[data.id];
+        return p;
+      });
+      alert('Error recreating container: ' + data.error);
+    });
+
+    return () => socket.disconnect();
+  }, []);
 
   useEffect(() => {
     fetchContainers();
@@ -74,9 +107,35 @@ export default function Containers() {
           {containers.map(c => {
             const webUrl = getWebUrl(c);
             const isClickable = webUrl && c.State === 'running';
+            const progressData = recreating[c.Id];
+            
+            let progressPercent = 0;
+            if (progressData?.progressDetail?.total) {
+              progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
+            }
 
             return (
-            <div key={c.Id} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div key={c.Id} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', position: 'relative', overflow: 'hidden' }}>
+              
+              {/* Progress Overlay */}
+              {progressData && (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  backdropFilter: 'blur(3px)',
+                  display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                  zIndex: 10, padding: '20px', color: 'white'
+                }}>
+                  <Loader className="spin" size={32} style={{ marginBottom: '10px' }} />
+                  <h4 style={{ margin: '0 0 10px 0' }}>{progressData.status}</h4>
+                  {progressData.progressDetail?.total && (
+                    <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '10px', overflow: 'hidden' }}>
+                      <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.2s' }}></div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 
                 {isClickable ? (

@@ -21,6 +21,12 @@ const ADMIN_PASS = process.env.ADMIN_PASS || 'casaos';
 app.use(cors());
 app.use(express.json());
 
+// Attach Socket.io to req
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 // Serve static frontend in production
 app.use(express.static(path.join(__dirname, 'public')));
 

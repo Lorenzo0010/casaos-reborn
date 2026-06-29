@@ -77,7 +77,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     fetchInspect();
   }, [containerId, onClose]);
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -99,10 +99,13 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         payload.ports[key] = [{ HostPort: p.hostPort }];
       });
 
-      await axios.post(`/api/docker/containers/${containerId}/recreate`, payload, {
+      const res = await axios.post(`/api/docker/containers/${containerId}/recreate`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      onSaved();
+      
+      if (res.status === 202 || res.status === 200) {
+        onSaved();
+      }
     } catch (err) {
       console.error(err);
       alert('Failed to save container: ' + (err.response?.data?.error || err.message));

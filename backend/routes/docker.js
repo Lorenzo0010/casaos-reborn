@@ -28,7 +28,11 @@ router.get('/containers/:id/inspect', async (req, res) => {
 router.post('/containers/:id/recreate', async (req, res) => {
   const { id } = req.params;
   const { image, name, ports, env, volumes, restartPolicy, privileged, memory, webUI } = req.body;
+  const io = req.io;
   
+  // Return early, continue processing in background
+  res.status(202).json({ success: true, message: 'Recreation started', id });
+
   try {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect().catch(() => ({}));
@@ -40,9 +44,19 @@ router.post('/containers/:id/recreate', async (req, res) => {
         docker.modem.followProgress(stream, (err, output) => {
           if (err) return reject(err);
           resolve(output);
+        }, (event) => {
+          if (io) {
+            io.emit('container.recreate.progress', {
+              id,
+              status: event.status,
+              progressDetail: event.progressDetail
+            });
+          }
         });
       });
     });
+
+    if (io) io.emit('container.recreate.progress', { id, status: 'Applying settings...' });
 
     // 2. Stop and remove the old container
     try {
@@ -82,10 +96,10 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const newContainer = await docker.createContainer(createOptions);
     await newContainer.start();
     
-    res.json({ success: true, id: newContainer.id });
+    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id });
   } catch (error) {
     console.error('Error recreating container:', error);
-    res.status(500).json({ error: error.message });
+    if (io) io.emit('container.recreate.error', { id, error: error.message });
   }
 });
 
