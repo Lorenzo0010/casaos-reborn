@@ -36,6 +36,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
   try {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect().catch(() => ({}));
+    const containerName = (oldInspect.Name || name || '').replace('/', '');
     
     // 1. Pull the requested image
     await new Promise((resolve, reject) => {
@@ -48,6 +49,8 @@ router.post('/containers/:id/recreate', async (req, res) => {
           if (io) {
             io.emit('container.recreate.progress', {
               id,
+              name: containerName,
+              image: image,
               status: event.status,
               progressDetail: event.progressDetail
             });
@@ -56,7 +59,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       });
     });
 
-    if (io) io.emit('container.recreate.progress', { id, status: 'Applying settings...' });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: image, status: 'Applying settings...' });
 
     // 2. Stop and remove the old container
     try {
@@ -103,10 +106,10 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const newContainer = await docker.createContainer(createOptions);
     await newContainer.start();
     
-    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id });
+    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName });
   } catch (error) {
     console.error('Error recreating container:', error);
-    if (io) io.emit('container.recreate.error', { id, error: error.message });
+    if (io) io.emit('container.recreate.error', { id, name: containerName, error: error.message });
   }
 });
 

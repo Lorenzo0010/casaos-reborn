@@ -192,7 +192,49 @@ export default function Containers() {
               </div>
             </div>
           )})}
-          {containers.length === 0 && <p>No containers found.</p>}
+
+          {/* Ghost cards for containers being recreated that disappeared from Docker list */}
+          {Object.entries(recreating)
+            .filter(([recreId]) => !containers.some(c => c.Id === recreId))
+            .map(([recreId, progressData]) => {
+              let progressPercent = 0;
+              if (progressData?.progressDetail?.total) {
+                progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
+              }
+              return (
+                <div key={recreId} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(3px)',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 10, padding: '20px', color: 'white'
+                  }}>
+                    <Loader className="spin" size={32} style={{ marginBottom: '10px' }} />
+                    <h4 style={{ margin: '0 0 10px 0' }}>{progressData.status}</h4>
+                    {progressData.progressDetail?.total && (
+                      <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '10px', overflow: 'hidden' }}>
+                        <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.2s' }}></div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0 }}>{progressData.name || 'Recreating...'}</h3>
+                    <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', backgroundColor: '#f59e0b', color: 'white' }}>
+                      recreating
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                    <strong>Image:</strong> {progressData.image || '...'}
+                  </div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                    <strong>Status:</strong> Recreating...
+                  </div>
+                </div>
+              );
+            })}
+
+          {containers.length === 0 && Object.keys(recreating).length === 0 && <p>No containers found.</p>}
         </div>
       )}
 
