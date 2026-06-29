@@ -257,7 +257,7 @@ router.post('/containers/create', async (req, res) => {
   res.status(202).json({ success: true, message: 'Creation started' });
 
   try {
-    const containerName = name.replace('/', '');
+    const containerName = (name || '').replace('/', '');
     // 1. Pull the requested image
     const imageExistsLocally = await docker.getImage(image).inspect().then(() => true).catch(() => false);
     if (!imageExistsLocally) {
