@@ -201,6 +201,8 @@ router.post('/containers/:id/recreate', async (req, res) => {
             if (newId) {
               console.log("Starting new container...");
               await request('POST', '/containers/' + newId + '/start');
+            } else {
+              console.error("Failed to create container:", createRes);
             }
           } catch(e) {
             console.error(e);
@@ -208,12 +210,18 @@ router.post('/containers/:id/recreate', async (req, res) => {
         })();
       `;
 
+      // Try to remove old updater if it exists from previous attempts
+      try {
+        const oldUpdater = docker.getContainer('casaos-reborn-updater');
+        await oldUpdater.remove({ force: true });
+      } catch (e) {}
+
       const updaterContainer = await docker.createContainer({
-        Image: image, // Use the new image we just pulled (or already have)
+        Image: image, 
+        name: 'casaos-reborn-updater',
         Cmd: ['node', '-e', updaterScript],
         HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
-          AutoRemove: true // Clean up automatically when done
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock']
         }
       });
 
