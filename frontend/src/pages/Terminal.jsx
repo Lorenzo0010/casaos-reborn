@@ -29,11 +29,11 @@ export default function TerminalPage() {
     const token = localStorage.getItem('token');
     
     socketRef.current = io(window.location.origin, {
-      auth: { type: 'terminal', token, sshHost: 'orangepizero2w', sshUser: 'orangepi' }
+      auth: { type: 'terminal', token, sshHost: '192.168.1.77', sshUser: 'orangepi' }
     });
 
     socketRef.current.on('connect', () => {
-      term.writeln(`\x1b[32m*** Connecting to orangepi@orangepizero2w via SSH ***\x1b[0m\r\n`);
+      term.writeln(`\x1b[32m*** Connecting to orangepi@192.168.1.77 via SSH ***\x1b[0m\r\n`);
       socketRef.current.emit('terminal.resize', { cols: term.cols, rows: term.rows });
     });
 
@@ -67,7 +67,7 @@ export default function TerminalPage() {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h1 style={{ margin: 0 }}>Terminale SSH</h1>
-        <span style={{ opacity: 0.7, fontSize: '0.9rem' }}>orangepi@orangepizero2w</span>
+        <span style={{ opacity: 0.7, fontSize: '0.9rem' }}>orangepi@192.168.1.77</span>
       </div>
       <div 
         ref={terminalRef} 
