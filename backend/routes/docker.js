@@ -210,18 +210,12 @@ router.post('/containers/:id/recreate', async (req, res) => {
         })();
       `;
 
-      // Try to remove old updater if it exists from previous attempts
-      try {
-        const oldUpdater = docker.getContainer('casaos-reborn-updater');
-        await oldUpdater.remove({ force: true });
-      } catch (e) {}
-
       const updaterContainer = await docker.createContainer({
         Image: image, 
-        name: 'casaos-reborn-updater',
         Cmd: ['node', '-e', updaterScript],
         HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock']
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
+          AutoRemove: true
         }
       });
 
