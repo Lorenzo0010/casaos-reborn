@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2, PlusSquare } from 'lucide-react';
 import yaml from 'js-yaml';
 import { io } from 'socket.io-client';
 
