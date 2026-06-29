@@ -193,6 +193,8 @@ router.post('/containers/:id/recreate', async (req, res) => {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Removing old container...");
             await request('DELETE', '/containers/${id}?force=true');
+            console.log("Waiting for Docker to release the container name...");
+            await new Promise(r => setTimeout(r, 2000));
             console.log("Creating new container...");
             const createRes = await request('POST', '/containers/create?name=${containerName}', ${JSON.stringify(createOptions)});
             const newId = JSON.parse(createRes).Id;

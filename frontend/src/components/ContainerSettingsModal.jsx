@@ -87,7 +87,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         name: data.name,
         restartPolicy: data.restartPolicy,
         privileged: data.privileged,
-        memory: data.memory,
+        memory: data.memory ? parseInt(data.memory) * 1024 * 1024 : 0,
         webUI: data.webUI,
         env: data.env.map(e => `${e.key}=${e.value}`),
         ports: {},
