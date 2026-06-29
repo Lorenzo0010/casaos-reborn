@@ -1,4 +1,5 @@
 const express = require('express');
+const { isDeepStrictEqual } = require('util');
 const router = express.Router();
 const Docker = require('dockerode');
 // Connect to local docker socket
@@ -40,9 +41,52 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const oldImage = oldInspect.Config?.Image || '';
     const imageChanged = image !== oldImage;
     
-    // 1. Pull the image ONLY if it changed (skip slow network check for settings-only changes)
-    if (imageChanged) {
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling new image...' });
+    // Check if we can do an in-place update (fast path)
+    const oldPortBindings = oldInspect.HostConfig?.PortBindings || {};
+    const oldBinds = oldInspect.HostConfig?.Binds || [];
+    const oldEnv = oldInspect.Config?.Env || [];
+    
+    // To compare env properly, the UI only sends the vars it knows, but we replace all Env in a recreate.
+    // However, if the user didn't change what they see, they send back what they received.
+    // We can just rely on basic equality or full recreate.
+    const newPortBindings = ports || {};
+    
+    // Normalize volumes
+    const newBinds = volumes || [];
+
+    const oldWebUI = {
+      scheme: oldInspect.Config?.Labels?.['casaos.reborn.web.scheme'] || 'http://',
+      port: oldInspect.Config?.Labels?.['casaos.reborn.web.port'] || '',
+      path: oldInspect.Config?.Labels?.['casaos.reborn.web.path'] || '/'
+    };
+    const newWebUI = webUI || oldWebUI;
+
+    // A full recreate is required if image, ports, volumes, env, webUI or privileged flag changed
+    const needsFullRecreate = 
+      imageChanged ||
+      privileged !== !!oldInspect.HostConfig?.Privileged ||
+      !isDeepStrictEqual(newPortBindings, oldPortBindings) ||
+      !isDeepStrictEqual(newBinds.sort(), oldBinds.sort()) ||
+      !isDeepStrictEqual(env?.sort(), oldEnv.sort()) ||
+      !isDeepStrictEqual(newWebUI, oldWebUI);
+
+    if (!needsFullRecreate) {
+      if (io) io.emit('container.update.progress', { id, name: containerName, status: 'Updating settings...' });
+      
+      await oldContainer.update({
+        RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
+        Memory: memory || 0
+      });
+      
+      if (io) io.emit('container.update.success', { id, oldId: id, name: containerName });
+      return; // done!
+    }
+
+    // Determine if we really need to pull the image
+    const imageExistsLocally = await docker.getImage(image).inspect().then(() => true).catch(() => false);
+    const needPull = imageChanged || !imageExistsLocally;
+    if (needPull) {
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling image...' });
       await new Promise((resolve, reject) => {
         docker.pull(image, (err, stream) => {
           if (err) return reject(err);

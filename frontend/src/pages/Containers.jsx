@@ -34,14 +34,21 @@ export default function Containers() {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
     });
 
-    socket.on('container.recreate.success', (data) => {
+    socket.on('container.update.progress', (data) => {
+      setRecreating(prev => ({ ...prev, [data.id]: data }));
+    });
+
+    const handleSuccess = (data) => {
       setRecreating(prev => {
         const p = { ...prev };
         delete p[data.oldId];
         return p;
       });
       fetchContainers();
-    });
+    };
+
+    socket.on('container.recreate.success', handleSuccess);
+    socket.on('container.update.success', handleSuccess);
 
     socket.on('container.recreate.error', (data) => {
       setRecreating(prev => {
