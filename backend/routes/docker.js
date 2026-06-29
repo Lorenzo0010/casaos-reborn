@@ -1,5 +1,6 @@
 const express = require('express');
 const { isDeepStrictEqual } = require('util');
+const fs = require('fs');
 const router = express.Router();
 const Docker = require('dockerode');
 // Connect to local docker socket
@@ -24,6 +25,15 @@ router.get('/containers/:id/inspect', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+function getOwnContainerId() {
+  try {
+    const data = fs.readFileSync('/proc/self/mountinfo', 'utf8');
+    const match = data.match(/containers\/([a-f0-9]{64})/);
+    if (match) return match[1];
+  } catch (e) {}
+  return null;
+}
 
 // Recreate container with new settings
 router.post('/containers/:id/recreate', async (req, res) => {
@@ -82,38 +92,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       return; // done!
     }
 
-    // Determine if we really need to pull the image
-    const imageExistsLocally = await docker.getImage(image).inspect().then(() => true).catch(() => false);
-    const needPull = imageChanged || !imageExistsLocally;
-    if (needPull) {
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling image...' });
-      await new Promise((resolve, reject) => {
-        docker.pull(image, (err, stream) => {
-          if (err) return reject(err);
-          docker.modem.followProgress(stream, (err, output) => {
-            if (err) return reject(err);
-            resolve(output);
-          }, (event) => {
-            if (io) {
-              io.emit('container.recreate.progress', {
-                id,
-                name: containerName,
-                image: image,
-                status: event.status,
-                progressDetail: event.progressDetail
-              });
-            }
-          });
-        });
-      });
-    } else {
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Applying settings...' });
-    }
-
-    // 2. Force-remove the old container (sends SIGKILL immediately, no 10s SIGTERM wait)
-    await oldContainer.remove({ force: true });
-
-    // 3. Create the new container
+    // Build createOptions
     const portBindings = ports || {};
     const exposedPorts = {};
     for (const key of Object.keys(portBindings)) {
@@ -146,6 +125,103 @@ router.post('/containers/:id/recreate', async (req, res) => {
     if (memory) {
       createOptions.HostConfig.Memory = memory;
     }
+
+    // Determine if we really need to pull the image
+    const imageExistsLocally = await docker.getImage(image).inspect().then(() => true).catch(() => false);
+    const needPull = imageChanged || !imageExistsLocally;
+    if (needPull) {
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling image...' });
+      await new Promise((resolve, reject) => {
+        docker.pull(image, (err, stream) => {
+          if (err) return reject(err);
+          docker.modem.followProgress(stream, (err, output) => {
+            if (err) return reject(err);
+            resolve(output);
+          }, (event) => {
+            if (io) {
+              io.emit('container.recreate.progress', {
+                id,
+                name: containerName,
+                image: image,
+                status: event.status,
+                progressDetail: event.progressDetail
+              });
+            }
+          });
+        });
+      });
+    } else {
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Applying settings...' });
+    }
+
+    // --- DETACHED UPDATER FOR SELF-UPDATE ---
+    const ownId = getOwnContainerId();
+    // Use startsWith just in case the ID in request is short or long
+    const isSelfUpdate = ownId && (id.startsWith(ownId) || ownId.startsWith(id));
+
+    if (isSelfUpdate) {
+      console.log('Initiating detached self-update for container', id);
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Rebooting system...' });
+      
+      // Inject a node script into an ephemeral container running the SAME image
+      const updaterScript = `
+        const http = require('http');
+        function request(method, path, body) {
+          return new Promise((resolve, reject) => {
+            const req = http.request({
+              socketPath: '/var/run/docker.sock',
+              method,
+              path: '/v1.41' + path,
+              headers: { 'Content-Type': 'application/json' }
+            }, res => {
+              let data = '';
+              res.on('data', chunk => data += chunk);
+              res.on('end', () => resolve(data));
+            });
+            req.on('error', reject);
+            if (body) req.write(JSON.stringify(body));
+            req.end();
+          });
+        }
+        (async () => {
+          try {
+            console.log("Waiting for main process to close connections...");
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Removing old container...");
+            await request('DELETE', '/containers/${id}?force=true');
+            console.log("Creating new container...");
+            const createRes = await request('POST', '/containers/create?name=${name}', ${JSON.stringify(createOptions)});
+            const newId = JSON.parse(createRes).Id;
+            if (newId) {
+              console.log("Starting new container...");
+              await request('POST', '/containers/' + newId + '/start');
+            }
+          } catch(e) {
+            console.error(e);
+          }
+        })();
+      `;
+
+      const updaterContainer = await docker.createContainer({
+        Image: image, // Use the new image we just pulled (or already have)
+        Cmd: ['node', '-e', updaterScript],
+        HostConfig: {
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
+          AutoRemove: true // Clean up automatically when done
+        }
+      });
+
+      await updaterContainer.start();
+      
+      // Do NOT proceed with normal remove/create since the updater will do it and kill us.
+      // We just return and let ourselves be killed in a few seconds.
+      return;
+    }
+
+    // 2. Force-remove the old container (sends SIGKILL immediately, no 10s SIGTERM wait)
+    await oldContainer.remove({ force: true });
+
+    // 3. Create the new container
 
     const newContainer = await docker.createContainer(createOptions);
     await newContainer.start();

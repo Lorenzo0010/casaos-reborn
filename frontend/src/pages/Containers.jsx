@@ -59,6 +59,25 @@ export default function Containers() {
       alert('Error recreating container: ' + data.error);
     });
 
+    socket.on('disconnect', () => {
+      // If we are currently rebooting the system, we know the backend went down on purpose.
+      // We will reload the page when it comes back.
+    });
+
+    socket.on('connect', () => {
+      // When we reconnect, fetch containers just in case.
+      fetchContainers();
+      
+      // If any container was in 'Rebooting system...' state, it means the self-update finished!
+      setRecreating(prev => {
+        const isRebooting = Object.values(prev).some(p => p.status === 'Rebooting system...');
+        if (isRebooting) {
+          window.location.reload();
+        }
+        return prev;
+      });
+    });
+
     return () => socket.disconnect();
   }, []);
 
