@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, RotateCw, Trash2 } from 'lucide-react';
+import { Play, Square, RotateCw, Trash2, Settings } from 'lucide-react';
+import ContainerSettingsModal from '../components/ContainerSettingsModal';
 
 export default function Containers() {
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingContainerId, setEditingContainerId] = useState(null);
 
   const fetchContainers = async () => {
     try {
@@ -22,9 +24,13 @@ export default function Containers() {
 
   useEffect(() => {
     fetchContainers();
-    const interval = setInterval(fetchContainers, 5000);
+    const interval = setInterval(() => {
+      if (!editingContainerId) {
+        fetchContainers();
+      }
+    }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [editingContainerId]);
 
   const handleAction = async (id, action) => {
     try {
@@ -81,9 +87,12 @@ export default function Containers() {
                     </button>
                   </>
                 )}
+                <button onClick={() => setEditingContainerId(c.Id)} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)', marginLeft: 'auto' }} title="Settings">
+                  <Settings size={16} />
+                </button>
                 <button onClick={() => {
                   if (window.confirm('Are you sure you want to delete this container?')) handleAction(c.Id, 'delete');
-                }} className="btn btn-danger" style={{ marginLeft: 'auto' }} title="Delete">
+                }} className="btn btn-danger" title="Delete">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -91,6 +100,17 @@ export default function Containers() {
           ))}
           {containers.length === 0 && <p>No containers found.</p>}
         </div>
+      )}
+
+      {editingContainerId && (
+        <ContainerSettingsModal 
+          containerId={editingContainerId} 
+          onClose={() => setEditingContainerId(null)}
+          onSaved={() => {
+            setEditingContainerId(null);
+            fetchContainers();
+          }}
+        />
       )}
     </div>
   );

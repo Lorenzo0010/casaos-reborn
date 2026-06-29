@@ -63,4 +63,69 @@ router.post('/deploy', async (req, res) => {
   }
 });
 
+// Get container inspect details
+router.get('/containers/:id/inspect', async (req, res) => {
+  try {
+    const container = docker.getContainer(req.params.id);
+    const data = await container.inspect();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Recreate container with new settings
+router.post('/containers/:id/recreate', async (req, res) => {
+  const { id } = req.params;
+  const { image, name, ports, env, volumes, restartPolicy, privileged, memory } = req.body;
+  
+  try {
+    const oldContainer = docker.getContainer(id);
+    
+    // 1. Pull the requested image
+    await new Promise((resolve, reject) => {
+      docker.pull(image, (err, stream) => {
+        if (err) return reject(err);
+        docker.modem.followProgress(stream, (err, output) => {
+          if (err) return reject(err);
+          resolve(output);
+        });
+      });
+    });
+
+    // 2. Stop and remove the old container
+    try {
+      await oldContainer.stop();
+    } catch (e) {
+      /* ignore if already stopped */
+    }
+    await oldContainer.remove({ force: true });
+
+    // 3. Create the new container
+    const createOptions = {
+      Image: image,
+      name: name,
+      Env: env || [],
+      HostConfig: {
+        PortBindings: ports || {},
+        Binds: volumes || [],
+        RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
+        Privileged: !!privileged,
+      }
+    };
+
+    if (memory) {
+      createOptions.HostConfig.Memory = memory;
+    }
+
+    const newContainer = await docker.createContainer(createOptions);
+    await newContainer.start();
+    
+    res.json({ success: true, id: newContainer.id });
+  } catch (error) {
+    console.error('Error recreating container:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
