@@ -37,29 +37,34 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect().catch(() => ({}));
     const containerName = (oldInspect.Name || name || '').replace('/', '');
+    const oldImage = oldInspect.Config?.Image || '';
+    const imageChanged = image !== oldImage;
     
-    // 1. Pull the requested image
-    await new Promise((resolve, reject) => {
-      docker.pull(image, (err, stream) => {
-        if (err) return reject(err);
-        docker.modem.followProgress(stream, (err, output) => {
+    // 1. Pull the image ONLY if it changed (skip slow network check for settings-only changes)
+    if (imageChanged) {
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling new image...' });
+      await new Promise((resolve, reject) => {
+        docker.pull(image, (err, stream) => {
           if (err) return reject(err);
-          resolve(output);
-        }, (event) => {
-          if (io) {
-            io.emit('container.recreate.progress', {
-              id,
-              name: containerName,
-              image: image,
-              status: event.status,
-              progressDetail: event.progressDetail
-            });
-          }
+          docker.modem.followProgress(stream, (err, output) => {
+            if (err) return reject(err);
+            resolve(output);
+          }, (event) => {
+            if (io) {
+              io.emit('container.recreate.progress', {
+                id,
+                name: containerName,
+                image: image,
+                status: event.status,
+                progressDetail: event.progressDetail
+              });
+            }
+          });
         });
       });
-    });
-
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: image, status: 'Applying settings...' });
+    } else {
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Applying settings...' });
+    }
 
     // 2. Stop and remove the old container
     try {
