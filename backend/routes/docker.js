@@ -249,37 +249,81 @@ router.post('/containers/:id/:action', async (req, res) => {
   }
 });
 
-// For App Store: Simple API to deploy a container
-router.post('/deploy', async (req, res) => {
-  const { image, name, ports, env, volumes } = req.body;
+// Create a new container
+router.post('/containers/create', async (req, res) => {
+  const { image, name, ports, env, volumes, restartPolicy, privileged, memory, webUI } = req.body;
+  const io = req.io;
+  
+  res.status(202).json({ success: true, message: 'Creation started' });
+
   try {
-    // Pull image first
-    await new Promise((resolve, reject) => {
-      docker.pull(image, (err, stream) => {
-        if (err) return reject(err);
-        docker.modem.followProgress(stream, (err, output) => {
+    const containerName = name.replace('/', '');
+    // 1. Pull the requested image
+    const imageExistsLocally = await docker.getImage(image).inspect().then(() => true).catch(() => false);
+    if (!imageExistsLocally) {
+      if (io) io.emit('container.create.progress', { name: containerName, image, status: 'Pulling image...' });
+      await new Promise((resolve, reject) => {
+        docker.pull(image, (err, stream) => {
           if (err) return reject(err);
-          resolve(output);
+          docker.modem.followProgress(stream, (err, output) => {
+            if (err) return reject(err);
+            resolve(output);
+          }, (event) => {
+            if (io) {
+              io.emit('container.create.progress', {
+                name: containerName,
+                image: image,
+                status: event.status,
+                progressDetail: event.progressDetail
+              });
+            }
+          });
         });
       });
-    });
+    }
+
+    if (io) io.emit('container.create.progress', { name: containerName, image, status: 'Applying settings...' });
+
+    // 2. Create the new container
+    const portBindings = ports || {};
+    const exposedPorts = {};
+    for (const key of Object.keys(portBindings)) {
+      exposedPorts[key] = {};
+    }
 
     const createOptions = {
       Image: image,
       name: name,
       Env: env || [],
+      Labels: {},
+      ExposedPorts: exposedPorts,
       HostConfig: {
-        PortBindings: ports || {},
+        PortBindings: portBindings,
         Binds: volumes || [],
-        RestartPolicy: { Name: 'unless-stopped' }
+        RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
+        Privileged: !!privileged,
       }
     };
 
-    const container = await docker.createContainer(createOptions);
-    await container.start();
-    res.json({ success: true, id: container.id });
+    if (webUI) {
+      createOptions.Labels = {
+        'casaos.reborn.web.scheme': webUI.scheme || 'http://',
+        'casaos.reborn.web.port': webUI.port || '',
+        'casaos.reborn.web.path': webUI.path || '/'
+      };
+    }
+
+    if (memory) {
+      createOptions.HostConfig.Memory = memory;
+    }
+
+    const newContainer = await docker.createContainer(createOptions);
+    await newContainer.start();
+    
+    if (io) io.emit('container.create.success', { id: newContainer.id, name: containerName });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error creating container:', error);
+    if (io) io.emit('container.create.error', { name, error: error.message });
   }
 });
 
