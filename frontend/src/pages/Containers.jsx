@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, RotateCw, Trash2, Settings } from 'lucide-react';
+import { Play, Square, RotateCw, Trash2, Settings, ExternalLink } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 
 export default function Containers() {
@@ -44,6 +44,15 @@ export default function Containers() {
     }
   };
 
+  const getWebUrl = (container) => {
+    if (!container.Ports) return null;
+    const publicPortInfo = container.Ports.find(p => p.PublicPort);
+    if (publicPortInfo) {
+      return `http://${window.location.hostname}:${publicPortInfo.PublicPort}`;
+    }
+    return null;
+  };
+
   return (
     <div>
       <h1>Containers</h1>
@@ -52,10 +61,19 @@ export default function Containers() {
         <p>Loading containers...</p>
       ) : (
         <div className="grid grid-cols-2">
-          {containers.map(c => (
+          {containers.map(c => {
+            const webUrl = getWebUrl(c);
+            return (
             <div key={c.Id} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0 }}>{c.Names[0].replace('/', '')}</h3>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {c.Names[0].replace('/', '')}
+                  {webUrl && c.State === 'running' && (
+                    <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', display: 'flex' }} title="Apri Web UI">
+                      <ExternalLink size={18} />
+                    </a>
+                  )}
+                </h3>
                 <span style={{
                   padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem',
                   backgroundColor: c.State === 'running' ? 'var(--success)' : 'var(--danger)',
@@ -97,7 +115,7 @@ export default function Containers() {
                 </button>
               </div>
             </div>
-          ))}
+          )})}
           {containers.length === 0 && <p>No containers found.</p>}
         </div>
       )}
