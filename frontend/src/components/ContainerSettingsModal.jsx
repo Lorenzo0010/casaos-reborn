@@ -45,10 +45,17 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           }
         }
 
-        const parsedVolumes = (info?.HostConfig?.Binds || []).map(b => {
-          const parts = b.split(':');
-          return { hostPath: parts[0] || '', containerPath: parts[1] || '' };
-        });
+        let parsedVolumes = [];
+        if (info?.HostConfig?.Binds && info.HostConfig.Binds.length > 0) {
+          parsedVolumes = info.HostConfig.Binds.map(b => {
+            const parts = b.split(':');
+            return { hostPath: parts[0] || '', containerPath: parts[1] || '' };
+          });
+        } else if (info?.Mounts && info.Mounts.length > 0) {
+          parsedVolumes = info.Mounts.map(m => {
+            return { hostPath: m.Source || '', containerPath: m.Destination || '' };
+          });
+        }
 
         const labels = info?.Config?.Labels || {};
         setData({
