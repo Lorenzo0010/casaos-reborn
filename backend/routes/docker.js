@@ -109,6 +109,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
         Binds: volumes || [],
         RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
         Privileged: !!privileged,
+        NetworkMode: oldInspect.HostConfig?.NetworkMode || 'default',
       }
     };
 
@@ -167,18 +168,22 @@ router.post('/containers/:id/recreate', async (req, res) => {
         const http = require('http');
         function request(method, path, body) {
           return new Promise((resolve, reject) => {
+            const bodyStr = body ? JSON.stringify(body) : '';
+            const headers = { 'Content-Type': 'application/json' };
+            if (bodyStr) headers['Content-Length'] = Buffer.byteLength(bodyStr);
+
             const req = http.request({
               socketPath: '/var/run/docker.sock',
               method,
-              path: '/v1.41' + path,
-              headers: { 'Content-Type': 'application/json' }
+              path,
+              headers
             }, res => {
               let data = '';
               res.on('data', chunk => data += chunk);
               res.on('end', () => resolve(data));
             });
             req.on('error', reject);
-            if (body) req.write(JSON.stringify(body));
+            if (bodyStr) req.write(bodyStr);
             req.end();
           });
         }
