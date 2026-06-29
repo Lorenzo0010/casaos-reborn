@@ -66,12 +66,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Applying settings...' });
     }
 
-    // 2. Stop and remove the old container
-    try {
-      await oldContainer.stop();
-    } catch (e) {
-      /* ignore if already stopped */
-    }
+    // 2. Force-remove the old container (sends SIGKILL immediately, no 10s SIGTERM wait)
     await oldContainer.remove({ force: true });
 
     // 3. Create the new container
