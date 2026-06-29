@@ -2,12 +2,12 @@ version: '3.8'
 
 services:
   casaos-reborn:
-    build: .
+    image: lorezno0010/casaos-reborn:latest
     container_name: casaos-reborn
     privileged: true
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "1111:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /:/host-root:ro
