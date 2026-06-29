@@ -1,0 +1,97 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Play, Square, RotateCw, Trash2 } from 'lucide-react';
+
+export default function Containers() {
+  const [containers, setContainers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchContainers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/docker/containers', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setContainers(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContainers();
+    const interval = setInterval(fetchContainers, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAction = async (id, action) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`/api/docker/containers/${id}/${action}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchContainers();
+    } catch (err) {
+      alert(`Error performing ${action}: ` + err.message);
+    }
+  };
+
+  return (
+    <div>
+      <h1>Containers</h1>
+      
+      {loading ? (
+        <p>Loading containers...</p>
+      ) : (
+        <div className="grid grid-cols-2">
+          {containers.map(c => (
+            <div key={c.Id} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0 }}>{c.Names[0].replace('/', '')}</h3>
+                <span style={{
+                  padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem',
+                  backgroundColor: c.State === 'running' ? 'var(--success)' : 'var(--danger)',
+                  color: 'white'
+                }}>
+                  {c.State}
+                </span>
+              </div>
+              
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                <strong>Image:</strong> {c.Image}
+              </div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                <strong>Status:</strong> {c.Status}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
+                {c.State !== 'running' ? (
+                  <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-success" title="Start">
+                    <Play size={16} />
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn" style={{ background: '#f59e0b', color: 'white' }} title="Stop">
+                      <Square size={16} />
+                    </button>
+                    <button onClick={() => handleAction(c.Id, 'restart')} className="btn btn-primary" title="Restart">
+                      <RotateCw size={16} />
+                    </button>
+                  </>
+                )}
+                <button onClick={() => {
+                  if (window.confirm('Are you sure you want to delete this container?')) handleAction(c.Id, 'delete');
+                }} className="btn btn-danger" style={{ marginLeft: 'auto' }} title="Delete">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          {containers.length === 0 && <p>No containers found.</p>}
+        </div>
+      )}
+    </div>
+  );
+}

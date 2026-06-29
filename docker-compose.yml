@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  casaos-reborn:
+    build: .
+    container_name: casaos-reborn
+    privileged: true
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /:/host-root:ro
+    environment:
+      - PORT=3000
+      - JWT_SECRET=supersecretcasaoskey
+      - ADMIN_USER=admin
+      - ADMIN_PASS=casaos

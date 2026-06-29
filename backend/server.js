@@ -1,0 +1,112 @@
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const { Server } = require('socket.io');
+const path = require('path');
+const jwt = require('jsonwebtoken');
+
+// Initialize app
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: '*' }
+});
+
+// Environment variables
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev';
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'casaos';
+
+app.use(cors());
+app.use(express.json());
+
+// Serve static frontend in production
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Basic Auth Route
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    const token = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '24h' });
+    return res.json({ token });
+  }
+  return res.status(401).json({ error: 'Invalid credentials' });
+});
+
+// Middleware to verify JWT
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+// API Routes will be imported here
+const systemRoutes = require('./routes/system');
+const dockerRoutes = require('./routes/docker');
+app.use('/api/system', authenticateToken, systemRoutes);
+app.use('/api/docker', authenticateToken, dockerRoutes);
+
+const pty = require('node-pty');
+const os = require('os');
+
+// Socket.io for Terminal & real-time updates
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) return next(new Error("Authentication error"));
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return next(new Error("Authentication error"));
+    socket.user = decoded;
+    next();
+  });
+});
+
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  // Terminal setup with host privileges (nsenter or simple sh if mounted)
+  // For true host privileges we use bash. The container should be privileged and map / to /host-root.
+  // Alternatively, just a normal bash inside the privileged container gives substantial control.
+  const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+  const ptyProcess = pty.spawn(shell, [], {
+    name: 'xterm-color',
+    cols: 80,
+    rows: 30,
+    cwd: process.env.HOME || '/root',
+    env: process.env
+  });
+
+  ptyProcess.on('data', function(data) {
+    socket.emit('terminal.incomingData', data);
+  });
+
+  socket.on('terminal.keystroke', (data) => {
+    ptyProcess.write(data);
+  });
+  
+  socket.on('terminal.resize', (size) => {
+    if (size && size.cols && size.rows) {
+      ptyProcess.resize(size.cols, size.rows);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+    ptyProcess.kill();
+  });
+});
+
+// SPA Fallback
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
