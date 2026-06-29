@@ -139,11 +139,15 @@ export default function NewContainer() {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch('/api/docker/containers/create', {
+      const res = await fetch('/api/docker/containers/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to start creation process');
+      }
       // We don't setLoading(false) here, we wait for socket event
     } catch (err) {
       alert(err.message);

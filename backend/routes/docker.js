@@ -293,7 +293,6 @@ router.post('/containers/create', async (req, res) => {
 
     const createOptions = {
       Image: image,
-      name: name,
       Env: env || [],
       Labels: {},
       ExposedPorts: exposedPorts,
@@ -304,6 +303,10 @@ router.post('/containers/create', async (req, res) => {
         Privileged: !!privileged,
       }
     };
+    
+    if (name) {
+      createOptions.name = name;
+    }
 
     if (webUI) {
       createOptions.Labels = {
