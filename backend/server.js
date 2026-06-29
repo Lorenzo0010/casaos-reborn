@@ -70,11 +70,11 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
   
-  // Terminal setup with host privileges (nsenter or simple sh if mounted)
-  // For true host privileges we use bash. The container should be privileged and map / to /host-root.
-  // Alternatively, just a normal bash inside the privileged container gives substantial control.
-  const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
-  const ptyProcess = pty.spawn(shell, [], {
+  const { sshUser, sshHost } = socket.handshake.auth;
+  const shell = os.platform() === 'win32' ? 'powershell.exe' : 'ssh';
+  const args = os.platform() === 'win32' ? [] : [`${sshUser || 'root'}@${sshHost || '127.0.1.1'}`];
+  
+  const ptyProcess = pty.spawn(shell, args, {
     name: 'xterm-color',
     cols: 80,
     rows: 30,
