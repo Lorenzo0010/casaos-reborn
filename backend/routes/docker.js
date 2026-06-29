@@ -67,13 +67,20 @@ router.post('/containers/:id/recreate', async (req, res) => {
     await oldContainer.remove({ force: true });
 
     // 3. Create the new container
+    const portBindings = ports || {};
+    const exposedPorts = {};
+    for (const key of Object.keys(portBindings)) {
+      exposedPorts[key] = {};
+    }
+
     const createOptions = {
       Image: image,
       name: name,
       Env: env || [],
       Labels: oldInspect.Config?.Labels || {},
+      ExposedPorts: exposedPorts,
       HostConfig: {
-        PortBindings: ports || {},
+        PortBindings: portBindings,
         Binds: volumes || [],
         RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
         Privileged: !!privileged,

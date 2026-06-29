@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, RotateCw, Trash2, Settings, ExternalLink, Loader } from 'lucide-react';
+import { Play, Square, RotateCw, Trash2, Settings, Loader } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import { io } from 'socket.io-client';
 

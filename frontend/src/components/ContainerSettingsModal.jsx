@@ -77,7 +77,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     fetchInspect();
   }, [containerId, onClose]);
 
-    const handleSave = async () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -153,13 +153,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
         </div>
 
-        {saving ? (
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <h3>Recreating container...</h3>
-            <p>Pulling image and applying settings. This may take a minute.</p>
-          </div>
-        ) : (
-          <div className="form-body">
+        <div className="form-body">
             <div className="form-group row">
               <div style={{ flex: 1 }}>
                 <label>Immagine Docker *</label>
@@ -283,7 +277,6 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
             </div>
 
           </div>
-        )}
         
         <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <button className="btn" onClick={onClose} disabled={saving}>Annulla</button>
