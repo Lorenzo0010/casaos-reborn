@@ -33,7 +33,7 @@ export default function TerminalPage() {
     const token = localStorage.getItem('token');
     
     socketRef.current = io(window.location.origin, {
-      auth: { token, sshHost: host, sshUser: user }
+      auth: { type: 'terminal', token, sshHost: host, sshUser: user }
     });
 
     socketRef.current.on('connect', () => {

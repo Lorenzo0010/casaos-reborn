@@ -27,7 +27,7 @@ export default function Containers() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const socket = io({
-      query: { token }
+      auth: { type: 'ui', token }
     });
     
     socket.on('container.recreate.progress', (data) => {

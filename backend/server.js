@@ -76,36 +76,43 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
   
-  const { sshUser, sshHost } = socket.handshake.auth;
-  const shell = os.platform() === 'win32' ? 'powershell.exe' : 'ssh';
-  const args = os.platform() === 'win32' ? [] : [`${sshUser || 'root'}@${sshHost || '127.0.1.1'}`];
+  const { type, sshUser, sshHost } = socket.handshake.auth;
   
-  const ptyProcess = pty.spawn(shell, args, {
-    name: 'xterm-color',
-    cols: 80,
-    rows: 30,
-    cwd: process.env.HOME || '/root',
-    env: process.env
-  });
+  if (type === 'terminal') {
+    const shell = os.platform() === 'win32' ? 'powershell.exe' : 'ssh';
+    const args = os.platform() === 'win32' ? [] : [`${sshUser || 'root'}@${sshHost || '127.0.1.1'}`];
+    
+    const ptyProcess = pty.spawn(shell, args, {
+      name: 'xterm-color',
+      cols: 80,
+      rows: 30,
+      cwd: process.env.HOME || '/root',
+      env: process.env
+    });
 
-  ptyProcess.on('data', function(data) {
-    socket.emit('terminal.incomingData', data);
-  });
+    ptyProcess.on('data', function(data) {
+      socket.emit('terminal.incomingData', data);
+    });
 
-  socket.on('terminal.keystroke', (data) => {
-    ptyProcess.write(data);
-  });
-  
-  socket.on('terminal.resize', (size) => {
-    if (size && size.cols && size.rows) {
-      ptyProcess.resize(size.cols, size.rows);
-    }
-  });
+    socket.on('terminal.keystroke', (data) => {
+      ptyProcess.write(data);
+    });
+    
+    socket.on('terminal.resize', (size) => {
+      if (size && size.cols && size.rows) {
+        ptyProcess.resize(size.cols, size.rows);
+      }
+    });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-    ptyProcess.kill();
-  });
+    socket.on('disconnect', () => {
+      console.log('Terminal user disconnected:', socket.id);
+      ptyProcess.kill();
+    });
+  } else {
+    socket.on('disconnect', () => {
+      console.log('User disconnected:', socket.id);
+    });
+  }
 });
 
 // SPA Fallback
