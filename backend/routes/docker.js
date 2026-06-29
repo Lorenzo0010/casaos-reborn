@@ -101,7 +101,6 @@ router.post('/containers/:id/recreate', async (req, res) => {
 
     const createOptions = {
       Image: image,
-      name: name,
       Env: env || [],
       Labels: oldInspect.Config?.Labels || {},
       ExposedPorts: exposedPorts,
@@ -190,7 +189,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
             console.log("Removing old container...");
             await request('DELETE', '/containers/${id}?force=true');
             console.log("Creating new container...");
-            const createRes = await request('POST', '/containers/create?name=${name}', ${JSON.stringify(createOptions)});
+            const createRes = await request('POST', '/containers/create?name=${containerName}', ${JSON.stringify(createOptions)});
             const newId = JSON.parse(createRes).Id;
             if (newId) {
               console.log("Starting new container...");
