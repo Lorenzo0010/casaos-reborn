@@ -27,10 +27,11 @@ router.get('/containers/:id/inspect', async (req, res) => {
 // Recreate container with new settings
 router.post('/containers/:id/recreate', async (req, res) => {
   const { id } = req.params;
-  const { image, name, ports, env, volumes, restartPolicy, privileged, memory } = req.body;
+  const { image, name, ports, env, volumes, restartPolicy, privileged, memory, webUI } = req.body;
   
   try {
     const oldContainer = docker.getContainer(id);
+    const oldInspect = await oldContainer.inspect().catch(() => ({}));
     
     // 1. Pull the requested image
     await new Promise((resolve, reject) => {
@@ -56,6 +57,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       Image: image,
       name: name,
       Env: env || [],
+      Labels: oldInspect.Config?.Labels || {},
       HostConfig: {
         PortBindings: ports || {},
         Binds: volumes || [],
@@ -63,6 +65,15 @@ router.post('/containers/:id/recreate', async (req, res) => {
         Privileged: !!privileged,
       }
     };
+
+    if (webUI) {
+      createOptions.Labels = {
+        ...createOptions.Labels,
+        'casaos.reborn.web.scheme': webUI.scheme || 'http://',
+        'casaos.reborn.web.port': webUI.port || '',
+        'casaos.reborn.web.path': webUI.path || '/'
+      };
+    }
 
     if (memory) {
       createOptions.HostConfig.Memory = memory;

@@ -45,10 +45,20 @@ export default function Containers() {
   };
 
   const getWebUrl = (container) => {
+    // 1. Try to use custom Web UI labels first
+    const labels = container.Labels || {};
+    const port = labels['casaos.reborn.web.port'];
+    if (port) {
+      const scheme = labels['casaos.reborn.web.scheme'] || 'http://';
+      const path = labels['casaos.reborn.web.path'] || '/';
+      return `${scheme}${window.location.hostname}:${port}${path}`;
+    }
+
+    // 2. Fallback to first available public port
     if (!container.Ports) return null;
     const publicPortInfo = container.Ports.find(p => p.PublicPort);
     if (publicPortInfo) {
-      return `http://${window.location.hostname}:${publicPortInfo.PublicPort}`;
+      return `http://${window.location.hostname}:${publicPortInfo.PublicPort}/`;
     }
     return null;
   };
@@ -63,17 +73,24 @@ export default function Containers() {
         <div className="grid grid-cols-2">
           {containers.map(c => {
             const webUrl = getWebUrl(c);
+            const isClickable = webUrl && c.State === 'running';
+
             return (
             <div key={c.Id} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {c.Names[0].replace('/', '')}
-                  {webUrl && c.State === 'running' && (
-                    <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', display: 'flex' }} title="Apri Web UI">
-                      <ExternalLink size={18} />
-                    </a>
-                  )}
-                </h3>
+                
+                {isClickable ? (
+                  <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }} title="Apri Web UI">
+                    <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                      {c.Names[0].replace('/', '')}
+                    </h3>
+                  </a>
+                ) : (
+                  <h3 style={{ margin: 0 }}>
+                    {c.Names[0].replace('/', '')}
+                  </h3>
+                )}
+
                 <span style={{
                   padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem',
                   backgroundColor: c.State === 'running' ? 'var(--success)' : 'var(--danger)',

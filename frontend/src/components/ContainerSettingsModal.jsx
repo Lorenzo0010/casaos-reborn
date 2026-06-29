@@ -13,7 +13,8 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     volumes: [],
     restartPolicy: 'unless-stopped',
     privileged: false,
-    memory: 0
+    memory: 0,
+    webUI: { scheme: 'http://', port: '', path: '/' }
   });
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           return { hostPath: parts[0] || '', containerPath: parts[1] || '' };
         });
 
+        const labels = info?.Config?.Labels || {};
         setData({
           image: info?.Config?.Image || '',
           name: (info?.Name || '').replace('/', ''),
@@ -57,7 +59,12 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           volumes: parsedVolumes,
           restartPolicy: info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped',
           privileged: !!info?.HostConfig?.Privileged,
-          memory: info?.HostConfig?.Memory || 0
+          memory: info?.HostConfig?.Memory || 0,
+          webUI: {
+            scheme: labels['casaos.reborn.web.scheme'] || 'http://',
+            port: labels['casaos.reborn.web.port'] || '',
+            path: labels['casaos.reborn.web.path'] || '/'
+          }
         });
       } catch (err) {
         console.error(err);
@@ -81,6 +88,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         restartPolicy: data.restartPolicy,
         privileged: data.privileged,
         memory: data.memory,
+        webUI: data.webUI,
         env: data.env.map(e => `${e.key}=${e.value}`),
         ports: {},
         volumes: data.volumes.map(v => `${v.hostPath}:${v.containerPath}`)
@@ -161,6 +169,34 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
               <div className="input-with-icon">
                 <input type="text" className="valid" value={data.name} onChange={e => updateField('name', e.target.value)} />
                 <Check className="valid-icon" size={16} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Web UI</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '0', borderRadius: '6px', border: '1px solid var(--card-border)', overflow: 'hidden' }}>
+                <select 
+                  style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
+                  value={data.webUI.scheme} 
+                  onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, scheme: e.target.value } }))}
+                >
+                  <option value="http://">http://</option>
+                  <option value="https://">https://</option>
+                </select>
+                <input 
+                  type="text" 
+                  placeholder="Porta (es. 8080)" 
+                  style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
+                  value={data.webUI.port} 
+                  onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, port: e.target.value } }))} 
+                />
+                <input 
+                  type="text" 
+                  placeholder="Percorso (es. /)" 
+                  style={{ border: 'none', borderRadius: 0 }} 
+                  value={data.webUI.path} 
+                  onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, path: e.target.value } }))} 
+                />
               </div>
             </div>
 
