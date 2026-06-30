@@ -177,7 +177,10 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
             </div>
 
             <div className="form-group">
-              <label>Web UI</label>
+              <label>Link Web UI (solo per la dashboard)</label>
+              <p style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '8px', marginTop: '-4px' }}>
+                Nota: Questo campo serve solo per il link sulla schermata principale. Per esporre fisicamente la porta, aggiungila nella sezione "Porte" sottostante.
+              </p>
               <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '0', borderRadius: '6px', border: '1px solid var(--card-border)', overflow: 'hidden' }}>
                 <select 
                   style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
@@ -189,11 +192,17 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
                 </select>
                 <input 
                   type="text" 
-                  placeholder="Porta (es. 8080)" 
+                  list="mapped-ports"
+                  placeholder="Porta (auto)" 
                   style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
                   value={data.webUI.port} 
                   onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, port: e.target.value } }))} 
                 />
+                <datalist id="mapped-ports">
+                  {data.ports.filter(p => p.hostPort).map((p, i) => (
+                    <option key={i} value={p.hostPort} />
+                  ))}
+                </datalist>
                 <input 
                   type="text" 
                   placeholder="Percorso (es. /)" 
