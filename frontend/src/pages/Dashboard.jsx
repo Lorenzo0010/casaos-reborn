@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, GripVertical, Check } from 'lucide-react';
+import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, GripVertical, Check, FileText } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
+import LogsModal from '../components/LogsModal';
 import { io } from 'socket.io-client';
 
 export default function Dashboard() {
@@ -9,6 +10,7 @@ export default function Dashboard() {
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingContainerId, setEditingContainerId] = useState(null);
+  const [logsContainer, setLogsContainer] = useState(null);
   const [selfUpdating, setSelfUpdating] = useState(false);
   const selfUpdatingRef = React.useRef(false);
   const [recreating, setRecreating] = useState({});
@@ -560,6 +562,9 @@ export default function Dashboard() {
                         <Square size={16} />
                       </button>
                     )}
+                    <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)' }} title="Logs">
+                      <FileText size={16} />
+                    </button>
                     <button onClick={() => setEditingContainerId(c.Id)} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)' }} title="Settings">
                       <Settings size={16} />
                     </button>
@@ -631,6 +636,14 @@ export default function Dashboard() {
             setEditingContainerId(null);
             fetchContainers();
           }}
+        />
+      )}
+
+      {logsContainer && (
+        <LogsModal 
+          containerId={logsContainer.id}
+          containerName={logsContainer.name}
+          onClose={() => setLogsContainer(null)} 
         />
       )}
     </div>

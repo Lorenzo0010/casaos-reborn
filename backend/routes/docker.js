@@ -414,4 +414,27 @@ router.post('/images/prune', async (req, res) => {
   }
 });
 
+// Get container logs
+router.get('/containers/:id/logs', async (req, res) => {
+  try {
+    const container = docker.getContainer(req.params.id);
+    const logs = await container.logs({
+      stdout: true,
+      stderr: true,
+      tail: 100
+    });
+    // The logs stream returned by dockerode for non-TTY containers has a header for each line (8 bytes)
+    // We can just strip non-printable characters for a quick and dirty plain text response,
+    // or properly demux it. For simplicity, we'll convert to string and remove docker's 8-byte stream header.
+    // However, if we just send it as binary buffer, we can do a simple replace or just send it as text.
+    // A more robust way: 
+    const logString = logs.toString('utf8');
+    const cleanLogs = logString.replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, '');
+    res.send(cleanLogs);
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

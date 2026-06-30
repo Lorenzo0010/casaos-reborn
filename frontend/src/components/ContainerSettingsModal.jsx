@@ -99,7 +99,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
       }
     };
     fetchInspect();
-  }, [containerId, onClose]);
+  }, [containerId]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -136,6 +136,22 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     } catch (err) {
       console.error(err);
       alert('Failed to save container: ' + (err.response?.data?.error || err.message));
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Sei sicuro di voler eliminare questo container? Questa azione è irreversibile.')) return;
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`/api/docker/containers/${containerId}/delete`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      onSaved();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete container: ' + (err.response?.data?.error || err.message));
       setSaving(false);
     }
   };
@@ -339,11 +355,17 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
             </div>
 
           </div>
-        
-        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-          <button className="btn" onClick={onClose} disabled={saving}>Annulla</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>Salva e Ricrea</button>
-        </div>
+                <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+            <button className="btn btn-danger" onClick={handleDelete} disabled={saving}>
+              Elimina Container
+            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn" onClick={onClose} disabled={saving} style={{ background: 'var(--card-bg)' }}>Annulla</button>
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Salvataggio...' : 'Salva e Ricrea'}
+              </button>
+            </div>
+          </div>
       </div>
     </div>
   );
