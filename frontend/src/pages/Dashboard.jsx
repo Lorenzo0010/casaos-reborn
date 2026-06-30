@@ -138,6 +138,20 @@ export default function Dashboard() {
     }
   };
 
+  const handlePruneImages = async () => {
+    if (!window.confirm('Sei sicuro di voler eliminare tutte le immagini Docker non utilizzate da alcun container?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`/api/docker/images/prune`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const deletedSpace = (res.data.result?.SpaceReclaimed || 0) / 1024 / 1024;
+      alert(`Pulizia completata. Spazio liberato: ${deletedSpace.toFixed(2)} MB`);
+    } catch (err) {
+      alert(`Errore durante la pulizia delle immagini: ` + err.message);
+    }
+  };
+
   const getWebUrl = (container) => {
     const labels = container.Labels || {};
     const port = labels['casaos.reborn.web.port'];
@@ -380,6 +394,17 @@ export default function Dashboard() {
           {containers.length === 0 && Object.keys(recreating).length === 0 && <p>No containers found.</p>}
         </div>
       )}
+
+      <div style={{ marginTop: '40px', padding: '20px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--card-bg)', borderRadius: '12px' }}>
+        <div>
+          <h3 style={{ margin: '0 0 5px 0' }}>Manutenzione Docker</h3>
+          <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Rimuovi le immagini docker non collegate ad alcun container per liberare spazio su disco.</p>
+        </div>
+        <button className="btn btn-danger" onClick={handlePruneImages}>
+          <Trash2 size={16} style={{ marginRight: '8px' }} />
+          Pulisci Immagini
+        </button>
+      </div>
 
       {editingContainerId && (
         <ContainerSettingsModal 

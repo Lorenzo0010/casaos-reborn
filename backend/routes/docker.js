@@ -403,5 +403,15 @@ router.post('/containers/create', async (req, res) => {
 });
 
 
+// Prune unused images
+router.post('/images/prune', async (req, res) => {
+  try {
+    const result = await docker.pruneImages({ filters: { dangling: ["false"] } });
+    res.json({ message: 'Immagini rimosse con successo', result });
+  } catch (error) {
+    console.error('Error pruning images:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
