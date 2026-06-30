@@ -462,17 +462,20 @@ export default function Dashboard() {
 
             const renderEditControls = () => {
               if (!editMode) return null;
-              if (isMobile) {
-                return (
-                  <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '10px' }}>
-                    <button onClick={() => moveWidget(widgetId, -1)} className="btn btn-icon" style={{ padding: '12px' }}><ChevronLeft size={24} /></button>
-                    <button onClick={() => moveWidget(widgetId, 1)} className="btn btn-icon" style={{ padding: '12px' }}><ChevronRight size={24} /></button>
-                  </div>
-                );
-              }
+              if (isMobile) return null; // Mobile controls are rendered at the bottom
               return (
                 <div style={{ position: 'absolute', top: '10px', right: '10px', opacity: 0.5 }}>
                   <GripHorizontal size={20} />
+                </div>
+              );
+            };
+
+            const renderMobileControls = () => {
+              if (!editMode || !isMobile) return null;
+              return (
+                <div style={{ display: 'flex', width: '100%', gap: '10px', marginTop: '15px' }}>
+                  <button onClick={() => moveWidget(widgetId, -1)} className="btn" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronLeft size={30} /></button>
+                  <button onClick={() => moveWidget(widgetId, 1)} className="btn" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronRight size={30} /></button>
                 </div>
               );
             };
@@ -489,6 +492,7 @@ export default function Dashboard() {
                   <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
                     {stats.cpu.temperature != null ? `${stats.cpu.temperature}°C` : 'Temperatura N/A'}
                   </div>
+                  {renderMobileControls()}
                 </div>
               );
             }
@@ -505,6 +509,7 @@ export default function Dashboard() {
                   <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
                     {(stats.memory.used / 1024 / 1024 / 1024).toFixed(1)} GB / {(stats.memory.total / 1024 / 1024 / 1024).toFixed(1)} GB
                   </div>
+                  {renderMobileControls()}
                 </div>
               );
             }
@@ -521,6 +526,7 @@ export default function Dashboard() {
                   <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
                     {(stats.disk.used / 1024 / 1024 / 1024).toFixed(1)} GB / {(stats.disk.total / 1024 / 1024 / 1024).toFixed(1)} GB
                   </div>
+                  {renderMobileControls()}
                 </div>
               );
             }
@@ -534,6 +540,7 @@ export default function Dashboard() {
                   </div>
                   <div className="value">{runningContainers} <span style={{fontSize: '1rem', color: 'var(--text-color)', fontWeight: 'normal'}}>out of {containers.length}</span></div>
                   <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>OS: {stats.os.distro} {stats.os.release}</div>
+                  {renderMobileControls()}
                 </div>
               );
             }
@@ -555,6 +562,7 @@ export default function Dashboard() {
                       <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{stats.network ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
                     </div>
                   </div>
+                  {renderMobileControls()}
                 </div>
               );
             }
@@ -682,11 +690,11 @@ export default function Dashboard() {
 
               <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', justifyContent: 'flex-end', alignItems: 'center' }}>
                 {editMode ? (
-                  <div style={{ display: 'flex', width: '100%', justifyContent: isMobile ? 'space-between' : 'flex-end', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', width: '100%', justifyContent: isMobile ? 'center' : 'flex-end', alignItems: 'center' }}>
                     {isMobile ? (
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-icon" title="Move Up" style={{ padding: '12px' }}><ChevronUp size={24} /></button>
-                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-icon" title="Move Down" style={{ padding: '12px' }}><ChevronDown size={24} /></button>
+                      <div style={{ display: 'flex', width: '100%', gap: '10px', marginTop: '10px' }}>
+                        <button onClick={() => moveCustom(c.Id, -1)} className="btn" title="Move Up" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronUp size={30} /></button>
+                        <button onClick={() => moveCustom(c.Id, 1)} className="btn" title="Move Down" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronDown size={30} /></button>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">
