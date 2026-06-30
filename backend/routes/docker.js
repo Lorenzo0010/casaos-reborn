@@ -172,55 +172,60 @@ router.post('/containers/:id/recreate', async (req, res) => {
       if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Rebooting system...' });
       
       const updaterScript = `
-        const Docker = require('dockerode');
-        const fs = require('fs');
-        const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+        const http = require('http');
         const createOptions = JSON.parse(process.env.CREATE_OPTIONS);
-        const containerId = process.env.OLD_CONTAINER_ID;
+        const oldId = process.env.OLD_CONTAINER_ID;
         const containerName = process.env.CONTAINER_NAME;
 
-        function log(msg) {
-          console.log(new Date().toISOString() + ' - ' + msg);
+        function log(msg) { console.log(new Date().toISOString() + ' - ' + msg); }
+        
+        function dockerRequest(method, path, data = null) {
+          return new Promise((resolve, reject) => {
+            const req = http.request({
+              socketPath: '/var/run/docker.sock',
+              path: '/v1.41' + path,
+              method: method,
+              headers: data ? { 'Content-Type': 'application/json' } : {}
+            }, res => {
+              let body = '';
+              res.on('data', chunk => body += chunk);
+              res.on('end', () => resolve({ statusCode: res.statusCode, body }));
+            });
+            req.on('error', reject);
+            if (data) req.write(JSON.stringify(data));
+            req.end();
+          });
         }
 
         (async () => {
           try {
-            log('Starting updater for ' + containerName + ' (Old ID: ' + containerId + ')');
-            log('Waiting for main process to close connections...');
+            log('Starting detached updater for ' + containerName);
             await new Promise(r => setTimeout(r, 2000));
-
-            log('Getting old container...');
-            const oldContainer = docker.getContainer(containerId);
             
             log('Stopping old container...');
-            await oldContainer.stop({ t: 5 }).catch(e => log('Stop error (ignored): ' + e.message));
-
+            await dockerRequest('POST', '/containers/' + oldId + '/stop?t=5');
+            
             log('Removing old container...');
-            await oldContainer.remove({ force: true }).catch(e => log('Remove error (ignored): ' + e.message));
+            await dockerRequest('DELETE', '/containers/' + oldId + '?force=true');
             
-            let newContainer;
+            let created = false;
             for (let i = 0; i < 5; i++) {
-              log('Waiting for Docker to release the container name (attempt ' + (i+1) + ')...');
-              await new Promise(r => setTimeout(r, 1500));
-              log('Creating new container with name ' + containerName + '...');
-              try {
-                newContainer = await docker.createContainer({ name: containerName, ...createOptions });
-                log('Successfully created container with ID: ' + newContainer.id);
+              log('Creating new container... (attempt ' + (i+1) + ')');
+              const createRes = await dockerRequest('POST', '/containers/create?name=' + containerName, createOptions);
+              log('Create response: ' + createRes.statusCode + ' ' + createRes.body);
+              if (createRes.statusCode === 201) {
+                const resObj = JSON.parse(createRes.body);
+                log('Starting new container: ' + resObj.Id);
+                const startRes = await dockerRequest('POST', '/containers/' + resObj.Id + '/start');
+                log('Start response: ' + startRes.statusCode);
+                created = true;
                 break;
-              } catch (createErr) {
-                log('Create failed: ' + createErr.message);
               }
+              await new Promise(r => setTimeout(r, 1500));
             }
-            
-            if (newContainer) {
-              log('Starting new container: ' + newContainer.id);
-              await newContainer.start();
-              log('Start successful!');
-            } else {
-              log('Failed to create container after 5 retries.');
-            }
+            if (!created) log('Failed to create container after 5 retries.');
           } catch(e) {
-            log('Exception in updater script: ' + e.message + '\\n' + e.stack);
+            log('Updater error: ' + e.message + '\\n' + e.stack);
           }
         })();
       `;

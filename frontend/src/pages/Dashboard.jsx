@@ -452,7 +452,7 @@ export default function Dashboard() {
                 position: 'relative',
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedWidget === widgetId ? 0.5 : 1,
-                border: editMode ? '2px dashed var(--primary)' : '1px solid var(--card-border)'
+                border: '1px solid var(--card-border)'
               },
               draggable: editMode && !isMobile,
               onDragStart: (e) => handleWidgetDragStart(e, widgetId),
@@ -615,7 +615,7 @@ export default function Dashboard() {
                 padding: '20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px', position: 'relative', overflow: 'hidden',
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedItem === c.Id ? 0.5 : 1,
-                border: editMode ? '2px dashed var(--primary)' : '1px solid var(--card-border)'
+                border: '1px solid var(--card-border)'
               }}
             >
               
@@ -688,35 +688,36 @@ export default function Dashboard() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {editMode ? (
-                    <div style={{ display: 'flex', width: '100%', flexDirection: 'column', gap: '10px' }}>
+                  {c.State !== 'running' ? (
+                    <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
+                      <Play size={16} />
+                    </button>
+                  ) : (
+                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
+                      <Square size={16} />
+                    </button>
+                  )}
+                  <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
+                    <FileText size={16} />
+                  </button>
+                  <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
+                    <Settings size={16} />
+                  </button>
+
+                  {editMode && (
+                    <>
+                      <div style={{ width: '2px', height: '24px', backgroundColor: 'var(--card-border)', margin: '0 5px' }} />
+                      <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su">
+                        <ChevronUp size={16} />
+                      </button>
+                      <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù">
+                        <ChevronDown size={16} />
+                      </button>
                       {!isMobile && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">
-                          <GripHorizontal size={24} />
+                        <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab', marginLeft: '5px' }} title="Trascina per riordinare">
+                          <GripHorizontal size={20} />
                         </div>
                       )}
-                      <div style={{ display: 'flex', width: '100%', gap: '10px' }}>
-                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su" style={{ flex: 1, padding: '10px', display: 'flex', justifyContent: 'center' }}><ChevronUp size={20} /></button>
-                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù" style={{ flex: 1, padding: '10px', display: 'flex', justifyContent: 'center' }}><ChevronDown size={20} /></button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {c.State !== 'running' ? (
-                        <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
-                          <Play size={16} />
-                        </button>
-                      ) : (
-                        <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
-                          <Square size={16} />
-                        </button>
-                      )}
-                      <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
-                        <FileText size={16} />
-                      </button>
-                      <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
-                        <Settings size={16} />
-                      </button>
                     </>
                   )}
                 </div>
