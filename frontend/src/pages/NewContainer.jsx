@@ -15,6 +15,7 @@ export default function NewContainer() {
 
   const [formData, setFormData] = useState({
     name: '',
+    displayName: '',
     image: '',
     tag: 'latest',
     icon: '',
@@ -141,6 +142,7 @@ export default function NewContainer() {
       image: formData.image,
       tag: formData.tag || 'latest',
       name: formData.name,
+      displayName: formData.displayName,
       icon: formData.icon,
       restartPolicy: formData.restartPolicy,
       privileged: formData.privileged,
@@ -240,9 +242,15 @@ export default function NewContainer() {
 
           {activeTab === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <label>Container Name</label>
-                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="my-app" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <label>Docker Container Name *</label>
+                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="my-app" />
+                </div>
+                <div>
+                  <label>Display Name (Dashboard)</label>
+                  <input type="text" value={formData.displayName} onChange={e => setFormData({...formData, displayName: e.target.value})} placeholder={formData.name || "My App"} />
+                </div>
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '10px' }}>

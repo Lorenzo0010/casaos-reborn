@@ -287,18 +287,24 @@ export default function Dashboard() {
               )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <img src={getContainerIcon(c)} alt="" style={{ width: 48, height: 48, borderRadius: '12px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+                {isClickable ? (
+                  <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'flex' }} title="Apri Web UI">
+                    <img src={getContainerIcon(c)} alt="" style={{ width: 64, height: 64, borderRadius: '14px', objectFit: 'cover', cursor: 'pointer' }} onError={e => { e.target.style.display = 'none'; }} />
+                  </a>
+                ) : (
+                  <img src={getContainerIcon(c)} alt="" style={{ width: 64, height: 64, borderRadius: '14px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+                )}
                 
                 <div style={{ flex: 1 }}>
                   {isClickable ? (
                     <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }} title="Apri Web UI">
                       <h3 style={{ margin: '0 0 4px 0', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
-                        {c.Names[0].replace('/', '')}
+                        {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                       </h3>
                     </a>
                   ) : (
                     <h3 style={{ margin: '0 0 4px 0' }}>
-                      {c.Names[0].replace('/', '')}
+                      {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                     </h3>
                   )}
 
@@ -315,28 +321,18 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', justifyContent: 'flex-end' }}>
                 {c.State !== 'running' ? (
                   <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-success" title="Start">
                     <Play size={16} />
                   </button>
                 ) : (
-                  <>
-                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn" style={{ background: '#f59e0b', color: 'white' }} title="Stop">
-                      <Square size={16} />
-                    </button>
-                    <button onClick={() => handleAction(c.Id, 'restart')} className="btn btn-primary" title="Restart">
-                      <RotateCw size={16} />
-                    </button>
-                  </>
+                  <button onClick={() => handleAction(c.Id, 'stop')} className="btn" style={{ background: '#f59e0b', color: 'white' }} title="Stop">
+                    <Square size={16} />
+                  </button>
                 )}
-                <button onClick={() => setEditingContainerId(c.Id)} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)', marginLeft: 'auto' }} title="Settings">
+                <button onClick={() => setEditingContainerId(c.Id)} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)' }} title="Settings">
                   <Settings size={16} />
-                </button>
-                <button onClick={() => {
-                  if (window.confirm('Are you sure you want to delete this container?')) handleAction(c.Id, 'delete');
-                }} className="btn btn-danger" title="Delete">
-                  <Trash2 size={16} />
                 </button>
               </div>
             </div>

@@ -38,7 +38,7 @@ function getOwnContainerId() {
 // Recreate container with new settings
 router.post('/containers/:id/recreate', async (req, res) => {
   const { id } = req.params;
-  const { image, tag, name, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
+  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
@@ -127,6 +127,11 @@ router.post('/containers/:id/recreate', async (req, res) => {
     // Icon label
     if (icon != null) {
       createOptions.Labels['casaos.reborn.icon'] = icon;
+    }
+
+    // Display Name label
+    if (displayName != null) {
+      createOptions.Labels['casaos.reborn.name'] = displayName;
     }
 
     if (memory) {
@@ -310,7 +315,7 @@ router.post('/containers/:id/:action', async (req, res) => {
 
 // Create a new container
 router.post('/containers/create', async (req, res) => {
-  const { image, tag, name, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
+  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
@@ -377,6 +382,10 @@ router.post('/containers/create', async (req, res) => {
 
     if (icon != null) {
       createOptions.Labels['casaos.reborn.icon'] = icon;
+    }
+
+    if (displayName != null) {
+      createOptions.Labels['casaos.reborn.name'] = displayName;
     }
 
     if (memory) {

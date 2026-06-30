@@ -9,6 +9,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     image: '',
     tag: 'latest',
     name: '',
+    displayName: '',
     icon: '',
     env: [],
     ports: [],
@@ -75,6 +76,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           image: imageName,
           tag: imageTag,
           name: (info?.Name || '').replace('/', ''),
+          displayName: labels['casaos.reborn.name'] || '',
           icon: labels['casaos.reborn.icon'] || '',
           env: parsedEnv,
           ports: parsedPorts,
@@ -108,6 +110,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         image: data.image,
         tag: data.tag || 'latest',
         name: data.name,
+        displayName: data.displayName,
         icon: data.icon,
         restartPolicy: data.restartPolicy,
         privileged: data.privileged,
@@ -177,7 +180,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
             {data.icon ? (
               <img src={data.icon} alt="" style={{ width: 36, height: 36, borderRadius: '8px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
             ) : null}
-            <h2 style={{ margin: 0 }}>{data.name}</h2>
+            <h2 style={{ margin: 0 }}>{data.displayName || data.name}</h2>
           </div>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
         </div>
@@ -196,11 +199,16 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
             </div>
 
             <div className="form-group">
-              <label>Nome del contenitore *</label>
+              <label>Nome del contenitore (Docker) *</label>
               <div className="input-with-icon">
                 <input type="text" className="valid" value={data.name} onChange={e => updateField('name', e.target.value)} />
                 <Check className="valid-icon" size={16} />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>Nome visualizzato nella dashboard (opzionale)</label>
+              <input type="text" value={data.displayName} onChange={e => updateField('displayName', e.target.value)} placeholder={data.name || "Nome App"} />
             </div>
 
             {/* Icon URL */}
