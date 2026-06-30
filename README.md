@@ -62,8 +62,8 @@ To run the project locally for development:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Lorenzo0010/myos.git
-   cd myos
+   git clone https://github.com/Lorenzo0010/casaos-reborn.git
+   cd casaos-reborn
    ```
 
 2. **Install Frontend Dependencies**:
