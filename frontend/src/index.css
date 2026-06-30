@@ -212,6 +212,7 @@ h1, h2, h3 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: var(--text-color);
 }
 .btn:hover { opacity: 0.9; }
 .btn-primary { background-color: var(--primary); color: white; }
