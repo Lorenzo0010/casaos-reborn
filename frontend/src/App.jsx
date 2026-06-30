@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
-import Containers from './pages/Containers';
 import NewContainer from './pages/NewContainer';
 import TerminalPage from './pages/Terminal';
 import Login from './pages/Login';
@@ -36,7 +35,6 @@ function App() {
           <div className="main-scrollable">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/containers" element={<Containers />} />
               <Route path="/new" element={<NewContainer />} />
               <Route path="/terminal" element={<TerminalPage />} />
               <Route path="*" element={<Navigate to="/" />} />

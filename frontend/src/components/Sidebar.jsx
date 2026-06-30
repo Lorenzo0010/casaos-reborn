@@ -71,9 +71,6 @@ export default function Sidebar({ theme, toggleTheme, logout }) {
         <NavLink to="/" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
           <Monitor /> <span className="sidebar-link-text">Dashboard</span>
         </NavLink>
-        <NavLink to="/containers" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
-          <Box /> <span className="sidebar-link-text">Containers</span>
-        </NavLink>
         <NavLink to="/new" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
           <PlusSquare /> <span className="sidebar-link-text">New Container</span>
         </NavLink>
