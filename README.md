@@ -4,12 +4,24 @@ CasaOS Reborn is a lightweight, modern, and powerful web-based interface for man
 
 ## Features
 
-- **Sleek Dashboard & UI**: A modern, glassmorphism-inspired interface with responsive design and dark/light mode support.
+- **Sleek Dashboard & UI**: A modern interface with responsive design. Includes an extensive theming engine with 19 accent colors and 14 background themes (including automatic Light/Dark mode switching).
+- **Customizable Layout**: Drag-and-drop to reorder system widgets (CPU, RAM, Disk, Network) and pin or sort your favorite Docker containers.
 - **Container Management**: View, start, stop, restart, and delete Docker containers effortlessly.
 - **Advanced Configuration**: Edit container settings including environment variables, ports, and volumes on the fly.
 - **YAML Import**: Quickly create new containers by pasting a `docker-compose` YAML snippet.
-- **Integrated Terminal**: Access a fully-functional web terminal (via SSH) directly from the sidebar.
-- **Flawless Self-Updater**: A robust, built-in self-updating mechanism that allows the system to pull the latest image and seamlessly recreate its own container without manual intervention or data loss.
+- **Integrated Terminal**: Access a fully-functional web terminal directly from the sidebar.
+- **Intelligent Self-Updater**: A robust, built-in self-updating mechanism that verifies image hashes and seamlessly updates its own container without manual intervention or data loss.
+- **Persistent Preferences**: All layout and theme settings are safely stored in a local backend JSON file, preserving your customized workspace across all devices.
+
+## Roadmap 🚀
+
+We are actively working on massive upgrades to turn CasaOS-Reborn into a complete web operating system. The upcoming features include:
+
+1. **Web File Manager**: Browse, manage, upload, and download host files directly from the browser.
+2. **Glassmorphism UI**: A complete visual overhaul featuring frosted-glass effects on cards and modals.
+3. **Host Control**: Safely Reboot and Shutdown the host machine (e.g., Orange Pi/Raspberry Pi) from the web interface.
+
+*For full details on the upcoming architecture and implementation, see the [ROADMAP.md](./ROADMAP.md) file.*
 
 ## Architecture
 
@@ -18,7 +30,7 @@ CasaOS Reborn is a lightweight, modern, and powerful web-based interface for man
 
 ## Quick Start (Docker)
 
-To deploy CasaOS Reborn on your system, you can use the following `docker-compose.yml` or run it directly via the Docker CLI. Ensure you map the Docker socket so the application can manage your containers.
+To deploy CasaOS Reborn on your system, use the following `docker-compose.yml`. Ensure you map the Docker socket and specify a host directory to save your configuration persistently.
 
 ```yaml
 services:
@@ -31,7 +43,8 @@ services:
       - "1111:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /:/host-root:ro
+      # Replace /home/username with your actual server path
+      - /home/username/casaos-reborn-config:/app/backend/data
     environment:
       - PORT=3000
       - JWT_SECRET=supersecretcasaoskey
