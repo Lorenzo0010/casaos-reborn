@@ -164,13 +164,19 @@ router.post('/containers/:id/recreate', async (req, res) => {
       console.log('Initiating detached self-update for container', id);
       if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Rebooting system...' });
       
-      // The updater script reads createOptions from an env var to avoid
-      // shell escaping issues with inline JSON interpolation.
       const updaterScript = `
         const http = require('http');
+        const fs = require('fs');
         const createOptions = JSON.parse(process.env.CREATE_OPTIONS);
         const containerId = process.env.OLD_CONTAINER_ID;
         const containerName = process.env.CONTAINER_NAME;
+
+        let logOutput = '';
+        function log(msg) {
+          console.log(msg);
+          logOutput += new Date().toISOString() + ' - ' + msg + '\\n';
+          try { fs.writeFileSync('/host-root/tmp/casaos-updater.log', logOutput); } catch(e) {}
+        }
 
         function request(method, path, body) {
           return new Promise((resolve, reject) => {
@@ -196,49 +202,52 @@ router.post('/containers/:id/recreate', async (req, res) => {
 
         (async () => {
           try {
-            console.log('Waiting for main process to close connections...');
+            log('Starting updater for ' + containerName + ' (Old ID: ' + containerId + ')');
+            log('Waiting for main process to close connections...');
             await new Promise(r => setTimeout(r, 2000));
 
-            console.log('Stopping old container...');
+            log('Stopping old container...');
             await request('POST', '/containers/' + containerId + '/stop?t=5').catch(() => {});
 
-            console.log('Removing old container...');
+            log('Removing old container...');
             await request('DELETE', '/containers/' + containerId + '?force=true');
             
             let newId;
             for (let i = 0; i < 5; i++) {
-              console.log('Waiting for Docker to release the container name (attempt ' + (i+1) + ')...');
+              log('Waiting for Docker to release the container name (attempt ' + (i+1) + ')...');
               await new Promise(r => setTimeout(r, 1500));
-              console.log('Creating new container...');
+              log('Creating new container with name ' + containerName + '...');
               const createRes = await request('POST', '/containers/create?name=' + encodeURIComponent(containerName), createOptions);
+              log('Create response status: ' + createRes.status);
               try {
                 const parsed = JSON.parse(createRes.body);
                 newId = parsed.Id;
-                if (newId) break;
-                console.log('Create returned:', createRes.status, createRes.body);
+                if (newId) {
+                  log('Successfully created container with ID: ' + newId);
+                  break;
+                }
+                log('Create returned body: ' + createRes.body);
               } catch (parseErr) {
-                console.log('Failed to parse create response:', createRes.body);
+                log('Failed to parse create response: ' + createRes.body);
               }
             }
             
             if (newId) {
-              console.log('Starting new container:', newId);
+              log('Starting new container: ' + newId);
               const startRes = await request('POST', '/containers/' + newId + '/start');
-              console.log('Start result:', startRes.status);
+              log('Start result: ' + startRes.status);
             } else {
-              console.error('Failed to create container after 5 retries');
+              log('Failed to create container after 5 retries. CreateOptions was: ' + JSON.stringify(createOptions));
             }
           } catch(e) {
-            console.error('Exception in updater script:', e);
+            log('Exception in updater script: ' + e.message + '\\n' + e.stack);
           }
         })();
       `;
 
-      // Prepare createOptions without the name field (it goes in the query string)
       const updaterCreateOptions = { ...createOptions };
       delete updaterCreateOptions.name;
 
-      // Try to remove old updater if it exists
       try {
         const oldUpdater = docker.getContainer('casaos-reborn-updater');
         await oldUpdater.remove({ force: true });
@@ -254,7 +263,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
           'CONTAINER_NAME=' + containerName
         ],
         HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock', '/:/host-root'],
           AutoRemove: true
         }
       });

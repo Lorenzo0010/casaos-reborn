@@ -99,11 +99,17 @@ export default function Dashboard() {
     const pollInterval = setInterval(async () => {
       try {
         const res = await axios.get('/api/health', { timeout: 3000 });
-        if (res.data?.status === 'ok') {
+        if (res.status === 200 || res.data?.status === 'ok') {
           clearInterval(pollInterval);
           window.location.reload();
         }
       } catch (e) {
+        // Se c'è una risposta (es. 404 perché l'immagine è vecchia e non ha l'endpoint),
+        // significa comunque che il server è tornato online!
+        if (e.response) {
+          clearInterval(pollInterval);
+          window.location.reload();
+        }
       }
     }, 2000);
   };
