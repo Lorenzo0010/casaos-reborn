@@ -52,17 +52,47 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const oldImage = oldInspect.Config?.Image || '';
     const imageChanged = fullImage !== oldImage;
     
+    // 1. Pull the image to check for updates
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Pulling image...' });
+    await new Promise((resolve, reject) => {
+      docker.pull(fullImage, (err, stream) => {
+        if (err) return reject(err);
+        docker.modem.followProgress(stream, (err, output) => {
+          if (err) return reject(err);
+          resolve(output);
+        }, (event) => {
+          if (io) {
+            io.emit('container.recreate.progress', {
+              id,
+              name: containerName,
+              image: fullImage,
+              status: event.status,
+              progressDetail: event.progressDetail
+            });
+          }
+        });
+      });
+    });
+
+    // 2. Check if the pulled image has a different hash than the one currently used
+    let newImageInspect;
+    try {
+      newImageInspect = await docker.getImage(fullImage).inspect();
+    } catch (e) {
+      console.error('Failed to inspect new image:', e);
+    }
+    const oldImageHash = oldInspect.Image; // The sha256 of the current container's image
+    const newImageHash = newImageInspect ? newImageInspect.Id : null;
+    const imageDigestChanged = newImageHash && oldImageHash && newImageHash !== oldImageHash;
+
+    const imageStringChanged = fullImage !== oldImage;
+    
     // Check if we can do an in-place update (fast path)
     const oldPortBindings = oldInspect.HostConfig?.PortBindings || {};
     const oldBinds = oldInspect.HostConfig?.Binds || [];
     const oldEnv = oldInspect.Config?.Env || [];
     
-    // To compare env properly, the UI only sends the vars it knows, but we replace all Env in a recreate.
-    // However, if the user didn't change what they see, they send back what they received.
-    // We can just rely on basic equality or full recreate.
     const newPortBindings = ports || {};
-    
-    // Normalize volumes
     const newBinds = volumes || [];
 
     const oldWebUI = {
@@ -72,9 +102,10 @@ router.post('/containers/:id/recreate', async (req, res) => {
     };
     const newWebUI = webUI || oldWebUI;
 
-    // A full recreate is required if image, ports, volumes, env, webUI or privileged flag changed
+    // A full recreate is required if image string changed, image digest changed, or config changed
     const needsFullRecreate = 
-      imageChanged ||
+      imageStringChanged ||
+      imageDigestChanged ||
       privileged !== !!oldInspect.HostConfig?.Privileged ||
       !isDeepStrictEqual(newPortBindings, oldPortBindings) ||
       !isDeepStrictEqual(newBinds.sort(), oldBinds.sort()) ||
@@ -82,7 +113,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       !isDeepStrictEqual(newWebUI, oldWebUI);
 
     if (!needsFullRecreate) {
-      if (io) io.emit('container.update.progress', { id, name: containerName, status: 'Updating settings...' });
+      if (io) io.emit('container.update.progress', { id, name: containerName, status: 'Image up to date. Applying hot settings...' });
       
       await oldContainer.update({
         RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
@@ -137,30 +168,6 @@ router.post('/containers/:id/recreate', async (req, res) => {
     if (memory) {
       createOptions.HostConfig.Memory = memory;
     }
-
-    // Always pull the image to ensure we get the latest version.
-    // Docker compares digests: if the remote image hasn't changed,
-    // this is a fast no-op (manifest check only, no re-download).
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Pulling image...' });
-    await new Promise((resolve, reject) => {
-      docker.pull(fullImage, (err, stream) => {
-        if (err) return reject(err);
-        docker.modem.followProgress(stream, (err, output) => {
-          if (err) return reject(err);
-          resolve(output);
-        }, (event) => {
-          if (io) {
-            io.emit('container.recreate.progress', {
-              id,
-              name: containerName,
-              image: fullImage,
-              status: event.status,
-              progressDetail: event.progressDetail
-            });
-          }
-        });
-      });
-    });
 
     // --- DETACHED UPDATER FOR SELF-UPDATE ---
     const ownId = getOwnContainerId();

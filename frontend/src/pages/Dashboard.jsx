@@ -282,8 +282,10 @@ export default function Dashboard() {
       sorted.sort((a, b) => b.Created - a.Created);
     } else if (sortMode === 'custom') {
       sorted.sort((a, b) => {
-        let indexA = customOrder.indexOf(a.Id);
-        let indexB = customOrder.indexOf(b.Id);
+        const nameA = a.Names ? a.Names[0].replace('/', '') : a.Id;
+        const nameB = b.Names ? b.Names[0].replace('/', '') : b.Id;
+        let indexA = customOrder.indexOf(nameA);
+        let indexB = customOrder.indexOf(nameB);
         if (indexA === -1) indexA = 99999;
         if (indexB === -1) indexB = 99999;
         return indexA - indexB;
@@ -293,7 +295,8 @@ export default function Dashboard() {
     const pinned = [];
     const unpinned = [];
     sorted.forEach(c => {
-      if (pinnedContainers.includes(c.Id)) {
+      const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
+      if (pinnedContainers.includes(stableId)) {
         pinned.push(c);
       } else {
         unpinned.push(c);
@@ -316,7 +319,8 @@ export default function Dashboard() {
     
     // Ensure all containers are in customOrder
     containers.forEach(c => {
-      if (!newOrder.includes(c.Id)) newOrder.push(c.Id);
+      const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
+      if (!newOrder.includes(stableId)) newOrder.push(stableId);
     });
 
     const index = newOrder.indexOf(id);
@@ -352,7 +356,8 @@ export default function Dashboard() {
 
     let newOrder = [...customOrder];
     containers.forEach(c => {
-      if (!newOrder.includes(c.Id)) newOrder.push(c.Id);
+      const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
+      if (!newOrder.includes(stableId)) newOrder.push(stableId);
     });
 
     const draggedIndex = newOrder.indexOf(draggedItem);
@@ -601,20 +606,21 @@ export default function Dashboard() {
               progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
             }
 
-            const isPinned = pinnedContainers.includes(c.Id);
+            const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
+            const isPinned = pinnedContainers.includes(stableId);
 
             return (
             <div 
               key={c.Id} 
               className={`glass ${editMode ? 'edit-mode' : ''}`} 
               draggable={editMode && !isMobile}
-              onDragStart={(e) => handleDragStart(e, c.Id)}
+              onDragStart={(e) => handleDragStart(e, stableId)}
               onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, c.Id)}
+              onDrop={(e) => handleDrop(e, stableId)}
               style={{ 
                 padding: '20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px', position: 'relative', overflow: 'hidden',
                 cursor: editMode && !isMobile ? 'grab' : 'default',
-                opacity: draggedItem === c.Id ? 0.5 : 1,
+                opacity: draggedItem === stableId ? 0.5 : 1,
                 border: '1px solid var(--card-border)'
               }}
             >
@@ -622,7 +628,7 @@ export default function Dashboard() {
               {/* Pin Icon */}
               {(editMode || isPinned) && (
                 <button 
-                  onClick={(e) => { e.stopPropagation(); togglePin(c.Id); }}
+                  onClick={(e) => { e.stopPropagation(); togglePin(stableId); }}
                   style={{
                     position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none',
                     color: isPinned ? 'var(--primary)' : 'var(--text-color)', opacity: isPinned || editMode ? 1 : 0.2,
