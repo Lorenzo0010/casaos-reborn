@@ -16,7 +16,17 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-  }, [theme]);
+    if (token) {
+      fetch('/api/system/preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ theme })
+      }).catch(console.error);
+    }
+  }, [theme, token]);
 
   // Fetch preferences on mount or token change
   useEffect(() => {
@@ -26,8 +36,11 @@ function App() {
       })
       .then(res => res.json())
       .then(data => {
+        if (data.theme) {
+          setTheme(data.theme);
+        }
         setPreferences(data);
-        applyCustomStyles(data, theme);
+        applyCustomStyles(data, data.theme || theme);
       })
       .catch(console.error);
     }

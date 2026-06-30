@@ -76,7 +76,12 @@ router.post('/preferences', (req, res) => {
     if (!fs.existsSync(PREFS_DIR)) {
       fs.mkdirSync(PREFS_DIR, { recursive: true });
     }
-    fs.writeFileSync(PREFS_FILE, JSON.stringify(req.body, null, 2));
+    let existingPrefs = {};
+    if (fs.existsSync(PREFS_FILE)) {
+      try { existingPrefs = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8')); } catch (e) {}
+    }
+    const newPrefs = { ...existingPrefs, ...req.body };
+    fs.writeFileSync(PREFS_FILE, JSON.stringify(newPrefs, null, 2));
     res.json({ success: true });
   } catch (error) {
     console.error('Error saving preferences:', error);
