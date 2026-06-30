@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, GripVertical, Check, FileText } from 'lucide-react';
+import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
 import { io } from 'socket.io-client';
@@ -229,6 +229,14 @@ export default function Dashboard() {
     return null;
   };
 
+  const formatSpeed = (bytesPerSec) => {
+    if (!bytesPerSec || bytesPerSec === 0) return '0 B/s';
+    const k = 1024;
+    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+    const i = Math.floor(Math.log(bytesPerSec) / Math.log(k));
+    return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   const getContainerIcon = (container) => {
     const labels = container.Labels || {};
     const iconUrl = labels['casaos.reborn.icon'];
@@ -416,6 +424,22 @@ export default function Dashboard() {
             </div>
             <div className="value">{runningContainers} <span style={{fontSize: '1rem', color: 'var(--text-color)', fontWeight: 'normal'}}>out of {containers.length}</span></div>
             <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>OS: {stats.os.distro} {stats.os.release}</div>
+          </div>
+
+          <div className="glass widget" style={{ minWidth: '250px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
+              <Globe /> <span>Network</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowDown size={14} color="#10b981" /> Download</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{stats.network ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUp size={14} color="#3b82f6" /> Upload</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{stats.network ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
