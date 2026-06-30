@@ -391,9 +391,13 @@ router.post('/images/prune', async (req, res) => {
 router.get('/containers/:id/logs', async (req, res) => {
   try {
     const container = docker.getContainer(req.params.id);
+    const inspectData = await container.inspect();
+    const startedAt = Math.floor(new Date(inspectData.State.StartedAt).getTime() / 1000);
+
     const logs = await container.logs({
       stdout: true,
-      stderr: true
+      stderr: true,
+      since: startedAt
     });
     // The logs stream returned by dockerode for non-TTY containers has a header for each line (8 bytes)
     // We can just strip non-printable characters for a quick and dirty plain text response,
