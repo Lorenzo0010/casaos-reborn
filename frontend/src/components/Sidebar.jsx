@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Monitor, Server, Box, Terminal as TermIcon, Moon, Sun, LogOut, PlusSquare, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function Sidebar({ theme, toggleTheme, logout }) {
+export default function Sidebar({ theme, toggleTheme, logout, openSettings }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -80,6 +80,10 @@ export default function Sidebar({ theme, toggleTheme, logout }) {
         
         {/* Footer actions */}
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button onClick={openSettings} className="btn sidebar-link" style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--text-color)', padding: isCollapsed ? '8px' : '8px 15px' }}>
+            <Monitor size={18} /> 
+            <span className="sidebar-link-text">UI Settings</span>
+          </button>
           <button onClick={toggleTheme} className="btn sidebar-link" style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--text-color)', padding: isCollapsed ? '8px' : '8px 15px' }}>
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />} 
             <span className="sidebar-link-text">Toggle Theme</span>
