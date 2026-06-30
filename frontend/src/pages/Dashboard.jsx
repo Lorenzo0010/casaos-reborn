@@ -612,7 +612,7 @@ export default function Dashboard() {
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, c.Id)}
               style={{ 
-                padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', position: 'relative', overflow: 'hidden',
+                padding: '20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px', position: 'relative', overflow: 'hidden',
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedItem === c.Id ? 0.5 : 1,
                 border: editMode ? '2px dashed var(--primary)' : '1px solid var(--card-border)'
@@ -653,73 +653,73 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              {/* LOGO BLOCK (Left) */}
+              <div style={{ flexShrink: 0 }}>
                 {isClickable ? (
                   <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'flex' }} title="Apri Web UI">
-                    <img src={getContainerIcon(c)} alt="" style={{ width: 64, height: 64, borderRadius: '14px', objectFit: 'cover', cursor: 'pointer' }} onError={e => { e.target.style.display = 'none'; }} />
+                    <img src={getContainerIcon(c)} alt="" style={{ width: 80, height: 80, borderRadius: '16px', objectFit: 'cover', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
                   </a>
                 ) : (
-                  <img src={getContainerIcon(c)} alt="" style={{ width: 64, height: 64, borderRadius: '14px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+                  <img src={getContainerIcon(c)} alt="" style={{ width: 80, height: 80, borderRadius: '16px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
                 )}
-                
-                <div style={{ flex: 1 }}>
+              </div>
+              
+              {/* CONTENT BLOCK (Right) */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
                   {isClickable ? (
-                    <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }} title="Apri Web UI">
-                      <h3 style={{ margin: '0 0 4px 0', cursor: 'pointer', transition: 'color 0.2s', paddingRight: '24px' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                    <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title="Apri Web UI">
+                      <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', paddingRight: '24px', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
                         {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                       </h3>
                     </a>
                   ) : (
-                    <h3 style={{ margin: '0 0 4px 0', paddingRight: '24px' }}>
+                    <h3 style={{ margin: 0, paddingRight: '24px', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                     </h3>
                   )}
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{
-                      padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem',
-                      backgroundColor: c.State === 'running' ? 'var(--success)' : 'var(--danger)',
-                      color: 'white'
-                    }}>
-                      {c.State}
-                    </span>
-                    <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>{c.Status}</span>
-                  </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', justifyContent: 'flex-end', alignItems: 'center' }}>
-                {editMode ? (
-                  <div style={{ display: 'flex', width: '100%', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                    {!isMobile && (
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">
-                        <GripHorizontal size={24} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                  <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`}></span>
+                  <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
+                    {c.State === 'running' ? c.Status.replace(/^Up\s/, 'Avviato da ') : c.Status.replace(/^Exited\s\(\d+\)\s/, 'Interrotto da ')}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {editMode ? (
+                    <div style={{ display: 'flex', width: '100%', flexDirection: 'column', gap: '10px' }}>
+                      {!isMobile && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">
+                          <GripHorizontal size={24} />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', width: '100%', gap: '10px' }}>
+                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su" style={{ flex: 1, padding: '10px', display: 'flex', justifyContent: 'center' }}><ChevronUp size={20} /></button>
+                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù" style={{ flex: 1, padding: '10px', display: 'flex', justifyContent: 'center' }}><ChevronDown size={20} /></button>
                       </div>
-                    )}
-                    <div style={{ display: 'flex', width: '100%', gap: '10px' }}>
-                      <button onClick={() => moveCustom(c.Id, -1)} className="btn" title="Move Up" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronUp size={30} /></button>
-                      <button onClick={() => moveCustom(c.Id, 1)} className="btn" title="Move Down" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronDown size={30} /></button>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    {c.State !== 'running' ? (
-                      <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-success" title="Start">
-                        <Play size={16} />
+                  ) : (
+                    <>
+                      {c.State !== 'running' ? (
+                        <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
+                          <Play size={16} />
+                        </button>
+                      ) : (
+                        <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
+                          <Square size={16} />
+                        </button>
+                      )}
+                      <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
+                        <FileText size={16} />
                       </button>
-                    ) : (
-                      <button onClick={() => handleAction(c.Id, 'stop')} className="btn" style={{ background: '#f59e0b', color: 'white' }} title="Stop">
-                        <Square size={16} />
+                      <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
+                        <Settings size={16} />
                       </button>
-                    )}
-                    <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)' }} title="Logs">
-                      <FileText size={16} />
-                    </button>
-                    <button onClick={() => setEditingContainerId(c.Id)} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)' }} title="Settings">
-                      <Settings size={16} />
-                    </button>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )})}
@@ -732,7 +732,7 @@ export default function Dashboard() {
                 progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
               }
               return (
-                <div key={recreId} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', position: 'relative', overflow: 'hidden' }}>
+                <div key={recreId} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px', position: 'relative', overflow: 'hidden' }}>
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -748,15 +748,23 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: 'var(--card-border)' }} />
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: '0 0 4px 0' }}>{progressData.name || 'Recreating...'}</h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem', backgroundColor: '#f59e0b', color: 'white' }}>
-                          recreating
-                        </span>
-                      </div>
+                  
+                  <div style={{ flexShrink: 0 }}>
+                    <div style={{ width: 80, height: 80, borderRadius: '16px', backgroundColor: 'var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  </div>
+                  
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {progressData.name || 'Recreating...'}
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                      <span className="status-dot recreating"></span>
+                      <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
+                        Aggiornamento in corso...
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                       <button className="btn btn-action neutral" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled><Loader size={16} className="spin" /></button>
                     </div>
                   </div>
                 </div>

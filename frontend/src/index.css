@@ -219,6 +219,28 @@ h1, h2, h3 {
 .btn-danger { background-color: var(--danger); color: white; }
 .btn-success { background-color: var(--success); color: white; }
 
+/* Action Buttons (Semi-transparent) */
+.btn-action {
+  background-color: var(--card-border);
+  color: var(--text-color);
+  transition: all 0.2s;
+}
+.btn-action.success:hover { background-color: var(--success); color: white; border-color: var(--success); }
+.btn-action.danger:hover { background-color: var(--danger); color: white; border-color: var(--danger); }
+.btn-action.neutral:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
+
+/* Status Dot */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.status-dot.running { background-color: var(--success); box-shadow: 0 0 6px var(--success); }
+.status-dot.exited { background-color: var(--danger); opacity: 0.8; }
+.status-dot.recreating { background-color: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+
 /* Login */
 .login-container {
   display: flex;
