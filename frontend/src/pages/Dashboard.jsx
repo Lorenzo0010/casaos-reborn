@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp } from 'lucide-react';
+import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
 import { io } from 'socket.io-client';
@@ -465,8 +465,8 @@ export default function Dashboard() {
               if (isMobile) {
                 return (
                   <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '5px' }}>
-                    <button onClick={() => moveWidget(widgetId, -1)} className="btn btn-icon" style={{ padding: '4px' }}><ChevronUp size={16} /></button>
-                    <button onClick={() => moveWidget(widgetId, 1)} className="btn btn-icon" style={{ padding: '4px' }}><ChevronDown size={16} /></button>
+                    <button onClick={() => moveWidget(widgetId, -1)} className="btn btn-icon" style={{ padding: '4px' }}><ChevronLeft size={16} /></button>
+                    <button onClick={() => moveWidget(widgetId, 1)} className="btn btn-icon" style={{ padding: '4px' }}><ChevronRight size={16} /></button>
                   </div>
                 );
               }
