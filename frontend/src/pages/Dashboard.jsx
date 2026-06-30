@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [editingContainerId, setEditingContainerId] = useState(null);
   const [selfUpdating, setSelfUpdating] = useState(false);
+  const selfUpdatingRef = React.useRef(false);
   const [recreating, setRecreating] = useState({});
 
   const fetchStats = async () => {
@@ -53,6 +54,7 @@ export default function Dashboard() {
     socket.on('container.recreate.progress', (data) => {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
       if (data.status === 'Rebooting system...') {
+        selfUpdatingRef.current = true;
         setSelfUpdating(true);
       }
     });
@@ -83,7 +85,7 @@ export default function Dashboard() {
     });
 
     socket.on('disconnect', () => {
-      if (selfUpdating) {
+      if (selfUpdatingRef.current) {
         startHealthPolling();
       }
     });
@@ -93,7 +95,7 @@ export default function Dashboard() {
     });
 
     return () => socket.disconnect();
-  }, [selfUpdating]);
+  }, []);
 
   const startHealthPolling = () => {
     const pollInterval = setInterval(async () => {
@@ -150,6 +152,24 @@ export default function Dashboard() {
       return `http://${window.location.hostname}:${publicPortInfo.PublicPort}/`;
     }
     return null;
+  };
+
+  const getContainerIcon = (container) => {
+    const labels = container.Labels || {};
+    const iconUrl = labels['casaos.reborn.icon'];
+    if (iconUrl) return iconUrl;
+    
+    const name = (container.Names?.[0] || container.name || 'Unknown').replace('/', '');
+    const initial = name.charAt(0).toUpperCase();
+    
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = `hsl(${Math.abs(hash) % 360}, 60%, 50%)`;
+    
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${color}"/><text x="50%" y="50%" font-family="sans-serif" font-size="40" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">${initial}</text></svg>`;
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
   };
 
   const runningContainers = containers.filter(c => c.State === 'running').length;
@@ -266,33 +286,33 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {isClickable ? (
-                  <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }} title="Apri Web UI">
-                    <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <img src={getContainerIcon(c)} alt="" style={{ width: 48, height: 48, borderRadius: '12px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+                
+                <div style={{ flex: 1 }}>
+                  {isClickable ? (
+                    <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }} title="Apri Web UI">
+                      <h3 style={{ margin: '0 0 4px 0', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                        {c.Names[0].replace('/', '')}
+                      </h3>
+                    </a>
+                  ) : (
+                    <h3 style={{ margin: '0 0 4px 0' }}>
                       {c.Names[0].replace('/', '')}
                     </h3>
-                  </a>
-                ) : (
-                  <h3 style={{ margin: 0 }}>
-                    {c.Names[0].replace('/', '')}
-                  </h3>
-                )}
+                  )}
 
-                <span style={{
-                  padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem',
-                  backgroundColor: c.State === 'running' ? 'var(--success)' : 'var(--danger)',
-                  color: 'white'
-                }}>
-                  {c.State}
-                </span>
-              </div>
-              
-              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                <strong>Image:</strong> {c.Image}
-              </div>
-              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                <strong>Status:</strong> {c.Status}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{
+                      padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem',
+                      backgroundColor: c.State === 'running' ? 'var(--success)' : 'var(--danger)',
+                      color: 'white'
+                    }}>
+                      {c.State}
+                    </span>
+                    <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>{c.Status}</span>
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
@@ -346,17 +366,16 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0 }}>{progressData.name || 'Recreating...'}</h3>
-                    <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', backgroundColor: '#f59e0b', color: 'white' }}>
-                      recreating
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                    <strong>Image:</strong> {progressData.image || '...'}
-                  </div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                    <strong>Status:</strong> Recreating...
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: 'var(--card-border)' }} />
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ margin: '0 0 4px 0' }}>{progressData.name || 'Recreating...'}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem', backgroundColor: '#f59e0b', color: 'white' }}>
+                          recreating
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );

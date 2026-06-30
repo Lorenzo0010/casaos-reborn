@@ -16,6 +16,8 @@ export default function NewContainer() {
   const [formData, setFormData] = useState({
     name: '',
     image: '',
+    tag: 'latest',
+    icon: '',
     restartPolicy: 'unless-stopped',
     privileged: false,
     memory: '',
@@ -36,7 +38,7 @@ export default function NewContainer() {
     socket.on('container.create.success', (data) => {
       setLoading(false);
       setProgress(null);
-      navigate('/containers');
+      navigate('/');
     });
 
     socket.on('container.create.error', (data) => {
@@ -64,8 +66,17 @@ export default function NewContainer() {
 
       if (!service.image) throw new Error('No image specified in YAML');
 
+      let imageName = service.image;
+      let imageTag = 'latest';
+      const colonIdx = service.image.lastIndexOf(':');
+      if (colonIdx > 0 && !service.image.substring(colonIdx).includes('/')) {
+        imageName = service.image.substring(0, colonIdx);
+        imageTag = service.image.substring(colonIdx + 1);
+      }
+
       const newData = { ...formData };
-      newData.image = service.image;
+      newData.image = imageName;
+      newData.tag = imageTag;
       newData.name = service.container_name || '';
       newData.restartPolicy = service.restart || 'unless-stopped';
       newData.privileged = !!service.privileged;
@@ -128,7 +139,9 @@ export default function NewContainer() {
 
     const payload = {
       image: formData.image,
+      tag: formData.tag || 'latest',
       name: formData.name,
+      icon: formData.icon,
       restartPolicy: formData.restartPolicy,
       privileged: formData.privileged,
       memory: formData.memory ? parseInt(formData.memory) * 1024 * 1024 : 0,
@@ -232,9 +245,20 @@ export default function NewContainer() {
                 <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="my-app" />
               </div>
               
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '10px' }}>
+                <div>
+                  <label>Docker Image *</label>
+                  <input type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} placeholder="nginx" />
+                </div>
+                <div>
+                  <label>Tag</label>
+                  <input type="text" value={formData.tag} onChange={e => setFormData({...formData, tag: e.target.value})} placeholder="latest" />
+                </div>
+              </div>
+
               <div>
-                <label>Docker Image *</label>
-                <input type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} placeholder="nginx:latest" />
+                <label>Icon URL</label>
+                <input type="text" value={formData.icon} onChange={e => setFormData({...formData, icon: e.target.value})} placeholder="https://example.com/icon.png" />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

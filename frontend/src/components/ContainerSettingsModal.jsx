@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, Plus, Check } from 'lucide-react';
+import { X, Plus, Check, Image as ImageIcon } from 'lucide-react';
 
 export default function ContainerSettingsModal({ containerId, onClose, onSaved }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState({
     image: '',
+    tag: 'latest',
     name: '',
+    icon: '',
     env: [],
     ports: [],
     volumes: [],
@@ -57,10 +59,23 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           });
         }
 
+        // Parse image:tag
+        const fullImage = info?.Config?.Image || '';
+        let imageName = fullImage;
+        let imageTag = 'latest';
+        const colonIdx = fullImage.lastIndexOf(':');
+        // Handle cases like registry.io/image:tag vs image:tag, avoid splitting on registry port
+        if (colonIdx > 0 && !fullImage.substring(colonIdx).includes('/')) {
+          imageName = fullImage.substring(0, colonIdx);
+          imageTag = fullImage.substring(colonIdx + 1);
+        }
+
         const labels = info?.Config?.Labels || {};
         setData({
-          image: info?.Config?.Image || '',
+          image: imageName,
+          tag: imageTag,
           name: (info?.Name || '').replace('/', ''),
+          icon: labels['casaos.reborn.icon'] || '',
           env: parsedEnv,
           ports: parsedPorts,
           volumes: parsedVolumes,
@@ -91,7 +106,9 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
       
       const payload = {
         image: data.image,
+        tag: data.tag || 'latest',
         name: data.name,
+        icon: data.icon,
         restartPolicy: data.restartPolicy,
         privileged: data.privileged,
         memory: data.memory ? parseInt(data.memory) * 1024 * 1024 : 0,
@@ -156,15 +173,25 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     <div className="modal-overlay">
       <div className="modal-content glass casaos-form">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0 }}>{data.name}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {data.icon ? (
+              <img src={data.icon} alt="" style={{ width: 36, height: 36, borderRadius: '8px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+            ) : null}
+            <h2 style={{ margin: 0 }}>{data.name}</h2>
+          </div>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
         </div>
 
         <div className="form-body">
-            <div className="form-group row">
-              <div style={{ flex: 1 }}>
+            {/* Image + Tag */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '10px' }}>
+              <div>
                 <label>Immagine Docker *</label>
-                <input type="text" className="valid" value={data.image} onChange={e => updateField('image', e.target.value)} />
+                <input type="text" className="valid" value={data.image} onChange={e => updateField('image', e.target.value)} placeholder="nginx" />
+              </div>
+              <div>
+                <label>Tag</label>
+                <input type="text" className="valid" value={data.tag} onChange={e => updateField('tag', e.target.value)} placeholder="latest" />
               </div>
             </div>
 
@@ -173,6 +200,17 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
               <div className="input-with-icon">
                 <input type="text" className="valid" value={data.name} onChange={e => updateField('name', e.target.value)} />
                 <Check className="valid-icon" size={16} />
+              </div>
+            </div>
+
+            {/* Icon URL */}
+            <div className="form-group">
+              <label>Icona (URL immagine)</label>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <input type="text" value={data.icon} onChange={e => updateField('icon', e.target.value)} placeholder="https://example.com/icon.png" style={{ flex: 1 }} />
+                {data.icon && (
+                  <img src={data.icon} alt="" style={{ width: 32, height: 32, borderRadius: '6px', objectFit: 'cover', border: '1px solid var(--card-border)' }} onError={e => { e.target.style.display = 'none'; }} />
+                )}
               </div>
             </div>
 

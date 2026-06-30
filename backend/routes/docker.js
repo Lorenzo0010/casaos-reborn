@@ -38,7 +38,8 @@ function getOwnContainerId() {
 // Recreate container with new settings
 router.post('/containers/:id/recreate', async (req, res) => {
   const { id } = req.params;
-  const { image, name, ports, env, volumes, restartPolicy, privileged, memory, webUI } = req.body;
+  const { image, tag, name, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
+  const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
   // Return early, continue processing in background
@@ -49,7 +50,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const oldInspect = await oldContainer.inspect().catch(() => ({}));
     const containerName = (oldInspect.Name || name || '').replace('/', '');
     const oldImage = oldInspect.Config?.Image || '';
-    const imageChanged = image !== oldImage;
+    const imageChanged = fullImage !== oldImage;
     
     // Check if we can do an in-place update (fast path)
     const oldPortBindings = oldInspect.HostConfig?.PortBindings || {};
@@ -101,7 +102,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
 
     const createOptions = {
       name: containerName,
-      Image: image,
+      Image: fullImage,
       Env: env || [],
       Labels: oldInspect.Config?.Labels || {},
       ExposedPorts: exposedPorts,
@@ -123,37 +124,38 @@ router.post('/containers/:id/recreate', async (req, res) => {
       };
     }
 
+    // Icon label
+    if (icon != null) {
+      createOptions.Labels['casaos.reborn.icon'] = icon;
+    }
+
     if (memory) {
       createOptions.HostConfig.Memory = memory;
     }
 
-    // Determine if we really need to pull the image
-    const imageExistsLocally = await docker.getImage(image).inspect().then(() => true).catch(() => false);
-    const needPull = imageChanged || !imageExistsLocally;
-    if (needPull) {
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling image...' });
-      await new Promise((resolve, reject) => {
-        docker.pull(image, (err, stream) => {
+    // Always pull the image to ensure we get the latest version.
+    // Docker compares digests: if the remote image hasn't changed,
+    // this is a fast no-op (manifest check only, no re-download).
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Pulling image...' });
+    await new Promise((resolve, reject) => {
+      docker.pull(fullImage, (err, stream) => {
+        if (err) return reject(err);
+        docker.modem.followProgress(stream, (err, output) => {
           if (err) return reject(err);
-          docker.modem.followProgress(stream, (err, output) => {
-            if (err) return reject(err);
-            resolve(output);
-          }, (event) => {
-            if (io) {
-              io.emit('container.recreate.progress', {
-                id,
-                name: containerName,
-                image: image,
-                status: event.status,
-                progressDetail: event.progressDetail
-              });
-            }
-          });
+          resolve(output);
+        }, (event) => {
+          if (io) {
+            io.emit('container.recreate.progress', {
+              id,
+              name: containerName,
+              image: fullImage,
+              status: event.status,
+              progressDetail: event.progressDetail
+            });
+          }
         });
       });
-    } else {
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Applying settings...' });
-    }
+    });
 
     // --- DETACHED UPDATER FOR SELF-UPDATE ---
     const ownId = getOwnContainerId();
@@ -162,7 +164,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
 
     if (isSelfUpdate) {
       console.log('Initiating detached self-update for container', id);
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Rebooting system...' });
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Rebooting system...' });
       
       const updaterScript = `
         const http = require('http');
@@ -308,38 +310,37 @@ router.post('/containers/:id/:action', async (req, res) => {
 
 // Create a new container
 router.post('/containers/create', async (req, res) => {
-  const { image, name, ports, env, volumes, restartPolicy, privileged, memory, webUI } = req.body;
+  const { image, tag, name, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
+  const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
   res.status(202).json({ success: true, message: 'Creation started' });
 
   try {
     const containerName = (name || '').replace('/', '');
-    // 1. Pull the requested image
-    const imageExistsLocally = await docker.getImage(image).inspect().then(() => true).catch(() => false);
-    if (!imageExistsLocally) {
-      if (io) io.emit('container.create.progress', { name: containerName, image, status: 'Pulling image...' });
-      await new Promise((resolve, reject) => {
-        docker.pull(image, (err, stream) => {
+    
+    // Always pull the image
+    if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Pulling image...' });
+    await new Promise((resolve, reject) => {
+      docker.pull(fullImage, (err, stream) => {
+        if (err) return reject(err);
+        docker.modem.followProgress(stream, (err, output) => {
           if (err) return reject(err);
-          docker.modem.followProgress(stream, (err, output) => {
-            if (err) return reject(err);
-            resolve(output);
-          }, (event) => {
-            if (io) {
-              io.emit('container.create.progress', {
-                name: containerName,
-                image: image,
-                status: event.status,
-                progressDetail: event.progressDetail
-              });
-            }
-          });
+          resolve(output);
+        }, (event) => {
+          if (io) {
+            io.emit('container.create.progress', {
+              name: containerName,
+              image: fullImage,
+              status: event.status,
+              progressDetail: event.progressDetail
+            });
+          }
         });
       });
-    }
+    });
 
-    if (io) io.emit('container.create.progress', { name: containerName, image, status: 'Applying settings...' });
+    if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Applying settings...' });
 
     // 2. Create the new container
     const portBindings = ports || {};
@@ -349,7 +350,7 @@ router.post('/containers/create', async (req, res) => {
     }
 
     const createOptions = {
-      Image: image,
+      Image: fullImage,
       Env: env || [],
       Labels: {},
       ExposedPorts: exposedPorts,
@@ -367,10 +368,15 @@ router.post('/containers/create', async (req, res) => {
 
     if (webUI) {
       createOptions.Labels = {
+        ...createOptions.Labels,
         'casaos.reborn.web.scheme': webUI.scheme || 'http://',
         'casaos.reborn.web.port': webUI.port || '',
         'casaos.reborn.web.path': webUI.path || '/'
       };
+    }
+
+    if (icon != null) {
+      createOptions.Labels['casaos.reborn.icon'] = icon;
     }
 
     if (memory) {
