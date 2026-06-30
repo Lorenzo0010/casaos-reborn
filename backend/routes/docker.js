@@ -100,6 +100,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
     }
 
     const createOptions = {
+      name: containerName,
       Image: image,
       Env: env || [],
       Labels: oldInspect.Config?.Labels || {},
@@ -163,9 +164,14 @@ router.post('/containers/:id/recreate', async (req, res) => {
       console.log('Initiating detached self-update for container', id);
       if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Rebooting system...' });
       
-      // Inject a node script into an ephemeral container running the SAME image
+      // The updater script reads createOptions from an env var to avoid
+      // shell escaping issues with inline JSON interpolation.
       const updaterScript = `
         const http = require('http');
+        const createOptions = JSON.parse(process.env.CREATE_OPTIONS);
+        const containerId = process.env.OLD_CONTAINER_ID;
+        const containerName = process.env.CONTAINER_NAME;
+
         function request(method, path, body) {
           return new Promise((resolve, reject) => {
             const bodyStr = body ? JSON.stringify(body) : '';
@@ -180,43 +186,57 @@ router.post('/containers/:id/recreate', async (req, res) => {
             }, res => {
               let data = '';
               res.on('data', chunk => data += chunk);
-              res.on('end', () => resolve(data));
+              res.on('end', () => resolve({ status: res.statusCode, body: data }));
             });
             req.on('error', reject);
             if (bodyStr) req.write(bodyStr);
             req.end();
           });
         }
+
         (async () => {
           try {
-            console.log("Waiting for main process to close connections...");
+            console.log('Waiting for main process to close connections...');
             await new Promise(r => setTimeout(r, 2000));
-            console.log("Removing old container...");
-            await request('DELETE', '/containers/${id}?force=true');
+
+            console.log('Stopping old container...');
+            await request('POST', '/containers/' + containerId + '/stop?t=5').catch(() => {});
+
+            console.log('Removing old container...');
+            await request('DELETE', '/containers/' + containerId + '?force=true');
             
-            let createRes;
             let newId;
             for (let i = 0; i < 5; i++) {
-              console.log("Waiting for Docker to release the container name (attempt " + (i+1) + ")...");
+              console.log('Waiting for Docker to release the container name (attempt ' + (i+1) + ')...');
               await new Promise(r => setTimeout(r, 1500));
-              console.log("Creating new container...");
-              createRes = await request('POST', '/containers/create?name=${containerName}', ${JSON.stringify(createOptions)});
-              newId = JSON.parse(createRes).Id;
-              if (newId) break;
-              console.log("Create failed (might be 409 Conflict), retrying...");
+              console.log('Creating new container...');
+              const createRes = await request('POST', '/containers/create?name=' + encodeURIComponent(containerName), createOptions);
+              try {
+                const parsed = JSON.parse(createRes.body);
+                newId = parsed.Id;
+                if (newId) break;
+                console.log('Create returned:', createRes.status, createRes.body);
+              } catch (parseErr) {
+                console.log('Failed to parse create response:', createRes.body);
+              }
             }
             
             if (newId) {
-              console.log("Starting new container...");
-              await request('POST', '/containers/' + newId + '/start');
+              console.log('Starting new container:', newId);
+              const startRes = await request('POST', '/containers/' + newId + '/start');
+              console.log('Start result:', startRes.status);
             } else {
-              console.error("Failed to create container after 5 retries:", createRes);
+              console.error('Failed to create container after 5 retries');
             }
           } catch(e) {
-            console.error("Exception in updater script:", e);
+            console.error('Exception in updater script:', e);
           }
         })();
       `;
+
+      // Prepare createOptions without the name field (it goes in the query string)
+      const updaterCreateOptions = { ...createOptions };
+      delete updaterCreateOptions.name;
 
       // Try to remove old updater if it exists
       try {
@@ -228,8 +248,14 @@ router.post('/containers/:id/recreate', async (req, res) => {
         Image: image, 
         name: 'casaos-reborn-updater',
         Cmd: ['node', '-e', updaterScript],
+        Env: [
+          'CREATE_OPTIONS=' + JSON.stringify(updaterCreateOptions),
+          'OLD_CONTAINER_ID=' + id,
+          'CONTAINER_NAME=' + containerName
+        ],
         HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock']
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
+          AutoRemove: true
         }
       });
 

@@ -8,6 +8,7 @@ export default function Containers() {
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingContainerId, setEditingContainerId] = useState(null);
+  const [selfUpdating, setSelfUpdating] = useState(false);
   const [recreating, setRecreating] = useState({});
 
   const fetchContainers = async () => {
@@ -32,6 +33,9 @@ export default function Containers() {
     
     socket.on('container.recreate.progress', (data) => {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
+      if (data.status === 'Rebooting system...') {
+        setSelfUpdating(true);
+      }
     });
 
     socket.on('container.update.progress', (data) => {
@@ -60,26 +64,33 @@ export default function Containers() {
     });
 
     socket.on('disconnect', () => {
-      // If we are currently rebooting the system, we know the backend went down on purpose.
-      // We will reload the page when it comes back.
+      // If we are in self-update mode, start polling for server recovery
+      if (selfUpdating) {
+        startHealthPolling();
+      }
     });
 
     socket.on('connect', () => {
-      // When we reconnect, fetch containers just in case.
       fetchContainers();
-      
-      // If any container was in 'Rebooting system...' state, it means the self-update finished!
-      setRecreating(prev => {
-        const isRebooting = Object.values(prev).some(p => p.status === 'Rebooting system...');
-        if (isRebooting) {
-          window.location.reload();
-        }
-        return prev;
-      });
     });
 
     return () => socket.disconnect();
-  }, []);
+  }, [selfUpdating]);
+
+  // HTTP polling to detect when the server comes back after a self-update
+  const startHealthPolling = () => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await axios.get('/api/health', { timeout: 3000 });
+        if (res.data?.status === 'ok') {
+          clearInterval(pollInterval);
+          window.location.reload();
+        }
+      } catch (e) {
+        // Server still down, keep polling
+      }
+    }, 2000);
+  };
 
   useEffect(() => {
     fetchContainers();
@@ -125,6 +136,21 @@ export default function Containers() {
   return (
     <div>
       <h1>Containers</h1>
+
+      {/* Full-screen overlay during self-update */}
+      {selfUpdating && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+          zIndex: 2000, color: 'white'
+        }}>
+          <Loader className="spin" size={48} style={{ marginBottom: '20px' }} />
+          <h2 style={{ margin: '0 0 8px 0' }}>Sistema in aggiornamento</h2>
+          <p style={{ opacity: 0.7 }}>Riconnessione in corso...</p>
+        </div>
+      )}
       
       {loading ? (
         <p>Loading containers...</p>

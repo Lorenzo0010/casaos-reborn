@@ -53,6 +53,11 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Health check endpoint (no auth required, used for reconnection polling after self-update)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // API Routes will be imported here
 const systemRoutes = require('./routes/system');
 const dockerRoutes = require('./routes/docker');
