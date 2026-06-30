@@ -11,6 +11,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /:/host-root:ro
+      - ./data:/app/backend/data
     environment:
       - PORT=3000
       - JWT_SECRET=supersecretcasaoskey

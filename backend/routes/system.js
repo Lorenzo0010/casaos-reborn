@@ -44,4 +44,36 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+const fs = require('fs');
+const path = require('path');
+const PREFS_DIR = path.join(__dirname, '..', 'data');
+const PREFS_FILE = path.join(PREFS_DIR, 'preferences.json');
+
+router.get('/preferences', (req, res) => {
+  try {
+    if (fs.existsSync(PREFS_FILE)) {
+      const data = fs.readFileSync(PREFS_FILE, 'utf8');
+      res.json(JSON.parse(data));
+    } else {
+      res.json({});
+    }
+  } catch (error) {
+    console.error('Error reading preferences:', error);
+    res.status(500).json({ error: 'Failed to read preferences' });
+  }
+});
+
+router.post('/preferences', (req, res) => {
+  try {
+    if (!fs.existsSync(PREFS_DIR)) {
+      fs.mkdirSync(PREFS_DIR, { recursive: true });
+    }
+    fs.writeFileSync(PREFS_FILE, JSON.stringify(req.body, null, 2));
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving preferences:', error);
+    res.status(500).json({ error: 'Failed to save preferences' });
+  }
+});
+
 module.exports = router;

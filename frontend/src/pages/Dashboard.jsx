@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader } from 'lucide-react';
+import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, GripVertical, Check } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import { io } from 'socket.io-client';
 
@@ -12,6 +12,65 @@ export default function Dashboard() {
   const [selfUpdating, setSelfUpdating] = useState(false);
   const selfUpdatingRef = React.useRef(false);
   const [recreating, setRecreating] = useState({});
+
+  // Layout preferences state
+  const [sortMode, setSortMode] = useState('date');
+  const [pinnedContainers, setPinnedContainers] = useState([]);
+  const [customOrder, setCustomOrder] = useState([]);
+  const [editMode, setEditMode] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Load preferences from server on mount
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    
+    const loadPrefs = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/system/preferences', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (res.data.sortMode) setSortMode(res.data.sortMode);
+        if (Array.isArray(res.data.pinnedContainers)) setPinnedContainers(res.data.pinnedContainers);
+        if (Array.isArray(res.data.customOrder)) setCustomOrder(res.data.customOrder);
+      } catch (e) {
+        console.error('Error loading preferences from server', e);
+      } finally {
+        setPrefsLoaded(true);
+      }
+    };
+    loadPrefs();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Save preferences when they change
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    
+    const savePrefs = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post('/api/system/preferences', {
+          sortMode,
+          pinnedContainers,
+          customOrder
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) {
+        console.error('Error saving preferences to server', e);
+      }
+    };
+    
+    // Basic debounce to avoid too many requests while dragging
+    const timeout = setTimeout(savePrefs, 500);
+    return () => clearTimeout(timeout);
+  }, [sortMode, pinnedContainers, customOrder, prefsLoaded]);
 
   const fetchStats = async () => {
     try {
@@ -196,6 +255,103 @@ export default function Dashboard() {
     return 'Buonasera';
   };
 
+  const sortedContainers = React.useMemo(() => {
+    let sorted = [...containers];
+    
+    if (sortMode === 'alphabetical') {
+      sorted.sort((a, b) => {
+        const nameA = a.Labels?.['casaos.reborn.name'] || a.Names[0].replace('/', '');
+        const nameB = b.Labels?.['casaos.reborn.name'] || b.Names[0].replace('/', '');
+        return nameA.localeCompare(nameB);
+      });
+    } else if (sortMode === 'date') {
+      sorted.sort((a, b) => b.Created - a.Created);
+    } else if (sortMode === 'custom') {
+      sorted.sort((a, b) => {
+        let indexA = customOrder.indexOf(a.Id);
+        let indexB = customOrder.indexOf(b.Id);
+        if (indexA === -1) indexA = 99999;
+        if (indexB === -1) indexB = 99999;
+        return indexA - indexB;
+      });
+    }
+
+    const pinned = [];
+    const unpinned = [];
+    sorted.forEach(c => {
+      if (pinnedContainers.includes(c.Id)) {
+        pinned.push(c);
+      } else {
+        unpinned.push(c);
+      }
+    });
+
+    return [...pinned, ...unpinned];
+  }, [containers, sortMode, pinnedContainers, customOrder]);
+
+  const togglePin = (id) => {
+    if (pinnedContainers.includes(id)) {
+      setPinnedContainers(pinnedContainers.filter(p => p !== id));
+    } else {
+      setPinnedContainers([...pinnedContainers, id]);
+    }
+  };
+
+  const moveCustom = (id, direction) => {
+    const newOrder = [...customOrder];
+    
+    // Ensure all containers are in customOrder
+    containers.forEach(c => {
+      if (!newOrder.includes(c.Id)) newOrder.push(c.Id);
+    });
+
+    const index = newOrder.indexOf(id);
+    if (index === -1) return;
+
+    if (direction === -1 && index > 0) {
+      const temp = newOrder[index - 1];
+      newOrder[index - 1] = newOrder[index];
+      newOrder[index] = temp;
+    } else if (direction === 1 && index < newOrder.length - 1) {
+      const temp = newOrder[index + 1];
+      newOrder[index + 1] = newOrder[index];
+      newOrder[index] = temp;
+    }
+    setCustomOrder(newOrder);
+  };
+
+  const handleDragStart = (e, id) => {
+    if (!editMode) return;
+    setDraggedItem(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    if (!editMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    if (!editMode || !draggedItem || draggedItem === targetId) return;
+
+    let newOrder = [...customOrder];
+    containers.forEach(c => {
+      if (!newOrder.includes(c.Id)) newOrder.push(c.Id);
+    });
+
+    const draggedIndex = newOrder.indexOf(draggedItem);
+    const targetIndex = newOrder.indexOf(targetId);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      newOrder.splice(draggedIndex, 1);
+      newOrder.splice(targetIndex, 0, draggedItem);
+      setCustomOrder(newOrder);
+    }
+    setDraggedItem(null);
+  };
+
   return (
     <div>
       <h1 style={{ marginBottom: '20px' }}>{getGreeting()}!</h1>
@@ -262,14 +418,30 @@ export default function Dashboard() {
         </div>
       )}
 
-      <h2 style={{ marginTop: '30px', marginBottom: '20px' }}>I tuoi Container</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px', marginBottom: '20px' }}>
+        <h2 style={{ margin: 0 }}>I tuoi Container</h2>
+        
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <select value={sortMode} onChange={e => { setSortMode(e.target.value); if (e.target.value !== 'custom') setEditMode(false); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--card-bg)', color: 'var(--text-color)', outline: 'none' }}>
+            <option value="date">Data di Creazione</option>
+            <option value="alphabetical">Alfabetico</option>
+            <option value="custom">Personalizzato</option>
+          </select>
+
+          {sortMode === 'custom' && (
+            <button className={`btn ${editMode ? 'btn-primary' : ''}`} onClick={() => setEditMode(!editMode)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: editMode ? 'var(--primary)' : 'var(--card-bg)' }}>
+              <Edit size={16} /> {editMode ? 'Fatto' : 'Modifica Ordine'}
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Containers List */}
       {loading ? (
         <p>Loading containers...</p>
       ) : (
         <div className="grid grid-cols-2">
-          {containers.map(c => {
+          {sortedContainers.map((c, index) => {
             const webUrl = getWebUrl(c);
             const isClickable = webUrl && c.State === 'running';
             const progressData = recreating[c.Id];
@@ -279,9 +451,37 @@ export default function Dashboard() {
               progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
             }
 
+            const isPinned = pinnedContainers.includes(c.Id);
+
             return (
-            <div key={c.Id} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', position: 'relative', overflow: 'hidden' }}>
+            <div 
+              key={c.Id} 
+              className={`glass ${editMode ? 'edit-mode' : ''}`} 
+              draggable={editMode && !isMobile}
+              onDragStart={(e) => handleDragStart(e, c.Id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, c.Id)}
+              style={{ 
+                padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', position: 'relative', overflow: 'hidden',
+                cursor: editMode && !isMobile ? 'grab' : 'default',
+                opacity: draggedItem === c.Id ? 0.5 : 1,
+                border: editMode ? '2px dashed var(--primary)' : '1px solid var(--card-border)'
+              }}
+            >
               
+              {/* Pin Icon */}
+              <button 
+                onClick={(e) => { e.stopPropagation(); togglePin(c.Id); }}
+                style={{
+                  position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none',
+                  color: isPinned ? 'var(--primary)' : 'var(--text-color)', opacity: isPinned || editMode ? 1 : 0.2,
+                  cursor: 'pointer', zIndex: 5, padding: '4px'
+                }}
+                title={isPinned ? 'Unpin' : 'Pin to top'}
+              >
+                <Pin size={20} fill={isPinned ? 'currentColor' : 'none'} />
+              </button>
+
               {progressData && (
                 <div style={{
                   position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -312,12 +512,12 @@ export default function Dashboard() {
                 <div style={{ flex: 1 }}>
                   {isClickable ? (
                     <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }} title="Apri Web UI">
-                      <h3 style={{ margin: '0 0 4px 0', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                      <h3 style={{ margin: '0 0 4px 0', cursor: 'pointer', transition: 'color 0.2s', paddingRight: '24px' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
                         {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                       </h3>
                     </a>
                   ) : (
-                    <h3 style={{ margin: '0 0 4px 0' }}>
+                    <h3 style={{ margin: '0 0 4px 0', paddingRight: '24px' }}>
                       {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                     </h3>
                   )}
@@ -335,19 +535,36 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', justifyContent: 'flex-end' }}>
-                {c.State !== 'running' ? (
-                  <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-success" title="Start">
-                    <Play size={16} />
-                  </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', justifyContent: 'flex-end', alignItems: 'center' }}>
+                {editMode ? (
+                  <div style={{ display: 'flex', width: '100%', justifyContent: isMobile ? 'space-between' : 'flex-end', alignItems: 'center' }}>
+                    {isMobile ? (
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-icon" title="Move Up"><ChevronUp size={20} /></button>
+                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-icon" title="Move Down"><ChevronDown size={20} /></button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">
+                        <GripHorizontal size={24} />
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <button onClick={() => handleAction(c.Id, 'stop')} className="btn" style={{ background: '#f59e0b', color: 'white' }} title="Stop">
-                    <Square size={16} />
-                  </button>
+                  <>
+                    {c.State !== 'running' ? (
+                      <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-success" title="Start">
+                        <Play size={16} />
+                      </button>
+                    ) : (
+                      <button onClick={() => handleAction(c.Id, 'stop')} className="btn" style={{ background: '#f59e0b', color: 'white' }} title="Stop">
+                        <Square size={16} />
+                      </button>
+                    )}
+                    <button onClick={() => setEditingContainerId(c.Id)} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)' }} title="Settings">
+                      <Settings size={16} />
+                    </button>
+                  </>
                 )}
-                <button onClick={() => setEditingContainerId(c.Id)} className="btn" style={{ background: 'var(--bg-color)', color: 'var(--text-color)' }} title="Settings">
-                  <Settings size={16} />
-                </button>
               </div>
             </div>
           )})}
