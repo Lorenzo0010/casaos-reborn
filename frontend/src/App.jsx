@@ -21,7 +21,7 @@ function App() {
   // Fetch preferences on mount or token change
   useEffect(() => {
     if (token) {
-      fetch('http://localhost:3000/api/system/preferences', {
+      fetch('/api/system/preferences', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.json())
@@ -50,7 +50,7 @@ function App() {
 
   const savePreferences = async (newPrefs) => {
     try {
-      await fetch('http://localhost:3000/api/system/preferences', {
+      await fetch('/api/system/preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
