@@ -5,11 +5,12 @@ const si = require('systeminformation');
 // Get current system load/stats
 router.get('/stats', async (req, res) => {
   try {
-    const [cpuLoad, mem, fsSize, osInfo] = await Promise.all([
+    const [cpuLoad, mem, fsSize, osInfo, cpuTemp] = await Promise.all([
       si.currentLoad(),
       si.mem(),
       si.fsSize(),
-      si.osInfo()
+      si.osInfo(),
+      si.cpuTemperature()
     ]);
 
     const primaryDisk = fsSize.find(fs => fs.mount === '/') || fsSize[0];
@@ -17,7 +18,8 @@ router.get('/stats', async (req, res) => {
     res.json({
       cpu: {
         load: cpuLoad.currentLoad.toFixed(1),
-        cores: cpuLoad.cpus.length
+        cores: cpuLoad.cpus.length,
+        temperature: cpuTemp.main
       },
       memory: {
         total: mem.total,

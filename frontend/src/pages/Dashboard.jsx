@@ -185,6 +185,9 @@ export default function Dashboard() {
             </div>
             <div className="value">{stats.cpu.load}%</div>
             <progress value={stats.cpu.load} max="100" style={{ width: '100%' }}></progress>
+            <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+              {stats.cpu.temperature ? `${stats.cpu.temperature}°C` : 'Temperatura N/A'}
+            </div>
           </div>
 
           <div className="glass widget" style={{ minWidth: '250px' }}>
