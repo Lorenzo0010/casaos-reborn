@@ -172,39 +172,15 @@ router.post('/containers/:id/recreate', async (req, res) => {
       if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Rebooting system...' });
       
       const updaterScript = `
-        const http = require('http');
+        const Docker = require('dockerode');
         const fs = require('fs');
+        const docker = new Docker({ socketPath: '/var/run/docker.sock' });
         const createOptions = JSON.parse(process.env.CREATE_OPTIONS);
         const containerId = process.env.OLD_CONTAINER_ID;
         const containerName = process.env.CONTAINER_NAME;
 
-        let logOutput = '';
         function log(msg) {
-          console.log(msg);
-          logOutput += new Date().toISOString() + ' - ' + msg + '\\n';
-          try { fs.writeFileSync('/host-root/tmp/casaos-updater.log', logOutput); } catch(e) {}
-        }
-
-        function request(method, path, body) {
-          return new Promise((resolve, reject) => {
-            const bodyStr = body ? JSON.stringify(body) : '';
-            const headers = { 'Content-Type': 'application/json' };
-            if (bodyStr) headers['Content-Length'] = Buffer.byteLength(bodyStr);
-
-            const req = http.request({
-              socketPath: '/var/run/docker.sock',
-              method,
-              path,
-              headers
-            }, res => {
-              let data = '';
-              res.on('data', chunk => data += chunk);
-              res.on('end', () => resolve({ status: res.statusCode, body: data }));
-            });
-            req.on('error', reject);
-            if (bodyStr) req.write(bodyStr);
-            req.end();
-          });
+          console.log(new Date().toISOString() + ' - ' + msg);
         }
 
         (async () => {
@@ -213,38 +189,35 @@ router.post('/containers/:id/recreate', async (req, res) => {
             log('Waiting for main process to close connections...');
             await new Promise(r => setTimeout(r, 2000));
 
+            log('Getting old container...');
+            const oldContainer = docker.getContainer(containerId);
+            
             log('Stopping old container...');
-            await request('POST', '/containers/' + containerId + '/stop?t=5').catch(() => {});
+            await oldContainer.stop({ t: 5 }).catch(e => log('Stop error (ignored): ' + e.message));
 
             log('Removing old container...');
-            await request('DELETE', '/containers/' + containerId + '?force=true');
+            await oldContainer.remove({ force: true }).catch(e => log('Remove error (ignored): ' + e.message));
             
-            let newId;
+            let newContainer;
             for (let i = 0; i < 5; i++) {
               log('Waiting for Docker to release the container name (attempt ' + (i+1) + ')...');
               await new Promise(r => setTimeout(r, 1500));
               log('Creating new container with name ' + containerName + '...');
-              const createRes = await request('POST', '/containers/create?name=' + encodeURIComponent(containerName), createOptions);
-              log('Create response status: ' + createRes.status);
               try {
-                const parsed = JSON.parse(createRes.body);
-                newId = parsed.Id;
-                if (newId) {
-                  log('Successfully created container with ID: ' + newId);
-                  break;
-                }
-                log('Create returned body: ' + createRes.body);
-              } catch (parseErr) {
-                log('Failed to parse create response: ' + createRes.body);
+                newContainer = await docker.createContainer({ name: containerName, ...createOptions });
+                log('Successfully created container with ID: ' + newContainer.id);
+                break;
+              } catch (createErr) {
+                log('Create failed: ' + createErr.message);
               }
             }
             
-            if (newId) {
-              log('Starting new container: ' + newId);
-              const startRes = await request('POST', '/containers/' + newId + '/start');
-              log('Start result: ' + startRes.status);
+            if (newContainer) {
+              log('Starting new container: ' + newContainer.id);
+              await newContainer.start();
+              log('Start successful!');
             } else {
-              log('Failed to create container after 5 retries. CreateOptions was: ' + JSON.stringify(createOptions));
+              log('Failed to create container after 5 retries.');
             }
           } catch(e) {
             log('Exception in updater script: ' + e.message + '\\n' + e.stack);
@@ -270,7 +243,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
           'CONTAINER_NAME=' + containerName
         ],
         HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock', '/:/host-root'],
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
           AutoRemove: true
         }
       });

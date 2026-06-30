@@ -462,7 +462,7 @@ export default function Dashboard() {
 
             const renderEditControls = () => {
               if (!editMode) return null;
-              if (isMobile) return null; // Mobile controls are rendered at the bottom
+              if (isMobile) return null; // Only show drag handle on desktop
               return (
                 <div style={{ position: 'absolute', top: '10px', right: '10px', opacity: 0.5 }}>
                   <GripHorizontal size={20} />
@@ -471,7 +471,7 @@ export default function Dashboard() {
             };
 
             const renderMobileControls = () => {
-              if (!editMode || !isMobile) return null;
+              if (!editMode) return null; // Show on both mobile and desktop
               return (
                 <div style={{ display: 'flex', width: '100%', gap: '10px', marginTop: '15px' }}>
                   <button onClick={() => moveWidget(widgetId, -1)} className="btn" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronLeft size={30} /></button>
@@ -690,17 +690,16 @@ export default function Dashboard() {
 
               <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', justifyContent: 'flex-end', alignItems: 'center' }}>
                 {editMode ? (
-                  <div style={{ display: 'flex', width: '100%', justifyContent: isMobile ? 'center' : 'flex-end', alignItems: 'center' }}>
-                    {isMobile ? (
-                      <div style={{ display: 'flex', width: '100%', gap: '10px', marginTop: '10px' }}>
-                        <button onClick={() => moveCustom(c.Id, -1)} className="btn" title="Move Up" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronUp size={30} /></button>
-                        <button onClick={() => moveCustom(c.Id, 1)} className="btn" title="Move Down" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronDown size={30} /></button>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">
+                  <div style={{ display: 'flex', width: '100%', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                    {!isMobile && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">
                         <GripHorizontal size={24} />
                       </div>
                     )}
+                    <div style={{ display: 'flex', width: '100%', gap: '10px' }}>
+                      <button onClick={() => moveCustom(c.Id, -1)} className="btn" title="Move Up" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronUp size={30} /></button>
+                      <button onClick={() => moveCustom(c.Id, 1)} className="btn" title="Move Down" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronDown size={30} /></button>
+                    </div>
                   </div>
                 ) : (
                   <>
