@@ -464,9 +464,9 @@ export default function Dashboard() {
               if (!editMode) return null;
               if (isMobile) {
                 return (
-                  <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '5px' }}>
-                    <button onClick={() => moveWidget(widgetId, -1)} className="btn btn-icon" style={{ padding: '4px' }}><ChevronLeft size={16} /></button>
-                    <button onClick={() => moveWidget(widgetId, 1)} className="btn btn-icon" style={{ padding: '4px' }}><ChevronRight size={16} /></button>
+                  <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '10px' }}>
+                    <button onClick={() => moveWidget(widgetId, -1)} className="btn btn-icon" style={{ padding: '12px' }}><ChevronLeft size={24} /></button>
+                    <button onClick={() => moveWidget(widgetId, 1)} className="btn btn-icon" style={{ padding: '12px' }}><ChevronRight size={24} /></button>
                   </div>
                 );
               }
@@ -685,8 +685,8 @@ export default function Dashboard() {
                   <div style={{ display: 'flex', width: '100%', justifyContent: isMobile ? 'space-between' : 'flex-end', alignItems: 'center' }}>
                     {isMobile ? (
                       <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-icon" title="Move Up"><ChevronUp size={20} /></button>
-                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-icon" title="Move Down"><ChevronDown size={20} /></button>
+                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-icon" title="Move Up" style={{ padding: '12px' }}><ChevronUp size={24} /></button>
+                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-icon" title="Move Down" style={{ padding: '12px' }}><ChevronDown size={24} /></button>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab' }} title="Drag to reorder">

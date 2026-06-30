@@ -420,8 +420,7 @@ router.get('/containers/:id/logs', async (req, res) => {
     const container = docker.getContainer(req.params.id);
     const logs = await container.logs({
       stdout: true,
-      stderr: true,
-      tail: 100
+      stderr: true
     });
     // The logs stream returned by dockerode for non-TTY containers has a header for each line (8 bytes)
     // We can just strip non-printable characters for a quick and dirty plain text response,
