@@ -116,14 +116,16 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         privileged: data.privileged,
         memory: data.memory ? parseInt(data.memory) * 1024 * 1024 : 0,
         webUI: data.webUI,
-        env: data.env.map(e => `${e.key}=${e.value}`),
+        env: data.env.filter(e => e.key).map(e => `${e.key}=${e.value}`),
         ports: {},
-        volumes: data.volumes.map(v => `${v.hostPath}:${v.containerPath}`)
+        volumes: data.volumes.filter(v => v.hostPath && v.containerPath).map(v => `${v.hostPath}:${v.containerPath}`)
       };
 
       data.ports.forEach(p => {
-        const key = `${p.containerPort}/${p.protocol}`;
-        payload.ports[key] = [{ HostPort: p.hostPort }];
+        if (p.containerPort) {
+          const key = `${p.containerPort}/${p.protocol}`;
+          payload.ports[key] = [{ HostPort: p.hostPort }];
+        }
       });
 
       const res = await axios.post(`/api/docker/containers/${containerId}/recreate`, payload, {

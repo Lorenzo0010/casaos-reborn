@@ -32,6 +32,18 @@ function getOwnContainerId() {
     const match = data.match(/containers\/([a-f0-9]{64})/);
     if (match) return match[1];
   } catch (e) {}
+
+  try {
+    const data = fs.readFileSync('/proc/self/cgroup', 'utf8');
+    const match = data.match(/(?:docker|containers)\/([a-f0-9]{64})/);
+    if (match) return match[1];
+  } catch (e) {}
+
+  try {
+    const os = require('os');
+    return os.hostname();
+  } catch (e) {}
+
   return null;
 }
 
@@ -48,31 +60,38 @@ router.post('/containers/:id/recreate', async (req, res) => {
   try {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect().catch(() => ({}));
-    const containerName = (oldInspect.Name || name || '').replace('/', '');
+    const containerName = name ? name.replace('/', '') : (oldInspect.Name || '').replace('/', '');
+    const nameChanged = containerName !== (oldInspect.Name || '').replace('/', '');
     const oldImage = oldInspect.Config?.Image || '';
     const imageChanged = fullImage !== oldImage;
     
     // 1. Pull the image to check for updates
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Pulling image...' });
-    await new Promise((resolve, reject) => {
-      docker.pull(fullImage, (err, stream) => {
-        if (err) return reject(err);
-        docker.modem.followProgress(stream, (err, output) => {
+    let pullFailed = false;
+    try {
+      await new Promise((resolve, reject) => {
+        docker.pull(fullImage, (err, stream) => {
           if (err) return reject(err);
-          resolve(output);
-        }, (event) => {
-          if (io) {
-            io.emit('container.recreate.progress', {
-              id,
-              name: containerName,
-              image: fullImage,
-              status: event.status,
-              progressDetail: event.progressDetail
-            });
-          }
+          docker.modem.followProgress(stream, (err, output) => {
+            if (err) return reject(err);
+            resolve(output);
+          }, (event) => {
+            if (io) {
+              io.emit('container.recreate.progress', {
+                id,
+                name: containerName,
+                image: fullImage,
+                status: event.status,
+                progressDetail: event.progressDetail
+              });
+            }
+          });
         });
       });
-    });
+    } catch (pullError) {
+      console.warn('Failed to pull image, continuing with local image if available:', pullError.message);
+      pullFailed = true;
+    }
 
     // 2. Check if the pulled image has a different hash than the one currently used
     let newImageInspect;
@@ -80,6 +99,9 @@ router.post('/containers/:id/recreate', async (req, res) => {
       newImageInspect = await docker.getImage(fullImage).inspect();
     } catch (e) {
       console.error('Failed to inspect new image:', e);
+      if (pullFailed) {
+        throw new Error(`Failed to pull image and it is not available locally: ${fullImage}`);
+      }
     }
     const oldImageHash = oldInspect.Image; // The sha256 of the current container's image
     const newImageHash = newImageInspect ? newImageInspect.Id : null;
@@ -101,12 +123,17 @@ router.post('/containers/:id/recreate', async (req, res) => {
       path: oldInspect.Config?.Labels?.['casaos.reborn.web.path'] || '/'
     };
     const newWebUI = webUI || oldWebUI;
+    const oldDisplayName = oldInspect.Config?.Labels?.['casaos.reborn.name'] || '';
+    const oldIcon = oldInspect.Config?.Labels?.['casaos.reborn.icon'] || '';
 
     // A full recreate is required if image string changed, image digest changed, or config changed
     const needsFullRecreate = 
+      nameChanged ||
       imageStringChanged ||
       imageDigestChanged ||
       privileged !== !!oldInspect.HostConfig?.Privileged ||
+      (displayName != null && displayName !== oldDisplayName) ||
+      (icon != null && icon !== oldIcon) ||
       !isDeepStrictEqual(newPortBindings, oldPortBindings) ||
       !isDeepStrictEqual(newBinds.sort(), oldBinds.sort()) ||
       !isDeepStrictEqual(env?.sort(), oldEnv.sort()) ||
@@ -172,7 +199,12 @@ router.post('/containers/:id/recreate', async (req, res) => {
     // --- DETACHED UPDATER FOR SELF-UPDATE ---
     const ownId = getOwnContainerId();
     // Use startsWith just in case the ID in request is short or long
-    const isSelfUpdate = ownId && (id.startsWith(ownId) || ownId.startsWith(id));
+    let isSelfUpdate = false;
+    if (ownId && (id.startsWith(ownId) || ownId.startsWith(id))) {
+      isSelfUpdate = true;
+    } else if (containerName === 'casaos-reborn' || (oldInspect.Name && oldInspect.Name.replace('/', '') === 'casaos-reborn')) {
+      isSelfUpdate = true;
+    }
 
     if (isSelfUpdate) {
       console.log('Initiating detached self-update for container', id);
@@ -311,24 +343,39 @@ router.post('/containers/create', async (req, res) => {
     
     // Always pull the image
     if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Pulling image...' });
-    await new Promise((resolve, reject) => {
-      docker.pull(fullImage, (err, stream) => {
-        if (err) return reject(err);
-        docker.modem.followProgress(stream, (err, output) => {
+    let pullFailed = false;
+    try {
+      await new Promise((resolve, reject) => {
+        docker.pull(fullImage, (err, stream) => {
           if (err) return reject(err);
-          resolve(output);
-        }, (event) => {
-          if (io) {
-            io.emit('container.create.progress', {
-              name: containerName,
-              image: fullImage,
-              status: event.status,
-              progressDetail: event.progressDetail
-            });
-          }
+          docker.modem.followProgress(stream, (err, output) => {
+            if (err) return reject(err);
+            resolve(output);
+          }, (event) => {
+            if (io) {
+              io.emit('container.create.progress', {
+                name: containerName,
+                image: fullImage,
+                status: event.status,
+                progressDetail: event.progressDetail
+              });
+            }
+          });
         });
       });
-    });
+    } catch (pullError) {
+      console.warn('Failed to pull image during create:', pullError.message);
+      pullFailed = true;
+    }
+
+    // Check if image exists locally if pull failed
+    try {
+      await docker.getImage(fullImage).inspect();
+    } catch (e) {
+      if (pullFailed) {
+        throw new Error(`Failed to pull image and it is not available locally: ${fullImage}`);
+      }
+    }
 
     if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Applying settings...' });
 

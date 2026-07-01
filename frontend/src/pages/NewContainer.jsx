@@ -135,8 +135,8 @@ export default function NewContainer() {
       if (p.host && p.container) portsObj[`${p.container}/tcp`] = [{ HostPort: p.host }];
     });
 
-    const envArray = formData.env.map(e => `${e.key}=${e.value}`);
-    const volumesArray = formData.volumes.map(v => `${v.host}:${v.container}`);
+    const envArray = formData.env.filter(e => e.key).map(e => `${e.key}=${e.value}`);
+    const volumesArray = formData.volumes.filter(v => v.host && v.container).map(v => `${v.host}:${v.container}`);
 
     const payload = {
       image: formData.image,
