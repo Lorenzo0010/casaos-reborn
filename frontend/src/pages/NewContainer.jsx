@@ -75,10 +75,27 @@ export default function NewContainer() {
         imageTag = service.image.substring(colonIdx + 1);
       }
 
+      const getCasaOSData = (xCasaos) => {
+        if (!xCasaos) return {};
+        const res = {};
+        if (xCasaos.icon) res.icon = xCasaos.icon;
+        if (xCasaos.title) {
+          if (typeof xCasaos.title === 'string') res.title = xCasaos.title;
+          else if (xCasaos.title.custom) res.title = xCasaos.title.custom;
+          else if (xCasaos.title.en_us) res.title = xCasaos.title.en_us;
+        }
+        return res;
+      };
+
+      const rootCasaosData = getCasaOSData(parsed['x-casaos']);
+      const serviceCasaosData = getCasaOSData(service['x-casaos']);
+
       const newData = { ...formData };
       newData.image = imageName;
       newData.tag = imageTag;
       newData.name = service.container_name || '';
+      newData.displayName = serviceCasaosData.title || rootCasaosData.title || '';
+      newData.icon = serviceCasaosData.icon || rootCasaosData.icon || '';
       newData.restartPolicy = service.restart || 'unless-stopped';
       newData.privileged = !!service.privileged;
       
