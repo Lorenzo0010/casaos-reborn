@@ -252,6 +252,13 @@ router.post('/containers/:id/recreate', async (req, res) => {
             log('Removing old container...');
             await dockerRequest('DELETE', '/containers/' + oldId + '?force=true');
             
+            log('Waiting for old container to be fully removed...');
+            for (let i = 0; i < 20; i++) {
+               const checkRes = await dockerRequest('GET', '/containers/' + oldId + '/json');
+               if (checkRes.statusCode === 404) break;
+               await new Promise(r => setTimeout(r, 500));
+            }
+            
             let created = false;
             for (let i = 0; i < 5; i++) {
               log('Creating new container... (attempt ' + (i+1) + ')');
@@ -304,11 +311,54 @@ router.post('/containers/:id/recreate', async (req, res) => {
     }
 
     // 2. Force-remove the old container (sends SIGKILL immediately, no 10s SIGTERM wait)
-    await oldContainer.remove({ force: true });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...' });
+    await oldContainer.remove({ force: true }).catch(e => console.warn('Remove old container error:', e.message));
+
+    // Wait for the container to be fully removed to prevent Name or Port conflicts (up to 30 seconds)
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Waiting for Docker to release name/ports...' });
+    let isFullyRemoved = false;
+    for (let i = 0; i < 60; i++) {
+      try {
+        await docker.getContainer(id).inspect();
+        await new Promise(r => setTimeout(r, 500));
+      } catch (e) {
+        if (e.statusCode === 404) {
+          isFullyRemoved = true;
+          break;
+        }
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+    
+    if (!isFullyRemoved) {
+      console.warn(`Container ${id} might not be fully removed yet, creation might fail with 409 Conflict.`);
+    }
 
     // 3. Create the new container
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Creating new container...' });
+    
+    let newContainer;
+    let createError;
+    for (let i = 0; i < 5; i++) {
+      try {
+        newContainer = await docker.createContainer(createOptions);
+        break;
+      } catch (err) {
+        createError = err;
+        if (err.statusCode === 409) {
+          console.warn(`Creation conflict (attempt ${i+1}), waiting 2 seconds...`);
+          await new Promise(r => setTimeout(r, 2000));
+        } else {
+          throw err; // Not a conflict error, abort
+        }
+      }
+    }
+    
+    if (!newContainer) {
+      throw createError || new Error('Failed to create container after multiple attempts due to naming conflict.');
+    }
 
-    const newContainer = await docker.createContainer(createOptions);
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Starting new container...' });
     await newContainer.start();
     
     if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName });
