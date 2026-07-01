@@ -52,16 +52,7 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
     { id: 'purple', name: 'Viola Profondo', lightHex: '#f3e8ff', darkHex: '#2e1065' },
   ];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
-    await onSave({
-      ...preferences,
-      accentColor,
-      bgTheme
-    });
-    setIsSaving(false);
-  };
+  // Removed handleSubmit since we save immediately
 
   const handleReset = async () => {
     setIsSaving(true);
@@ -82,7 +73,7 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
           <Palette /> Impostazioni UI
         </h2>
         
-        <form onSubmit={handleSubmit} className="casaos-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="casaos-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           <div className="input-group">
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -107,7 +98,10 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
                   key={color.hex}
                   type="button"
                   title={color.name}
-                  onClick={() => setAccentColor(color.hex)}
+                  onClick={() => {
+                    setAccentColor(color.hex);
+                    onSave({ ...preferences, accentColor: color.hex, bgTheme });
+                  }}
                   style={{
                     width: '40px', height: '40px', borderRadius: '50%', border: 'none', cursor: 'pointer',
                     backgroundColor: color.hex,
@@ -129,7 +123,10 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
                     key={bg.id}
                     type="button"
                     title={bg.name}
-                    onClick={() => setBgTheme(bg.id)}
+                    onClick={() => {
+                      setBgTheme(bg.id);
+                      onSave({ ...preferences, accentColor, bgTheme: bg.id });
+                    }}
                     style={{
                       width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--card-border)', cursor: 'pointer',
                       backgroundColor: currentHex,
@@ -143,15 +140,12 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
             <button type="button" className="btn btn-action danger" onClick={handleReset} disabled={isSaving}>
               <RefreshCcw size={16} /> Ripristina Default
             </button>
-            <button type="submit" className="btn btn-primary" disabled={isSaving}>
-              <Save size={18} /> {isSaving ? 'Salvataggio...' : 'Applica Tema'}
-            </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

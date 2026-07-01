@@ -214,6 +214,10 @@ function App() {
   };
 
   const savePreferences = async (newPrefs) => {
+    // Aggiornamento ottimistico per un feedback istantaneo
+    setPreferences(newPrefs);
+    applyCustomStyles(newPrefs, theme);
+    
     try {
       await fetch('/api/system/preferences', {
         method: 'POST',
@@ -223,8 +227,6 @@ function App() {
         },
         body: JSON.stringify(newPrefs)
       });
-      setPreferences(newPrefs);
-      applyCustomStyles(newPrefs, theme);
     } catch (e) {
       console.error(e);
     }
