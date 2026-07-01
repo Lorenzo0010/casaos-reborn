@@ -26,10 +26,10 @@ Nessuna al momento. Procederò ad implementare un'interfaccia intuitiva in puro 
 
 ### Backend System
 
-#### [MODIFY] [package.json](file:///c:/Users/loren/Documents/GitHub/myos/backend/package.json)
+#### [MODIFY] [package.json](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/backend/package.json)
 - Add `multer` to `dependencies` to handle multipart/form-data for file uploads.
 
-#### [NEW] [files.js](file:///c:/Users/loren/Documents/GitHub/myos/backend/routes/files.js)
+#### [NEW] [files.js](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/backend/routes/files.js)
 - Create a new Express router for file operations:
   - `GET /` - List directory contents (stat files for size/date).
   - `GET /download` - Stream file download.
@@ -39,10 +39,10 @@ Nessuna al momento. Procederò ad implementare un'interfaccia intuitiva in puro 
   - `DELETE /` - Delete a file or directory recursively.
 - Security: Sanitize all paths to ensure they stay within the `/storage` root directory to prevent directory traversal attacks.
 
-#### [MODIFY] [server.js](file:///c:/Users/loren/Documents/GitHub/myos/backend/server.js)
+#### [MODIFY] [server.js](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/backend/server.js)
 - Mount the new `routes/files.js` under the `/api/files` endpoint, protected by `authenticateToken`.
 
-#### [MODIFY] [system.js](file:///c:/Users/loren/Documents/GitHub/myos/backend/routes/system.js)
+#### [MODIFY] [system.js](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/backend/routes/system.js)
 - Add `POST /reboot` endpoint which executes the DBus reboot command: `dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 "org.freedesktop.login1.Manager.Reboot" boolean:true`
 - Add `POST /shutdown` endpoint using `org.freedesktop.login1.Manager.PowerOff`
 
@@ -50,7 +50,7 @@ Nessuna al momento. Procederò ad implementare un'interfaccia intuitiva in puro 
 
 ### Frontend System
 
-#### [NEW] [FileManager.jsx](file:///c:/Users/loren/Documents/GitHub/myos/frontend/src/pages/FileManager.jsx)
+#### [NEW] [FileManager.jsx](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/frontend/src/pages/FileManager.jsx)
 - Build the main React page for the File Manager.
 - Features:
   - Breadcrumb navigation to traverse folders.
@@ -58,15 +58,15 @@ Nessuna al momento. Procederò ad implementare un'interfaccia intuitiva in puro 
   - Action menu for each item (Download, Rename, Delete).
   - Floating Action Button or toolbar for "Upload File" and "New Folder".
 
-#### [MODIFY] [App.jsx](file:///c:/Users/loren/Documents/GitHub/myos/frontend/src/App.jsx)
+#### [MODIFY] [App.jsx](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/frontend/src/App.jsx)
 - Import `FileManager`.
 - Add `<Route path="/files" element={<FileManager />} />` to the React Router.
 
-#### [MODIFY] [Sidebar.jsx](file:///c:/Users/loren/Documents/GitHub/myos/frontend/src/components/Sidebar.jsx)
+#### [MODIFY] [Sidebar.jsx](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/frontend/src/components/Sidebar.jsx)
 - Add a new navigation link icon (e.g., `Folder`) pointing to `/files`.
 - Add a "Power" button at the bottom of the sidebar to trigger Reboot/Shutdown (with a confirmation dialog).
 
-#### [MODIFY] [index.css](file:///c:/Users/loren/Documents/GitHub/myos/frontend/src/index.css)
+#### [MODIFY] [index.css](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/frontend/src/index.css)
 - Implement Glassmorphism by adding `backdrop-filter: blur(12px)` and `-webkit-backdrop-filter: blur(12px)` to `.card`, `.glass`, and `.modal-content`.
 - Adjust borders to be slightly translucent (e.g., `border: 1px solid rgba(255, 255, 255, 0.1)`) to enhance the frosted glass effect.
 
@@ -74,7 +74,7 @@ Nessuna al momento. Procederò ad implementare un'interfaccia intuitiva in puro 
 
 ### Docker Configuration
 
-#### [MODIFY] [docker-compose.yml](file:///c:/Users/loren/Documents/GitHub/myos/docker-compose.yml)
+#### [MODIFY] [docker-compose.yml](file:///c:/Users/loren/Documents/GitHub/casaos-reborn/docker-compose.yml)
 - Add volume mapping: `- /home/orangepi:/storage` (For File Manager)
 - Add volume mapping: `- /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket` (For Host Control)
 

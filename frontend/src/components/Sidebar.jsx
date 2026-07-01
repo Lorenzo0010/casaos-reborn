@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Server, Box, Terminal as TermIcon, Moon, Sun, LogOut, PlusSquare, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Monitor, Server, Box, Terminal as TermIcon, LogOut, PlusSquare, Menu, X, ChevronLeft, ChevronRight, Settings as SettingsIcon } from 'lucide-react';
 
-export default function Sidebar({ theme, toggleTheme, logout, openSettings }) {
+export default function Sidebar({ logout }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -77,18 +77,13 @@ export default function Sidebar({ theme, toggleTheme, logout, openSettings }) {
         <NavLink to="/terminal" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
           <TermIcon /> <span className="sidebar-link-text">Terminal</span>
         </NavLink>
+        <NavLink to="/settings" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
+          <SettingsIcon /> <span className="sidebar-link-text">UI Settings</span>
+        </NavLink>
         
         {/* Footer actions */}
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <button onClick={openSettings} className="btn sidebar-link" style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--text-color)', padding: isCollapsed ? '8px' : '8px 15px' }}>
-            <Monitor size={18} /> 
-            <span className="sidebar-link-text">UI Settings</span>
-          </button>
-          <button onClick={toggleTheme} className="btn sidebar-link" style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--text-color)', padding: isCollapsed ? '8px' : '8px 15px' }}>
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />} 
-            <span className="sidebar-link-text">Toggle Theme</span>
-          </button>
-          <button onClick={logout} className="btn btn-danger sidebar-link" style={{ padding: isCollapsed ? '8px' : '8px 15px' }}>
+          <button onClick={logout} className="btn sidebar-link logout-btn" style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--text-color)', padding: isCollapsed ? '8px' : '8px 15px' }}>
             <LogOut size={18} /> 
             <span className="sidebar-link-text">Logout</span>
           </button>

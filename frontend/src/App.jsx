@@ -5,12 +5,10 @@ import NewContainer from './pages/NewContainer';
 import TerminalPage from './pages/Terminal';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
-import SettingsModal from './components/SettingsModal';
-
+import Settings from './pages/Settings';
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [preferences, setPreferences] = useState(null);
 
   useEffect(() => {
@@ -246,7 +244,7 @@ function App() {
   return (
     <Router>
       <div className="layout">
-        <Sidebar theme={theme} toggleTheme={toggleTheme} logout={logout} openSettings={() => setIsSettingsOpen(true)} />
+        <Sidebar logout={logout} />
 
         <div className="main-content">
           <div className="main-scrollable">
@@ -254,19 +252,13 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/new" element={<NewContainer />} />
               <Route path="/terminal" element={<TerminalPage />} />
+              <Route path="/settings" element={<Settings theme={theme} toggleTheme={toggleTheme} preferences={preferences || {}} onSave={savePreferences} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
         </div>
       </div>
       
-      {isSettingsOpen && (
-        <SettingsModal 
-          onClose={() => setIsSettingsOpen(false)} 
-          preferences={preferences || {}} 
-          onSave={savePreferences} 
-        />
-      )}
     </Router>
   );
 }

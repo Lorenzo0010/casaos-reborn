@@ -99,6 +99,12 @@ body {
   color: var(--primary-text, white);
 }
 
+.sidebar-link.logout-btn:hover {
+  background-color: var(--danger) !important;
+  color: white !important;
+  border-color: var(--danger) !important;
+}
+
 .sidebar-link-text {
   transition: opacity 0.3s;
 }

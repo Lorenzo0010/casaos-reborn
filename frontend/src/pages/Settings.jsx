@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Save, Palette, RefreshCcw } from 'lucide-react';
+import { Palette, Save, RefreshCcw, Moon, Sun } from 'lucide-react';
 
-export default function SettingsModal({ onClose, preferences, onSave }) {
+export default function Settings({ theme, toggleTheme, preferences, onSave }) {
   const [accentColor, setAccentColor] = useState(preferences?.accentColor || '#3b82f6');
   const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
   const [isSaving, setIsSaving] = useState(false);
@@ -61,7 +61,6 @@ export default function SettingsModal({ onClose, preferences, onSave }) {
       bgTheme
     });
     setIsSaving(false);
-    onClose();
   };
 
   const handleReset = async () => {
@@ -71,22 +70,36 @@ export default function SettingsModal({ onClose, preferences, onSave }) {
       accentColor: '#3b82f6',
       bgTheme: 'gray'
     });
+    setAccentColor('#3b82f6');
+    setBgTheme('gray');
     setIsSaving(false);
-    onClose();
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content glass casaos-form" onClick={e => e.stopPropagation()}>
-        <div className="section-header">
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-            <Palette /> Tema e Colori
-          </h2>
-          <button className="btn-icon" onClick={onClose}><X /></button>
-        </div>
+    <div className="grid">
+      <div className="widget glass" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+          <Palette /> Impostazioni UI
+        </h2>
         
-        <form onSubmit={handleSubmit} className="form-body">
+        <form onSubmit={handleSubmit} className="casaos-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
           <div className="input-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Tema Dark Mode {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+              <label className="switch">
+                <input type="checkbox" checked={theme === 'dark'} onChange={toggleTheme} />
+                <span className="slider round"></span>
+              </label>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-color)' }}>
+                {theme === 'dark' ? 'Scuro abilitato' : 'Chiaro abilitato'}
+              </span>
+            </div>
+          </div>
+
+          <div className="input-group" style={{ marginTop: '10px' }}>
             <label>Colore Accento</label>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '5px' }}>
               {predefinedAccents.map(color => (
@@ -127,16 +140,13 @@ export default function SettingsModal({ onClose, preferences, onSave }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
             <button type="button" className="btn btn-action danger" onClick={handleReset} disabled={isSaving}>
-              <RefreshCcw size={16} /> Ripristina
+              <RefreshCcw size={16} /> Ripristina Default
             </button>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="button" className="btn" onClick={onClose} style={{ border: '1px solid var(--card-border)' }}>Annulla</button>
-              <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                <Save size={18} /> {isSaving ? 'Salvataggio...' : 'Applica Tema'}
-              </button>
-            </div>
+            <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              <Save size={18} /> {isSaving ? 'Salvataggio...' : 'Applica Tema'}
+            </button>
           </div>
         </form>
       </div>
