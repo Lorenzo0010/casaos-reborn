@@ -341,7 +341,11 @@ router.post('/containers/:id/recreate', async (req, res) => {
     let createError;
     for (let i = 0; i < 5; i++) {
       try {
-        newContainer = await docker.createContainer(createOptions);
+        // Wrap createContainer in a timeout to prevent indefinite hanging
+        newContainer = await Promise.race([
+          docker.createContainer(createOptions),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_CREATE')), 15000))
+        ]);
         break;
       } catch (err) {
         createError = err;
@@ -349,13 +353,15 @@ router.post('/containers/:id/recreate', async (req, res) => {
           console.warn(`Creation conflict (attempt ${i+1}), waiting 2 seconds...`);
           await new Promise(r => setTimeout(r, 2000));
         } else {
-          throw err; // Not a conflict error, abort
+          // If it's a timeout or any other error, stop retrying
+          break;
         }
       }
     }
     
     if (!newContainer) {
-      throw createError || new Error('Failed to create container after multiple attempts due to naming conflict.');
+      const errorMsg = createError ? (createError.message || JSON.stringify(createError)) : 'Unknown error';
+      throw new Error(`Failed to create container: ${errorMsg}`);
     }
 
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Starting new container...' });
@@ -478,7 +484,10 @@ router.post('/containers/create', async (req, res) => {
       createOptions.HostConfig.Memory = memory;
     }
 
-    const newContainer = await docker.createContainer(createOptions);
+    const newContainer = await Promise.race([
+      docker.createContainer(createOptions),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_CREATE')), 15000))
+    ]);
     await newContainer.start();
     
     if (io) io.emit('container.create.success', { id: newContainer.id, name: containerName });
