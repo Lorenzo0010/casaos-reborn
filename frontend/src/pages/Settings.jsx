@@ -35,21 +35,21 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
 
   const predefinedBackgrounds = [
     // Grigi/Neutri
-    { id: 'gray', name: 'Grigio Classico', hex: '#9ca3af' },
-    { id: 'lightgray', name: 'Grigio Chiaro', hex: '#d1d5db' },
-    { id: 'mediumgray', name: 'Grigio Medio', hex: '#4b5563' },
-    { id: 'darkgray', name: 'Grigio Scuro', hex: '#1f2937' },
-    { id: 'anthracite', name: 'Antracite', hex: '#18181b' },
-    { id: 'black', name: 'Total Black', hex: '#000000' },
+    { id: 'gray', name: 'Grigio Classico', lightHex: '#f3f4f6', darkHex: '#111827' },
+    { id: 'lightgray', name: 'Grigio Chiaro', lightHex: '#e5e7eb', darkHex: '#4b5563' },
+    { id: 'mediumgray', name: 'Grigio Medio', lightHex: '#e5e7eb', darkHex: '#374151' },
+    { id: 'darkgray', name: 'Grigio Scuro', lightHex: '#d1d5db', darkHex: '#1f2937' },
+    { id: 'anthracite', name: 'Antracite', lightHex: '#e4e4e7', darkHex: '#18181b' },
+    { id: 'black', name: 'Total Black', lightHex: '#e5e7eb', darkHex: '#000000' },
     // Colori
-    { id: 'navy', name: 'Blu Navy', hex: '#020617' },
-    { id: 'ocean', name: 'Oceano Profondo', hex: '#083344' },
-    { id: 'forest', name: 'Verde Foresta', hex: '#022c22' },
-    { id: 'military', name: 'Verde Militare', hex: '#333d29' },
-    { id: 'mocha', name: 'Mocha Caldo', hex: '#2e1008' },
-    { id: 'rust', name: 'Ruggine', hex: '#451a03' },
-    { id: 'red', name: 'Rosso Scuro', hex: '#2a040d' },
-    { id: 'purple', name: 'Viola Profondo', hex: '#2e1065' },
+    { id: 'navy', name: 'Blu Navy', lightHex: '#e0e7ff', darkHex: '#020617' },
+    { id: 'ocean', name: 'Oceano Profondo', lightHex: '#cffafe', darkHex: '#083344' },
+    { id: 'forest', name: 'Verde Foresta', lightHex: '#dcfce7', darkHex: '#022c22' },
+    { id: 'military', name: 'Verde Militare', lightHex: '#e9edc9', darkHex: '#333d29' },
+    { id: 'mocha', name: 'Mocha Caldo', lightHex: '#ffedd5', darkHex: '#2e1008' },
+    { id: 'rust', name: 'Ruggine', lightHex: '#ffedbf', darkHex: '#451a03' },
+    { id: 'red', name: 'Rosso Scuro', lightHex: '#ffe4e6', darkHex: '#2a040d' },
+    { id: 'purple', name: 'Viola Profondo', lightHex: '#f3e8ff', darkHex: '#2e1065' },
   ];
 
   const handleSubmit = async (e) => {
@@ -122,21 +122,24 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
           <div className="input-group" style={{ marginTop: '10px' }}>
             <label>Sfondo Adattivo (Light/Dark)</label>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '5px' }}>
-              {predefinedBackgrounds.map(bg => (
-                <button
-                  key={bg.id}
-                  type="button"
-                  title={bg.name}
-                  onClick={() => setBgTheme(bg.id)}
-                  style={{
-                    width: '40px', height: '40px', borderRadius: '50%', border: 'none', cursor: 'pointer',
-                    backgroundColor: bg.hex,
-                    boxShadow: bgTheme === bg.id ? `0 0 0 3px var(--card-bg), 0 0 0 5px var(--primary)` : 'none',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                />
-              ))}
+              {predefinedBackgrounds.map(bg => {
+                const currentHex = theme === 'dark' ? bg.darkHex : bg.lightHex;
+                return (
+                  <button
+                    key={bg.id}
+                    type="button"
+                    title={bg.name}
+                    onClick={() => setBgTheme(bg.id)}
+                    style={{
+                      width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--card-border)', cursor: 'pointer',
+                      backgroundColor: currentHex,
+                      boxShadow: bgTheme === bg.id ? `0 0 0 3px var(--card-bg), 0 0 0 5px var(--primary)` : 'none',
+                      transition: 'all 0.2s',
+                      position: 'relative'
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
 
