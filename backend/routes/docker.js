@@ -220,18 +220,23 @@ router.post('/containers/:id/recreate', async (req, res) => {
         
         function dockerRequest(method, path, data = null) {
           return new Promise((resolve, reject) => {
+            const payload = data ? JSON.stringify(data) : '';
+            const headers = data ? { 
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(payload)
+            } : {};
             const req = http.request({
               socketPath: '/var/run/docker.sock',
               path: '/v1.41' + path,
               method: method,
-              headers: data ? { 'Content-Type': 'application/json' } : {}
+              headers: headers
             }, res => {
               let body = '';
               res.on('data', chunk => body += chunk);
               res.on('end', () => resolve({ statusCode: res.statusCode, body }));
             });
             req.on('error', reject);
-            if (data) req.write(JSON.stringify(data));
+            if (data) req.write(payload);
             req.end();
           });
         }
@@ -287,8 +292,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
           'CONTAINER_NAME=' + containerName
         ],
         HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
-          AutoRemove: true
+          Binds: ['/var/run/docker.sock:/var/run/docker.sock']
         }
       });
 
