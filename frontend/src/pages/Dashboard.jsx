@@ -149,6 +149,16 @@ export default function Dashboard() {
       alert('Error recreating container: ' + data.error);
     });
 
+    socket.on('container.recreate.rollback', (data) => {
+      setRecreating(prev => {
+        const p = { ...prev };
+        delete p[data.oldId];
+        return p;
+      });
+      fetchContainers();
+      alert(`Errore durante la creazione del container. È stato eseguito un rollback automatico al container precedente.\nErrore originale: ${data.error}`);
+    });
+
     socket.on('disconnect', () => {
       if (selfUpdatingRef.current) {
         startHealthPolling();

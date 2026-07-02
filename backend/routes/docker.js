@@ -57,10 +57,14 @@ router.post('/containers/:id/recreate', async (req, res) => {
   // Return early, continue processing in background
   res.status(202).json({ success: true, message: 'Recreation started', id });
 
+  // Fix Bug 3: Declare containerName outside try-catch
+  let containerName = name ? name.replace('/', '') : '';
+
   try {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect().catch(() => ({}));
-    const containerName = name ? name.replace('/', '') : (oldInspect.Name || '').replace('/', '');
+    
+    containerName = containerName || (oldInspect.Name || '').replace('/', '');
     const nameChanged = containerName !== (oldInspect.Name || '').replace('/', '');
     const oldImage = oldInspect.Config?.Image || '';
     const imageChanged = fullImage !== oldImage;
@@ -158,6 +162,9 @@ router.post('/containers/:id/recreate', async (req, res) => {
       exposedPorts[key] = {};
     }
 
+    // Fix Bug 6: Save endpoints config for custom networks
+    const endpointsConfig = oldInspect.NetworkSettings?.Networks || {};
+
     const createOptions = {
       name: containerName,
       Image: fullImage,
@@ -170,6 +177,9 @@ router.post('/containers/:id/recreate', async (req, res) => {
         RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
         Privileged: !!privileged,
         NetworkMode: oldInspect.HostConfig?.NetworkMode || 'default',
+      },
+      NetworkingConfig: {
+        EndpointsConfig: endpointsConfig
       }
     };
 
@@ -247,7 +257,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
             await new Promise(r => setTimeout(r, 2000));
             
             log('Stopping old container...');
-            await dockerRequest('POST', '/containers/' + oldId + '/stop?t=5');
+            await dockerRequest('POST', '/containers/' + oldId + '/stop?t=10');
             
             log('Removing old container...');
             await dockerRequest('DELETE', '/containers/' + oldId + '?force=true');
@@ -289,8 +299,9 @@ router.post('/containers/:id/recreate', async (req, res) => {
         await oldUpdater.remove({ force: true });
       } catch (e) {}
 
+      // Fix Bug 7: Use fullImage instead of image
       const updaterContainer = await docker.createContainer({
-        Image: image, 
+        Image: fullImage, 
         name: 'casaos-reborn-updater',
         Cmd: ['node', '-e', updaterScript],
         Env: [
@@ -310,12 +321,42 @@ router.post('/containers/:id/recreate', async (req, res) => {
       return;
     }
 
-    // 2. Force-remove the old container (sends SIGKILL immediately, no 10s SIGTERM wait)
+    // Fix Bug 2: Save old container configuration for rollback
+    const rollbackOptions = {
+        name: (oldInspect.Name || '').replace('/', ''),
+        Image: oldInspect.Image,
+        Env: oldInspect.Config?.Env || [],
+        Labels: oldInspect.Config?.Labels || {},
+        ExposedPorts: oldInspect.Config?.ExposedPorts || {},
+        HostConfig: oldInspect.HostConfig || {},
+        NetworkingConfig: {
+            EndpointsConfig: oldInspect.NetworkSettings?.Networks || {}
+        }
+    };
+    
+    // Fix Bug 1: Graceful stop and remove without force
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Stopping old container...' });
+    try {
+        // Try graceful stop with 10s timeout
+        await oldContainer.stop({ t: 10 });
+    } catch (e) {
+        if (e.statusCode !== 304) { // 304 means already stopped
+            console.warn(`Graceful stop failed for ${id}, will force remove:`, e.message);
+        }
+    }
+
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...' });
-    await oldContainer.remove({ force: true }).catch(e => console.warn('Remove old container error:', e.message));
+    
+    // Remove without force first. If it fails, fallback to force remove.
+    try {
+        await oldContainer.remove({ v: false }); // v: false to preserve volumes
+    } catch (e) {
+        console.warn(`Standard remove failed for ${id}, falling back to force remove:`, e.message);
+        await oldContainer.remove({ force: true, v: false }).catch(err => console.warn('Force remove old container error:', err.message));
+    }
 
     // Wait for the container to be fully removed to prevent Name or Port conflicts (up to 30 seconds)
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Waiting for Docker to release name/ports...' });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Waiting for Docker to release resources...' });
     let isFullyRemoved = false;
     for (let i = 0; i < 60; i++) {
       try {
@@ -339,21 +380,29 @@ router.post('/containers/:id/recreate', async (req, res) => {
     
     let newContainer;
     let createError;
-    for (let i = 0; i < 5; i++) {
+    
+    // Fix Bug 4 & 5: Increase timeout and use exponential backoff
+    const delays = [1000, 2000, 4000, 8000, 16000, 30000, 30000]; // 7 attempts
+    for (let i = 0; i < delays.length; i++) {
       try {
-        // Wrap createContainer in a timeout to prevent indefinite hanging
+        // Wrap createContainer in a timeout to prevent indefinite hanging (30s)
         newContainer = await Promise.race([
           docker.createContainer(createOptions),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_CREATE')), 15000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_CREATE')), 30000))
         ]);
         break;
       } catch (err) {
         createError = err;
-        if (err.statusCode === 409) {
-          console.warn(`Creation conflict (attempt ${i+1}), waiting 2 seconds...`);
-          await new Promise(r => setTimeout(r, 2000));
+        console.warn(`Creation attempt ${i+1} failed:`, err.message || err.statusCode);
+        
+        // Retry on 409 (Conflict), network errors, timeouts
+        if (err.statusCode === 409 || err.code === 'ECONNRESET' || err.code === 'EPIPE' || err.message === 'TIMEOUT_CREATE') {
+          if (i < delays.length - 1) {
+              console.log(`Waiting ${delays[i]}ms before next attempt...`);
+              await new Promise(r => setTimeout(r, delays[i]));
+          }
         } else {
-          // If it's a timeout or any other error, stop retrying
+          // If it's a specific configuration error (e.g., invalid port binding), stop retrying
           break;
         }
       }
@@ -361,15 +410,55 @@ router.post('/containers/:id/recreate', async (req, res) => {
     
     if (!newContainer) {
       const errorMsg = createError ? (createError.message || JSON.stringify(createError)) : 'Unknown error';
-      throw new Error(`Failed to create container: ${errorMsg}`);
+      console.error(`Failed to create container: ${errorMsg}. Initiating rollback...`);
+      
+      // Fix Bug 2: ROLLBACK
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Creation failed, rolling back...' });
+      
+      try {
+          // Verify if name conflict exists and remove if so
+          try {
+             const conflictCheck = docker.getContainer(containerName);
+             await conflictCheck.inspect();
+             await conflictCheck.remove({force: true});
+          } catch(e) {}
+
+          const rollbackContainer = await docker.createContainer(rollbackOptions);
+          await rollbackContainer.start();
+          
+          if (io) io.emit('container.recreate.rollback', { id: rollbackContainer.id, oldId: id, name: containerName, error: errorMsg });
+          return; // Stop processing further since rollback succeeded
+      } catch (rollbackErr) {
+          console.error('Fatal: Rollback failed!', rollbackErr);
+          throw new Error(`Failed to create container: ${errorMsg}. Rollback also failed: ${rollbackErr.message}`);
+      }
     }
 
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Starting new container...' });
     await newContainer.start();
     
+    // Fix Bug 6: Ensure the container connects to all required custom networks
+    try {
+        const primaryNetwork = oldInspect.HostConfig?.NetworkMode || 'default';
+        for (const [netName, netConfig] of Object.entries(endpointsConfig)) {
+            // Skip the primary network as it's already connected during creation
+            if (netName !== primaryNetwork && netName !== 'default' && netName !== 'bridge' && netName !== 'host' && netName !== 'none') {
+                console.log(`Reconnecting ${containerName} to network ${netName}`);
+                const network = docker.getNetwork(netName);
+                await network.connect({
+                    Container: newContainer.id,
+                    EndpointConfig: netConfig
+                }).catch(e => console.warn(`Failed to connect to network ${netName}:`, e.message));
+            }
+        }
+    } catch (netErr) {
+        console.warn("Error restoring extra networks:", netErr.message);
+    }
+
     if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName });
   } catch (error) {
     console.error('Error recreating container:', error);
+    // Fix Bug 3: containerName is now in scope
     if (io) io.emit('container.recreate.error', { id, name: containerName, error: error.message });
   }
 });
