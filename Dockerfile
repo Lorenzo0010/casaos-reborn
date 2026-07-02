@@ -1,5 +1,6 @@
 # Stage 1: Build the React Frontend
-FROM node:20-alpine AS frontend-builder
+# Use native platform for frontend to avoid QEMU emulation overhead and crashes
+FROM --platform=$BUILDPLATFORM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
@@ -7,11 +8,14 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Setup the Node.js Backend
-FROM node:20-alpine
+# Use Debian (bookworm-slim) instead of Alpine to fix Node 20 + QEMU "Illegal instruction" crashes on ARM64
+FROM node:20-bookworm-slim
 WORKDIR /app/backend
 
 # Install necessary system packages for node-pty and general utilities
-RUN apk add --no-cache make gcc g++ python3 bash procps util-linux openssh-client
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    make gcc g++ python3 bash procps util-linux openssh-client \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
 RUN npm install --production
