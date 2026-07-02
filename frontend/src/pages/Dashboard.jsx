@@ -631,7 +631,7 @@ export default function Dashboard() {
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stableId)}
               style={{ 
-                padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: '15px', position: 'relative', overflow: 'hidden',
+                padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: '10px', position: 'relative', overflow: 'hidden',
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedItem === stableId ? 0.5 : 1,
                 border: '1px solid var(--card-border)',
@@ -674,27 +674,27 @@ export default function Dashboard() {
               )}
 
               {/* LOGO BLOCK (Top Center) */}
-              <div style={{ flexShrink: 0, marginTop: '10px' }}>
+              <div style={{ flexShrink: 0, marginTop: '5px' }}>
                 {isClickable ? (
                   <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'flex' }} title="Apri Web UI">
-                    <img src={getContainerIcon(c)} alt="" style={{ width: 80, height: 80, borderRadius: '16px', objectFit: 'cover', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
+                    <img src={getContainerIcon(c)} alt="" style={{ width: 64, height: 64, borderRadius: '16px', objectFit: 'cover', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
                   </a>
                 ) : (
-                  <img src={getContainerIcon(c)} alt="" style={{ width: 80, height: 80, borderRadius: '16px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
+                  <img src={getContainerIcon(c)} alt="" style={{ width: 64, height: 64, borderRadius: '16px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
                 )}
               </div>
               
               {/* CONTENT BLOCK (Middle Center) */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px', width: '100%' }}>
                   {isClickable ? (
                     <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', maxWidth: '100%' }} title="Apri Web UI">
-                      <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                      <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
                         {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                       </h3>
                     </a>
                   ) : (
-                    <h3 style={{ margin: 0, fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                       {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                     </h3>
                   )}
@@ -702,7 +702,7 @@ export default function Dashboard() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                   <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`}></span>
-                  <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 500, lineHeight: '1.2' }}>
                     {c.State === 'running' ? c.Status.replace(/^Up\s/, 'Avviato da ') : c.Status.replace(/^Exited\s\(\d+\)\s/, 'Interrotto da ')}
                   </span>
                 </div>
@@ -754,7 +754,7 @@ export default function Dashboard() {
                 progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
               }
               return (
-                <div key={recreId} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: '15px', position: 'relative', overflow: 'hidden', aspectRatio: '1 / 1' }}>
+                <div key={recreId} className="glass" style={{ padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: '10px', position: 'relative', overflow: 'hidden', aspectRatio: '1 / 1' }}>
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -771,17 +771,17 @@ export default function Dashboard() {
                     )}
                   </div>
                   
-                  <div style={{ flexShrink: 0, marginTop: '10px' }}>
-                    <div style={{ width: 80, height: 80, borderRadius: '16px', backgroundColor: 'var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  <div style={{ flexShrink: 0, marginTop: '5px' }}>
+                    <div style={{ width: 64, height: 64, borderRadius: '16px', backgroundColor: 'var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                   </div>
                   
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                       {progressData.name || 'Recreating...'}
                     </h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                       <span className="status-dot recreating"></span>
-                      <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
+                      <span style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 500, lineHeight: '1.2' }}>
                         Aggiornamento in corso...
                       </span>
                     </div>
