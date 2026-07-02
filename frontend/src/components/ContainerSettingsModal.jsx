@@ -83,7 +83,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           volumes: parsedVolumes,
           restartPolicy: info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped',
           privileged: !!info?.HostConfig?.Privileged,
-          memory: info?.HostConfig?.Memory || 0,
+          memory: info?.HostConfig?.Memory ? Math.round(info.HostConfig.Memory / (1024 * 1024)) : 0,
           webUI: {
             scheme: labels['casaos.reborn.web.scheme'] || 'http://',
             port: labels['casaos.reborn.web.port'] || '',
