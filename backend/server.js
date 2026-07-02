@@ -112,7 +112,7 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  // console.log('User connected:', socket.id); // Spamma i log ad ogni cambio pagina
   
   const { type, sshUser, sshHost } = socket.handshake.auth;
   
@@ -143,12 +143,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-      console.log('Terminal user disconnected:', socket.id);
+      // console.log('Terminal user disconnected:', socket.id);
       ptyProcess.kill();
     });
   } else {
     socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
+      // console.log('User disconnected:', socket.id); // Spamma i log ad ogni cambio pagina
     });
   }
 });
