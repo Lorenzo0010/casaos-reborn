@@ -608,7 +608,7 @@ export default function Dashboard() {
       {loading ? (
         <p>Loading containers...</p>
       ) : (
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-cards">
           {sortedContainers.map((c, index) => {
             const webUrl = getWebUrl(c);
             const isClickable = webUrl && c.State === 'running';
@@ -631,10 +631,11 @@ export default function Dashboard() {
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stableId)}
               style={{ 
-                padding: '20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px', position: 'relative', overflow: 'hidden',
+                padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: '15px', position: 'relative', overflow: 'hidden',
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedItem === stableId ? 0.5 : 1,
-                border: '1px solid var(--card-border)'
+                border: '1px solid var(--card-border)',
+                aspectRatio: '1 / 1'
               }}
             >
               
@@ -663,7 +664,7 @@ export default function Dashboard() {
                   zIndex: 10, padding: '20px', color: 'white'
                 }}>
                   <Loader className="spin" size={32} style={{ marginBottom: '10px' }} />
-                  <h4 style={{ margin: '0 0 10px 0' }}>{progressData.status}</h4>
+                  <h4 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>{progressData.status}</h4>
                   {progressData.progressDetail?.total && (
                     <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '10px', overflow: 'hidden' }}>
                       <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.2s' }}></div>
@@ -672,8 +673,8 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* LOGO BLOCK (Left) */}
-              <div style={{ flexShrink: 0 }}>
+              {/* LOGO BLOCK (Top Center) */}
+              <div style={{ flexShrink: 0, marginTop: '10px' }}>
                 {isClickable ? (
                   <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'flex' }} title="Apri Web UI">
                     <img src={getContainerIcon(c)} alt="" style={{ width: 80, height: 80, borderRadius: '16px', objectFit: 'cover', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
@@ -683,63 +684,64 @@ export default function Dashboard() {
                 )}
               </div>
               
-              {/* CONTENT BLOCK (Right) */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
+              {/* CONTENT BLOCK (Middle Center) */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', alignItems: 'center', textAlign: 'center', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', width: '100%' }}>
                   {isClickable ? (
-                    <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title="Apri Web UI">
-                      <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', paddingRight: '24px', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                    <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', maxWidth: '100%' }} title="Apri Web UI">
+                      <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
                         {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                       </h3>
                     </a>
                   ) : (
-                    <h3 style={{ margin: 0, paddingRight: '24px', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                       {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                     </h3>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                   <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`}></span>
                   <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
                     {c.State === 'running' ? c.Status.replace(/^Up\s/, 'Avviato da ') : c.Status.replace(/^Exited\s\(\d+\)\s/, 'Interrotto da ')}
                   </span>
                 </div>
+              </div>
 
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {c.State !== 'running' ? (
-                    <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
-                      <Play size={16} />
-                    </button>
-                  ) : (
-                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
-                      <Square size={16} />
-                    </button>
-                  )}
-                  <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
-                    <FileText size={16} />
+              {/* BUTTONS BLOCK (Bottom) */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', flexShrink: 0, width: '100%' }}>
+                {c.State !== 'running' ? (
+                  <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
+                    <Play size={16} />
                   </button>
-                  <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
-                    <Settings size={16} />
+                ) : (
+                  <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
+                    <Square size={16} />
                   </button>
+                )}
+                <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
+                  <FileText size={16} />
+                </button>
+                <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
+                  <Settings size={16} />
+                </button>
 
-                  {editMode && (
-                    <>
-                      <div style={{ width: '2px', height: '24px', backgroundColor: 'var(--card-border)', margin: '0 5px' }} />
-                      <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su">
-                        <ChevronUp size={16} />
-                      </button>
-                      <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù">
-                        <ChevronDown size={16} />
-                      </button>
-                      {!isMobile && (
-                        <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab', marginLeft: '5px' }} title="Trascina per riordinare">
-                          <GripHorizontal size={20} />
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                {editMode && (
+                  <>
+                    <div style={{ width: '2px', height: '24px', backgroundColor: 'var(--card-border)', margin: '0 5px' }} />
+                    <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su">
+                      <ChevronUp size={16} />
+                    </button>
+                    <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù">
+                      <ChevronDown size={16} />
+                    </button>
+                    {!isMobile && (
+                      <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab', marginLeft: '5px' }} title="Trascina per riordinare">
+                        <GripHorizontal size={20} />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )})}
@@ -752,7 +754,7 @@ export default function Dashboard() {
                 progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
               }
               return (
-                <div key={recreId} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px', position: 'relative', overflow: 'hidden' }}>
+                <div key={recreId} className="glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: '15px', position: 'relative', overflow: 'hidden', aspectRatio: '1 / 1' }}>
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -761,7 +763,7 @@ export default function Dashboard() {
                     zIndex: 10, padding: '20px', color: 'white'
                   }}>
                     <Loader className="spin" size={32} style={{ marginBottom: '10px' }} />
-                    <h4 style={{ margin: '0 0 10px 0' }}>{progressData.status}</h4>
+                    <h4 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>{progressData.status}</h4>
                     {progressData.progressDetail?.total && (
                       <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '10px', overflow: 'hidden' }}>
                         <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.2s' }}></div>
@@ -769,23 +771,24 @@ export default function Dashboard() {
                     )}
                   </div>
                   
-                  <div style={{ flexShrink: 0 }}>
+                  <div style={{ flexShrink: 0, marginTop: '10px' }}>
                     <div style={{ width: 80, height: 80, borderRadius: '16px', backgroundColor: 'var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                   </div>
                   
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', alignItems: 'center', textAlign: 'center', width: '100%' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                       {progressData.name || 'Recreating...'}
                     </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                       <span className="status-dot recreating"></span>
                       <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
                         Aggiornamento in corso...
                       </span>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                       <button className="btn btn-action neutral" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled><Loader size={16} className="spin" /></button>
-                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', flexShrink: 0, width: '100%' }}>
+                    <button className="btn btn-action neutral" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled><Loader size={16} className="spin" /></button>
                   </div>
                 </div>
               );
