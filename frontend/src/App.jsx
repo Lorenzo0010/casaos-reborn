@@ -6,6 +6,8 @@ import TerminalPage from './pages/Terminal';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Settings from './pages/Settings';
+import SystemLogs from './pages/SystemLogs';
+
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -254,6 +256,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/new" element={<NewContainer />} />
               <Route path="/terminal" element={<TerminalPage />} />
+              <Route path="/logs" element={<SystemLogs />} />
               <Route path="/settings" element={<Settings theme={theme} toggleTheme={toggleTheme} preferences={preferences || {}} onSave={savePreferences} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

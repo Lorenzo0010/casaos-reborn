@@ -56,6 +56,7 @@ const fs = require('fs');
 const path = require('path');
 const PREFS_DIR = path.join(__dirname, '..', 'data');
 const PREFS_FILE = path.join(PREFS_DIR, 'preferences.json');
+const LOGS_FILE = path.join(PREFS_DIR, 'casaos.log');
 
 router.get('/preferences', (req, res) => {
   try {
@@ -86,6 +87,34 @@ router.post('/preferences', (req, res) => {
   } catch (error) {
     console.error('Error saving preferences:', error);
     res.status(500).json({ error: 'Failed to save preferences' });
+  }
+});
+
+router.get('/logs', (req, res) => {
+  try {
+    if (fs.existsSync(LOGS_FILE)) {
+      const data = fs.readFileSync(LOGS_FILE, 'utf8');
+      // Limit to last 500000 characters to avoid payload too large if log gets huge
+      const content = data.length > 500000 ? data.substring(data.length - 500000) : data;
+      res.send(content);
+    } else {
+      res.send('Nessun log disponibile.');
+    }
+  } catch (error) {
+    console.error('Error reading logs:', error);
+    res.status(500).json({ error: 'Failed to read logs' });
+  }
+});
+
+router.delete('/logs', (req, res) => {
+  try {
+    if (fs.existsSync(LOGS_FILE)) {
+      fs.writeFileSync(LOGS_FILE, '');
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error clearing logs:', error);
+    res.status(500).json({ error: 'Failed to clear logs' });
   }
 });
 

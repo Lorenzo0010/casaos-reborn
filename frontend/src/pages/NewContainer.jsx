@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2, PlusSquare } from 'lucide-react';
 import yaml from 'js-yaml';
 import { io } from 'socket.io-client';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function NewContainer() {
+  const { showAlert } = useDialog();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('manual');
   const [yamlInput, setYamlInput] = useState('');
@@ -45,7 +47,7 @@ export default function NewContainer() {
     socket.on('container.create.error', (data) => {
       setLoading(false);
       setProgress(null);
-      alert('Error: ' + data.error);
+      showAlert('Errore Creazione', 'Error: ' + data.error, true);
     });
 
     return () => socket.disconnect();
@@ -142,7 +144,10 @@ export default function NewContainer() {
   };
 
   const handleCreate = async () => {
-    if (!formData.image) return alert('Image is required');
+    if (!formData.image) {
+      showAlert('Attenzione', 'Image is required');
+      return;
+    }
     
     setLoading(true);
     
@@ -182,7 +187,7 @@ export default function NewContainer() {
       }
       // We don't setLoading(false) here, we wait for socket event
     } catch (err) {
-      alert(err.message);
+      showAlert('Errore', err.message, true);
       setLoading(false);
     }
   };

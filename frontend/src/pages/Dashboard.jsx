@@ -4,8 +4,10 @@ import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, 
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
 import { io } from 'socket.io-client';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Dashboard() {
+  const { showAlert, showConfirm } = useDialog();
   const [stats, setStats] = useState(null);
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +148,7 @@ export default function Dashboard() {
         delete p[data.id];
         return p;
       });
-      alert('Error recreating container: ' + data.error);
+      showAlert('Errore Creazione', 'Error recreating container: ' + data.error, true);
     });
 
     socket.on('container.recreate.rollback', (data) => {
@@ -156,7 +158,7 @@ export default function Dashboard() {
         return p;
       });
       fetchContainers();
-      alert(`Errore durante la creazione del container. È stato eseguito un rollback automatico al container precedente.\nErrore originale: ${data.error}`);
+      showAlert('Rollback Automatico Eseguito', `Errore durante la creazione del container. È stato eseguito un rollback automatico al container precedente.\n\nErrore originale: ${data.error}`, true);
     });
 
     socket.on('disconnect', () => {
@@ -209,21 +211,22 @@ export default function Dashboard() {
       });
       fetchContainers();
     } catch (err) {
-      alert(`Error performing ${action}: ` + err.message);
+      showAlert('Errore', `Error performing ${action}: ` + err.message, true);
     }
   };
 
   const handlePruneImages = async () => {
-    if (!window.confirm('Sei sicuro di voler eliminare tutte le immagini Docker non utilizzate da alcun container?')) return;
+    const confirmed = await showConfirm('Pulizia Immagini', 'Sei sicuro di voler eliminare tutte le immagini Docker non utilizzate da alcun container?');
+    if (!confirmed) return;
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(`/api/docker/images/prune`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const deletedSpace = (res.data.result?.SpaceReclaimed || 0) / 1024 / 1024;
-      alert(`Pulizia completata. Spazio liberato: ${deletedSpace.toFixed(2)} MB`);
+      showAlert('Pulizia Completata', `Spazio liberato: ${deletedSpace.toFixed(2)} MB`);
     } catch (err) {
-      alert(`Errore durante la pulizia delle immagini: ` + err.message);
+      showAlert('Errore', `Errore durante la pulizia delle immagini: ` + err.message, true);
     }
   };
 

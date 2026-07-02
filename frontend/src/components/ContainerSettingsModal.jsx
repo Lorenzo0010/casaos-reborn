@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Plus, Check, Image as ImageIcon } from 'lucide-react';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function ContainerSettingsModal({ containerId, onClose, onSaved }) {
+  const { showAlert, showConfirm } = useDialog();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState({
@@ -92,7 +94,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         });
       } catch (err) {
         console.error(err);
-        alert('Failed to load container details');
+        showAlert('Errore di Caricamento', 'Failed to load container details', true);
         onClose();
       } finally {
         setLoading(false);
@@ -137,13 +139,14 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to save container: ' + (err.response?.data?.error || err.message));
+      showAlert('Errore Salvataggio', 'Failed to save container: ' + (err.response?.data?.error || err.message), true);
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Sei sicuro di voler eliminare questo container? Questa azione è irreversibile.')) return;
+    const confirmed = await showConfirm('Elimina Container', 'Sei sicuro di voler eliminare questo container? Questa azione è irreversibile.');
+    if (!confirmed) return;
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -153,7 +156,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
       onSaved();
     } catch (err) {
       console.error(err);
-      alert('Failed to delete container: ' + (err.response?.data?.error || err.message));
+      showAlert('Errore Eliminazione', 'Failed to delete container: ' + (err.response?.data?.error || err.message), true);
       setSaving(false);
     }
   };

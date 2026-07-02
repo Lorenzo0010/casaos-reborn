@@ -19,8 +19,12 @@ axios.interceptors.response.use(
   }
 );
 
+import { DialogProvider } from './contexts/DialogContext.jsx';
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <DialogProvider>
+      <App />
+    </DialogProvider>
   </React.StrictMode>,
 )

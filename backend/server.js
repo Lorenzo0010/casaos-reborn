@@ -4,6 +4,39 @@ const cors = require('cors');
 const { Server } = require('socket.io');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+
+// Setup global logger
+const logDir = path.join(__dirname, 'data');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+const logFile = path.join(logDir, 'casaos.log');
+
+const originalLog = console.log;
+const originalError = console.error;
+
+function formatLogMessage(level, args) {
+  const timestamp = new Date().toISOString();
+  const message = args.map(arg => {
+    if (arg instanceof Error) return arg.stack || arg.message;
+    if (typeof arg === 'object') {
+      try { return JSON.stringify(arg); } catch(e) { return String(arg); }
+    }
+    return String(arg);
+  }).join(' ');
+  return `[${timestamp}] [${level}] ${message}\n`;
+}
+
+console.log = function(...args) {
+  originalLog.apply(console, args);
+  try { fs.appendFileSync(logFile, formatLogMessage('INFO', args)); } catch(e) {}
+};
+
+console.error = function(...args) {
+  originalError.apply(console, args);
+  try { fs.appendFileSync(logFile, formatLogMessage('ERROR', args)); } catch(e) {}
+};
 
 // Initialize app
 const app = express();
