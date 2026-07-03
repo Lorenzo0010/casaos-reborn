@@ -701,14 +701,14 @@ export default function Dashboard() {
                     </h3>
                   )}
                   {/* Status Dot */}
-                  <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ margin: 0, width: '12px', height: '12px', flexShrink: 0 }}></span>
+                  <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ margin: 0, width: '12px', height: '12px', flexShrink: 0, marginLeft: 'auto' }}></span>
                 </div>
 
                 {/* Buttons Row */}
                 <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginTop: '4px' }}>
                   
                   {/* Actions */}
-                  <div style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '15px' }}>
+                  <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', gap: '15px' }}>
                     {c.State !== 'running' ? (
                       <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" style={{ padding: '10px 20px' }} title="Avvia">
                         <Play size={20} />
@@ -783,13 +783,13 @@ export default function Dashboard() {
                       <h3 style={{ margin: 0, fontSize: '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                         {progressData.name || 'Recreating...'}
                       </h3>
-                      <span className="status-dot recreating" style={{ margin: 0, width: '12px', height: '12px', flexShrink: 0 }}></span>
+                      <span className="status-dot recreating" style={{ margin: 0, width: '12px', height: '12px', flexShrink: 0, marginLeft: 'auto' }}></span>
                     </div>
                     
                     {/* Buttons Row */}
                     <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginTop: '4px' }}>
                       
-                      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                      <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
                         <button className="btn btn-action neutral" style={{ padding: '10px 40px', opacity: 0.5, cursor: 'not-allowed' }} disabled>
                           <Loader size={20} className="spin" />
                         </button>
