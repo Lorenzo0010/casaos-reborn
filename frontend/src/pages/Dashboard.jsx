@@ -684,9 +684,11 @@ export default function Dashboard() {
                 )}
               </div>
               
-              {/* CONTENT BLOCK (Middle) */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, alignItems: 'flex-start', textAlign: 'left', margin: '0 5px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', marginBottom: '4px', width: '100%' }}>
+              {/* CONTENT AND BUTTONS BLOCK (Right Side) */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', margin: '0 5px', gap: '8px' }}>
+                
+                {/* Title Row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%' }}>
                   {isClickable ? (
                     <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', maxWidth: '100%' }} title="Apri Web UI">
                       <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
@@ -700,48 +702,54 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-start' }}>
-                  <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`}></span>
-                  <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
-                    {c.State === 'running' ? c.Status.replace(/^Up\s/, 'Avviato da ') : c.Status.replace(/^Exited\s\(\d+\)\s/, 'Interrotto da ')}
-                  </span>
-                </div>
-              </div>
+                {/* Status and Buttons Row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
+                  
+                  {/* Status */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`}></span>
+                    <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
+                      {c.State === 'running' ? c.Status.replace(/^Up\s/, '') : c.Status.replace(/^Exited\s\(\d+\)\s/, '')}
+                    </span>
+                  </div>
 
-              {/* BUTTONS BLOCK (Right) */}
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', flexShrink: 0 }}>
-                {c.State !== 'running' ? (
-                  <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
-                    <Play size={16} />
-                  </button>
-                ) : (
-                  <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
-                    <Square size={16} />
-                  </button>
-                )}
-                <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
-                  <FileText size={16} />
-                </button>
-                <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
-                  <Settings size={16} />
-                </button>
-
-                {editMode && (
-                  <>
-                    <div style={{ width: '2px', height: '24px', backgroundColor: 'var(--card-border)', margin: '0 5px' }} />
-                    <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su">
-                      <ChevronUp size={16} />
-                    </button>
-                    <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù">
-                      <ChevronDown size={16} />
-                    </button>
-                    {!isMobile && (
-                      <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab', marginLeft: '5px' }} title="Trascina per riordinare">
-                        <GripHorizontal size={20} />
-                      </div>
+                  {/* Buttons */}
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {c.State !== 'running' ? (
+                      <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
+                        <Play size={16} />
+                      </button>
+                    ) : (
+                      <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
+                        <Square size={16} />
+                      </button>
                     )}
-                  </>
-                )}
+                    <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
+                      <FileText size={16} />
+                    </button>
+                    <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
+                      <Settings size={16} />
+                    </button>
+
+                    {editMode && (
+                      <>
+                        <div style={{ width: '2px', height: '24px', backgroundColor: 'var(--card-border)', margin: '0 5px' }} />
+                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su">
+                          <ChevronUp size={16} />
+                        </button>
+                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù">
+                          <ChevronDown size={16} />
+                        </button>
+                        {!isMobile && (
+                          <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab', marginLeft: '5px' }} title="Trascina per riordinare">
+                            <GripHorizontal size={20} />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                </div>
               </div>
             </div>
           )})}
@@ -775,20 +783,27 @@ export default function Dashboard() {
                     <div style={{ width: 80, height: 80, borderRadius: '16px', backgroundColor: 'var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                   </div>
                   
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, alignItems: 'flex-start', textAlign: 'left', margin: '0 5px' }}>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                  {/* CONTENT AND BUTTONS BLOCK */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', margin: '0 5px', gap: '8px' }}>
+                    
+                    {/* Title */}
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                       {progressData.name || 'Recreating...'}
                     </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-start' }}>
-                      <span className="status-dot recreating"></span>
-                      <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
-                        Aggiornamento in corso...
-                      </span>
+                    
+                    {/* Status and Buttons Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="status-dot recreating"></span>
+                        <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
+                          Aggiornamento in corso...
+                        </span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button className="btn btn-action neutral" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled><Loader size={16} className="spin" /></button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', flexShrink: 0 }}>
-                    <button className="btn btn-action neutral" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled><Loader size={16} className="spin" /></button>
                   </div>
                 </div>
               );
