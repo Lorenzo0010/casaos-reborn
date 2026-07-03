@@ -172,15 +172,15 @@ h1, h2, h3 {
 }
 .grid-cols-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
 .grid-cols-2 { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); }
-.grid-cols-cards { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.grid-cols-cards { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 
 /* Container Card — Vertical Centered Layout */
 .container-card {
-  padding: 20px;
+  padding: 28px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   position: relative;
   overflow: hidden;
   cursor: default;
@@ -263,7 +263,7 @@ h1, h2, h3 {
     gap: 12px;
   }
   .container-card {
-    padding: 12px;
+    padding: 16px 10px;
     gap: 10px;
   }
   .container-card .card-icon {
