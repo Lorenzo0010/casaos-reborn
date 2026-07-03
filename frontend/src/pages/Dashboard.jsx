@@ -677,10 +677,10 @@ export default function Dashboard() {
               <div style={{ flexShrink: 0 }}>
                 {isClickable ? (
                   <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'flex' }} title="Apri Web UI">
-                    <img src={getContainerIcon(c)} alt="" style={{ width: 80, height: 80, borderRadius: '16px', objectFit: 'cover', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
+                    <img src={getContainerIcon(c)} alt="" style={{ width: 100, height: 100, borderRadius: '16px', objectFit: 'cover', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
                   </a>
                 ) : (
-                  <img src={getContainerIcon(c)} alt="" style={{ width: 80, height: 80, borderRadius: '16px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
+                  <img src={getContainerIcon(c)} alt="" style={{ width: 100, height: 100, borderRadius: '16px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onError={e => { e.target.style.display = 'none'; }} />
                 )}
               </div>
               
@@ -691,57 +691,59 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%' }}>
                   {isClickable ? (
                     <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', maxWidth: '100%' }} title="Apri Web UI">
-                      <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                      <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', fontSize: '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
                         {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                       </h3>
                     </a>
                   ) : (
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                       {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                     </h3>
                   )}
                 </div>
 
                 {/* Status and Buttons Row */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', width: '100%', position: 'relative', marginTop: '4px' }}>
                   
-                  {/* Status Button-style */}
-                  <div className={`btn btn-action ${c.State === 'running' ? 'success' : 'danger'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', pointerEvents: 'none', padding: '12px 0' }} title={c.State === 'running' ? 'Avviato' : 'Interrotto'}>
-                    <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ margin: 0, boxShadow: 'none', backgroundColor: 'white' }}></span>
+                  {/* Status Dot */}
+                  <div style={{ position: 'absolute', left: 0 }}>
+                    <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ margin: 0, width: '12px', height: '12px', display: 'block' }}></span>
                   </div>
 
                   {/* Actions */}
-                  {c.State !== 'running' ? (
-                    <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Avvia">
-                      <Play size={20} />
+                  <div style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '15px' }}>
+                    {c.State !== 'running' ? (
+                      <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" style={{ padding: '10px 20px' }} title="Avvia">
+                        <Play size={20} />
+                      </button>
+                    ) : (
+                      <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" style={{ padding: '10px 20px' }} title="Arresta">
+                        <Square size={20} />
+                      </button>
+                    )}
+                    <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" style={{ padding: '10px 20px' }} title="Log">
+                      <FileText size={20} />
                     </button>
-                  ) : (
-                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Arresta">
-                      <Square size={20} />
+                    <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" style={{ padding: '10px 20px' }} title="Impostazioni">
+                      <Settings size={20} />
                     </button>
-                  )}
-                  <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Log">
-                    <FileText size={20} />
-                  </button>
-                  <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Impostazioni">
-                    <Settings size={20} />
-                  </button>
 
-                  {editMode && (
-                    <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
-                      <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Sposta Su">
-                        <ChevronUp size={20} />
-                      </button>
-                      <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Sposta Giù">
-                        <ChevronDown size={20} />
-                      </button>
-                      {!isMobile && (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', flex: 0.5 }} title="Trascina per riordinare">
-                          <GripHorizontal size={20} />
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    {editMode && (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" style={{ padding: '10px 15px' }} title="Sposta Su">
+                          <ChevronUp size={20} />
+                        </button>
+                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" style={{ padding: '10px 15px' }} title="Sposta Giù">
+                          <ChevronDown size={20} />
+                        </button>
+                        {!isMobile && (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', padding: '0 5px' }} title="Trascina per riordinare">
+                            <GripHorizontal size={20} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -773,27 +775,29 @@ export default function Dashboard() {
                   </div>
                   
                   <div style={{ flexShrink: 0 }}>
-                    <div style={{ width: 80, height: 80, borderRadius: '16px', backgroundColor: 'var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <div style={{ width: 100, height: 100, borderRadius: '16px', backgroundColor: 'var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                   </div>
                   
                   {/* CONTENT AND BUTTONS BLOCK */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', margin: '0 5px', gap: '8px' }}>
                     
                     {/* Title */}
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                       {progressData.name || 'Recreating...'}
                     </h3>
                     
                     {/* Status and Buttons Row */}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'nowrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', position: 'relative', marginTop: '4px' }}>
                       
-                      <div className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', pointerEvents: 'none', padding: '12px 0' }}>
-                        <span className="status-dot recreating" style={{ margin: 0, boxShadow: 'none' }}></span>
+                      <div style={{ position: 'absolute', left: 0 }}>
+                        <span className="status-dot recreating" style={{ margin: 0, width: '12px', height: '12px', display: 'block' }}></span>
                       </div>
                       
-                      <button className="btn btn-action neutral" style={{ flex: 3, display: 'flex', justifyContent: 'center', padding: '12px 0', opacity: 0.5, cursor: 'not-allowed' }} disabled>
-                        <Loader size={20} className="spin" />
-                      </button>
+                      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                        <button className="btn btn-action neutral" style={{ padding: '10px 40px', opacity: 0.5, cursor: 'not-allowed' }} disabled>
+                          <Loader size={20} className="spin" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
