@@ -703,52 +703,45 @@ export default function Dashboard() {
                 </div>
 
                 {/* Status and Buttons Row */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'nowrap' }}>
                   
-                  {/* Status */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`}></span>
-                    <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
-                      {c.State === 'running' ? c.Status.replace(/^Up\s/, '') : c.Status.replace(/^Exited\s\(\d+\)\s/, '')}
-                    </span>
+                  {/* Status Button-style */}
+                  <div className={`btn btn-action ${c.State === 'running' ? 'success' : 'danger'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', pointerEvents: 'none', padding: '12px 0' }} title={c.State === 'running' ? 'Avviato' : 'Interrotto'}>
+                    <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ margin: 0, boxShadow: 'none', backgroundColor: 'white' }}></span>
                   </div>
 
-                  {/* Buttons */}
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {c.State !== 'running' ? (
-                      <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" title="Avvia">
-                        <Play size={16} />
-                      </button>
-                    ) : (
-                      <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" title="Arresta">
-                        <Square size={16} />
-                      </button>
-                    )}
-                    <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" title="Log">
-                      <FileText size={16} />
+                  {/* Actions */}
+                  {c.State !== 'running' ? (
+                    <button onClick={() => handleAction(c.Id, 'start')} className="btn btn-action success" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Avvia">
+                      <Play size={20} />
                     </button>
-                    <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" title="Impostazioni">
-                      <Settings size={16} />
+                  ) : (
+                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn btn-action danger" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Arresta">
+                      <Square size={20} />
                     </button>
+                  )}
+                  <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Log">
+                    <FileText size={20} />
+                  </button>
+                  <button onClick={() => setEditingContainerId(c.Id)} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Impostazioni">
+                    <Settings size={20} />
+                  </button>
 
-                    {editMode && (
-                      <>
-                        <div style={{ width: '2px', height: '24px', backgroundColor: 'var(--card-border)', margin: '0 5px' }} />
-                        <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" title="Sposta Su">
-                          <ChevronUp size={16} />
-                        </button>
-                        <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" title="Sposta Giù">
-                          <ChevronDown size={16} />
-                        </button>
-                        {!isMobile && (
-                          <div style={{ display: 'flex', alignItems: 'center', opacity: 0.5, cursor: 'grab', marginLeft: '5px' }} title="Trascina per riordinare">
-                            <GripHorizontal size={20} />
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-
+                  {editMode && (
+                    <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
+                      <button onClick={() => moveCustom(c.Id, -1)} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Sposta Su">
+                        <ChevronUp size={20} />
+                      </button>
+                      <button onClick={() => moveCustom(c.Id, 1)} className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '12px 0' }} title="Sposta Giù">
+                        <ChevronDown size={20} />
+                      </button>
+                      {!isMobile && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', flex: 0.5 }} title="Trascina per riordinare">
+                          <GripHorizontal size={20} />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -792,17 +785,15 @@ export default function Dashboard() {
                     </h3>
                     
                     {/* Status and Buttons Row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className="status-dot recreating"></span>
-                        <span style={{ fontSize: '0.85rem', opacity: 0.7, fontWeight: 500 }}>
-                          Aggiornamento in corso...
-                        </span>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'nowrap' }}>
+                      
+                      <div className="btn btn-action neutral" style={{ flex: 1, display: 'flex', justifyContent: 'center', pointerEvents: 'none', padding: '12px 0' }}>
+                        <span className="status-dot recreating" style={{ margin: 0, boxShadow: 'none' }}></span>
                       </div>
                       
-                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-action neutral" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled><Loader size={16} className="spin" /></button>
-                      </div>
+                      <button className="btn btn-action neutral" style={{ flex: 3, display: 'flex', justifyContent: 'center', padding: '12px 0', opacity: 0.5, cursor: 'not-allowed' }} disabled>
+                        <Loader size={20} className="spin" />
+                      </button>
                     </div>
                   </div>
                 </div>
