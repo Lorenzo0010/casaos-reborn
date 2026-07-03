@@ -688,7 +688,7 @@ export default function Dashboard() {
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', margin: '0 5px', gap: '8px' }}>
                 
                 {/* Title Row */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%', gap: '10px' }}>
                   {isClickable ? (
                     <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', maxWidth: '100%' }} title="Apri Web UI">
                       <h3 style={{ margin: 0, cursor: 'pointer', transition: 'color 0.2s', fontSize: '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
@@ -700,16 +700,13 @@ export default function Dashboard() {
                       {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
                     </h3>
                   )}
+                  {/* Status Dot */}
+                  <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ margin: 0, width: '12px', height: '12px', flexShrink: 0 }}></span>
                 </div>
 
-                {/* Status and Buttons Row */}
-                <div style={{ display: 'flex', alignItems: 'center', width: '100%', position: 'relative', marginTop: '4px' }}>
+                {/* Buttons Row */}
+                <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginTop: '4px' }}>
                   
-                  {/* Status Dot */}
-                  <div style={{ position: 'absolute', left: 0 }}>
-                    <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ margin: 0, width: '12px', height: '12px', display: 'block' }}></span>
-                  </div>
-
                   {/* Actions */}
                   <div style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '15px' }}>
                     {c.State !== 'running' ? (
@@ -781,17 +778,16 @@ export default function Dashboard() {
                   {/* CONTENT AND BUTTONS BLOCK */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center', margin: '0 5px', gap: '8px' }}>
                     
-                    {/* Title */}
-                    <h3 style={{ margin: 0, fontSize: '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
-                      {progressData.name || 'Recreating...'}
-                    </h3>
+                    {/* Title Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%', gap: '10px' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                        {progressData.name || 'Recreating...'}
+                      </h3>
+                      <span className="status-dot recreating" style={{ margin: 0, width: '12px', height: '12px', flexShrink: 0 }}></span>
+                    </div>
                     
-                    {/* Status and Buttons Row */}
-                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', position: 'relative', marginTop: '4px' }}>
-                      
-                      <div style={{ position: 'absolute', left: 0 }}>
-                        <span className="status-dot recreating" style={{ margin: 0, width: '12px', height: '12px', display: 'block' }}></span>
-                      </div>
+                    {/* Buttons Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginTop: '4px' }}>
                       
                       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                         <button className="btn btn-action neutral" style={{ padding: '10px 40px', opacity: 0.5, cursor: 'not-allowed' }} disabled>
