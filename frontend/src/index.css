@@ -231,6 +231,17 @@ progress::-moz-progress-bar {
   border-radius: 4px;
 }
 
+/* Hide scrollbar on mobile for widgets-row */
+@media (max-width: 768px) {
+  .widgets-row::-webkit-scrollbar {
+    display: none;
+  }
+  .widgets-row {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
 /* Buttons */
 .btn {
   padding: 8px 16px;
