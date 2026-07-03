@@ -172,7 +172,129 @@ h1, h2, h3 {
 }
 .grid-cols-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
 .grid-cols-2 { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); }
-.grid-cols-cards { grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
+.grid-cols-cards { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+
+/* Container Card — Vertical Centered Layout */
+.container-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.container-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.12);
+}
+
+.container-card .card-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.container-card .card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.3;
+  width: 100%;
+}
+
+.container-card .card-led {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.container-card .card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Square action buttons */
+.btn-action-square {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background-color: var(--card-border);
+  color: var(--text-color);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.btn-action-square:hover {
+  transform: scale(1.1);
+}
+.btn-action-square.success:hover { background-color: var(--success); color: white; }
+.btn-action-square.danger:hover { background-color: var(--danger); color: white; }
+.btn-action-square.neutral:hover { background-color: var(--primary); color: white; }
+
+.container-card .card-edit-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Mobile responsive — 2 columns */
+@media (max-width: 768px) {
+  .grid-cols-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .container-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  .container-card .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .container-card .card-title {
+    font-size: 0.85rem;
+  }
+  .container-card .card-led {
+    top: 10px;
+    right: 10px;
+  }
+  .container-card .card-led .status-dot {
+    width: 9px;
+    height: 9px;
+  }
+  .btn-action-square {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+}
+
+/* Very small screens fallback */
+@media (max-width: 340px) {
+  .grid-cols-cards {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Widgets */
 .widget {
