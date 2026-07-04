@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [sortMode, setSortMode] = useState('date');
   const [pinnedContainers, setPinnedContainers] = useState([]);
   const [customOrder, setCustomOrder] = useState([]);
+  const [containerOverrides, setContainerOverrides] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [draggedItem, setDraggedItem] = useState(null);
@@ -44,6 +45,7 @@ export default function Dashboard() {
         if (Array.isArray(res.data.pinnedContainers)) setPinnedContainers(res.data.pinnedContainers);
         if (Array.isArray(res.data.customOrder)) setCustomOrder(res.data.customOrder);
         if (Array.isArray(res.data.widgetsOrder) && res.data.widgetsOrder.length > 0) setWidgetsOrder(res.data.widgetsOrder);
+        if (res.data.containerOverrides) setContainerOverrides(res.data.containerOverrides);
       } catch (e) {
         console.error('Error loading preferences from server', e);
       } finally {
@@ -66,7 +68,8 @@ export default function Dashboard() {
           sortMode,
           pinnedContainers,
           customOrder,
-          widgetsOrder
+          widgetsOrder,
+          containerOverrides
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -78,7 +81,7 @@ export default function Dashboard() {
     // Basic debounce to avoid too many requests while dragging
     const timeout = setTimeout(savePrefs, 500);
     return () => clearTimeout(timeout);
-  }, [sortMode, pinnedContainers, customOrder, widgetsOrder, prefsLoaded]);
+  }, [sortMode, pinnedContainers, customOrder, widgetsOrder, containerOverrides, prefsLoaded]);
 
   const fetchStats = async () => {
     try {
@@ -254,12 +257,21 @@ export default function Dashboard() {
     return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  const getContainerName = (container) => {
+    const stableId = container.Names ? container.Names[0].replace('/', '') : container.Id;
+    if (containerOverrides[stableId] && containerOverrides[stableId].displayName) return containerOverrides[stableId].displayName;
+    return container.Labels?.['casaos.reborn.name'] || stableId;
+  };
+
   const getContainerIcon = (container) => {
+    const stableId = container.Names ? container.Names[0].replace('/', '') : container.Id;
+    if (containerOverrides[stableId] && containerOverrides[stableId].icon) return containerOverrides[stableId].icon;
+
     const labels = container.Labels || {};
     const iconUrl = labels['casaos.reborn.icon'];
     if (iconUrl) return iconUrl;
     
-    const name = (container.Names?.[0] || container.name || 'Unknown').replace('/', '');
+    const name = stableId;
     const initial = name.charAt(0).toUpperCase();
     
     let hash = 0;
@@ -287,8 +299,8 @@ export default function Dashboard() {
     
     if (sortMode === 'alphabetical') {
       sorted.sort((a, b) => {
-        const nameA = a.Labels?.['casaos.reborn.name'] || a.Names[0].replace('/', '');
-        const nameB = b.Labels?.['casaos.reborn.name'] || b.Names[0].replace('/', '');
+        const nameA = getContainerName(a);
+        const nameB = getContainerName(b);
         return nameA.localeCompare(nameB);
       });
     } else if (sortMode === 'date') {
@@ -688,12 +700,12 @@ export default function Dashboard() {
               {isClickable ? (
                 <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', width: '100%' }} title="Apri Web UI">
                   <h3 className="card-title" style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
-                    {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
+                    {getContainerName(c)}
                   </h3>
                 </a>
               ) : (
                 <h3 className="card-title">
-                  {c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '')}
+                  {getContainerName(c)}
                 </h3>
               )}
 
@@ -708,7 +720,7 @@ export default function Dashboard() {
                     <Square size={18} />
                   </button>
                 )}
-                <button onClick={() => setLogsContainer({ id: c.Id, name: c.Labels?.['casaos.reborn.name'] || c.Names[0].replace('/', '') })} className="btn-action-square neutral" title="Log">
+                <button onClick={() => setLogsContainer({ id: c.Id, name: getContainerName(c) })} className="btn-action-square neutral" title="Log">
                   <FileText size={18} />
                 </button>
                 <button onClick={() => setEditingContainerId(c.Id)} className="btn-action-square neutral" title="Impostazioni">
@@ -801,6 +813,13 @@ export default function Dashboard() {
       {editingContainerId && (
         <ContainerSettingsModal 
           containerId={editingContainerId} 
+          containerOverrides={containerOverrides}
+          onUpdateOverride={(stableId, overrides) => {
+            setContainerOverrides(prev => ({
+              ...prev,
+              [stableId]: { ...(prev[stableId] || {}), ...overrides }
+            }));
+          }}
           onClose={() => setEditingContainerId(null)}
           onSaved={() => {
             setEditingContainerId(null);
