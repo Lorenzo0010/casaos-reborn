@@ -13,7 +13,7 @@ CasaOS Reborn is a lightweight, modern, and powerful web-based interface for man
 - **Intelligent Self-Updater**: A robust, built-in self-updating mechanism that verifies image hashes and seamlessly updates its own container without manual intervention or data loss.
 - **Persistent Preferences**: All layout and theme settings are safely stored in a local backend JSON file, preserving your customized workspace across all devices.
 
-## Roadmap 🚀
+## Roadmap 🚀 
 
 We are actively working on massive upgrades to turn CasaOS-Reborn into a complete web operating system. The upcoming features include:
 
