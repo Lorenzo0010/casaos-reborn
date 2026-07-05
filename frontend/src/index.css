@@ -340,27 +340,31 @@ progress::-moz-progress-bar {
   margin-bottom: 10px;
 }
 
-/* Scrollbar styling for webkit */
-.widgets-row::-webkit-scrollbar {
-  height: 8px;
-}
-.widgets-row::-webkit-scrollbar-track {
-  background: var(--card-border);
-  border-radius: 4px;
-}
-.widgets-row::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 4px;
-}
-
-/* Hide scrollbar on mobile for widgets-row */
-@media (max-width: 768px) {
-  .widgets-row::-webkit-scrollbar {
-    display: none;
-  }
+/* Scrollbar styling for desktop (visible on hover) */
+@media (hover: hover) and (pointer: fine) {
   .widgets-row {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    scrollbar-color: transparent transparent;
+  }
+  .widgets-row:hover {
+    scrollbar-color: var(--primary) var(--card-border);
+  }
+
+  .widgets-row::-webkit-scrollbar {
+    height: 8px;
+  }
+  .widgets-row::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+  .widgets-row::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+  }
+  .widgets-row:hover::-webkit-scrollbar-track {
+    background: var(--card-border);
+  }
+  .widgets-row:hover::-webkit-scrollbar-thumb {
+    background: var(--primary);
   }
 }
 
