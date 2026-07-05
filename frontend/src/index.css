@@ -404,8 +404,8 @@ progress::-moz-progress-bar {
   display: inline-block;
   flex-shrink: 0;
 }
-.status-dot.running { background-color: var(--success); box-shadow: 0 0 6px var(--success); }
-.status-dot.exited { background-color: var(--danger); opacity: 0.8; }
+.status-dot.running { background-color: var(--primary); box-shadow: 0 0 6px var(--primary); }
+.status-dot.exited { background-color: #9ca3af; opacity: 0.8; }
 .status-dot.recreating { background-color: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
 
 /* Login */
