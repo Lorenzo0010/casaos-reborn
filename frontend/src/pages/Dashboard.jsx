@@ -520,7 +520,7 @@ export default function Dashboard() {
                   <div className="value">{stats.cpu.load}%</div>
                   <progress value={stats.cpu.load} max="100" style={{ width: '100%' }}></progress>
                   <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-                    {stats.cpu.temperature != null ? `${stats.cpu.temperature}°C` : 'Temperatura N/A'}
+                    {stats.cpu.temperature != null ? `${Math.round(stats.cpu.temperature)}°C` : 'Temperatura N/A'}
                   </div>
                   {renderMobileControls()}
                 </div>
