@@ -35,7 +35,7 @@ To deploy CasaOS Reborn on your system, use the following `docker-compose.yml`. 
 ```yaml
 services:
   casaos-reborn:
-    image: lorenzo0010/casaos-reborn:latest
+    image: ghcr.io/lorenzo0010/casaos-reborn:latest
     container_name: casaos-reborn
     privileged: true
     restart: unless-stopped
