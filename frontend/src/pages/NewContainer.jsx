@@ -23,6 +23,7 @@ export default function NewContainer() {
   
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(null);
+  const [maxMemory, setMaxMemory] = useState(8192);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -46,6 +47,25 @@ export default function NewContainer() {
   });
 
   useEffect(() => {
+    const fetchSysInfo = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/system/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.memory && data.memory.total) {
+            const totalMB = Math.floor(data.memory.total / (1024 * 1024));
+            setMaxMemory(totalMB);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch system memory', err);
+      }
+    };
+    fetchSysInfo();
+
     const token = localStorage.getItem('token');
     const socket = io({ auth: { type: 'ui', token } });
 
@@ -374,6 +394,11 @@ export default function NewContainer() {
               </div>
 
               <div>
+                  <label>Docker Container Name *</label>
+                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="my-app" />
+              </div>
+
+              <div>
                 <label>Display Name (Dashboard)</label>
                 <input type="text" value={formData.displayName} onChange={e => setFormData({...formData, displayName: e.target.value})} placeholder={formData.name || "My App"} />
               </div>
@@ -428,8 +453,8 @@ export default function NewContainer() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
                   <label>Memory Limit</label>
-                  <input type="range" className="memory-slider" min="0" max="8192" step="256" value={formData.memory} onChange={e => setFormData({...formData, memory: parseInt(e.target.value)})} />
-                  <div style={{ textAlign: 'center', fontSize: '0.9rem', marginTop: '5px' }}>{formData.memory === 0 ? 'Unlimited' : `${formData.memory} MB`}</div>
+                  <input type="range" className="memory-slider" min="0" max={maxMemory} step="256" value={formData.memory} onChange={e => setFormData({...formData, memory: parseInt(e.target.value)})} />
+                  <div style={{ textAlign: 'center', fontSize: '0.9rem', marginTop: '5px' }}>{formData.memory === 0 ? 'Unlimited' : `${formData.memory} MB (Max: ${maxMemory} MB)`}</div>
                 </div>
                 <div>
                   <label>CPU Quota</label>
@@ -572,11 +597,6 @@ export default function NewContainer() {
                         </div>
                     ))}
                 </div>
-              </div>
-
-              <div>
-                  <label>Docker Container Name *</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="my-app" />
               </div>
 
               <button className="btn btn-primary" onClick={handleCreate} style={{ padding: '15px', fontSize: '1.1rem', marginTop: '10px' }}>
