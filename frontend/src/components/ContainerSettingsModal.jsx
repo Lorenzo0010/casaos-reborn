@@ -284,7 +284,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content glass casaos-form">
+      <div className="modal-content glass casaos-form" style={{ maxWidth: '800px', width: '95vw' }}>
         {showYamlExport ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -475,16 +475,19 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
               </select>
             </div>
 
-          </div>
-          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+            <hr style={{ border: 'none', borderTop: '1px solid var(--card-border)', margin: '10px 0' }} />
+            
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button className="btn btn-danger" onClick={handleDelete} disabled={saving}>
-                Elimina Container
-              </button>
               <button className="btn" onClick={handleExportYaml} disabled={saving} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                 <Download size={16} /> Esporta YAML
               </button>
+              <button className="btn btn-danger" onClick={handleDelete} disabled={saving}>
+                Elimina Container
+              </button>
             </div>
+
+          </div>
+          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn" onClick={onClose} disabled={saving} style={{ background: 'var(--card-bg)' }}>Annulla</button>
               <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
