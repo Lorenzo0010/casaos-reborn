@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Palette, Save, RefreshCcw, Moon, Sun } from 'lucide-react';
 
-export default function Settings({ theme, setTheme, preferences, onSave }) {
+export default function Settings({ theme, actualTheme, setTheme, preferences, onSave }) {
   const [accentColor, setAccentColor] = useState(preferences?.accentColor || '#3b82f6');
   const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
   const [isSaving, setIsSaving] = useState(false);
