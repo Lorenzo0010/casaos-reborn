@@ -33,6 +33,7 @@ export default function NewContainer() {
     icon: '',
     webUI: { scheme: 'http', port: '', path: '/' },
     networkMode: 'bridge',
+    pidMode: '',
     hostname: '',
     restartPolicy: 'unless-stopped',
     privileged: false,
@@ -143,6 +144,7 @@ export default function NewContainer() {
       newData.restartPolicy = service.restart || 'unless-stopped';
       newData.privileged = !!service.privileged;
       newData.networkMode = service.network_mode || 'bridge';
+      newData.pidMode = service.pid || '';
       newData.hostname = service.hostname || '';
       
       if (serviceCasaosData.port || rootCasaosData.port) {
@@ -270,6 +272,7 @@ export default function NewContainer() {
       icon: formData.icon,
       webUI: formData.webUI.port ? formData.webUI : null,
       networkMode: formData.networkMode,
+      pidMode: formData.pidMode,
       hostname: formData.hostname,
       restartPolicy: formData.restartPolicy,
       privileged: formData.privileged,
@@ -426,7 +429,7 @@ export default function NewContainer() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px' }}>
                 <div>
                   <label>Network Mode</label>
                   <select value={formData.networkMode} onChange={e => setFormData({...formData, networkMode: e.target.value})}>
@@ -434,6 +437,13 @@ export default function NewContainer() {
                     <option value="host">host</option>
                     <option value="none">none</option>
                   </select>
+                </div>
+                <div>
+                  <label>PID Mode</label>
+                  <input type="text" value={formData.pidMode} onChange={e => setFormData({...formData, pidMode: e.target.value})} placeholder="e.g. host" list="pid-options" />
+                  <datalist id="pid-options">
+                    <option value="host" />
+                  </datalist>
                 </div>
                 <div>
                   <label>Hostname</label>

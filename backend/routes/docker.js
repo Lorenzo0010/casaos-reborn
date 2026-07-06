@@ -50,7 +50,7 @@ function getOwnContainerId() {
 // Recreate container with new settings
 router.post('/containers/:id/recreate', async (req, res) => {
   const { id } = req.params;
-  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
+  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon, pidMode } = req.body;
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
@@ -129,6 +129,8 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const newWebUI = webUI || oldWebUI;
     const oldDisplayName = oldInspect.Config?.Labels?.['casaos.reborn.name'] || '';
     const oldIcon = oldInspect.Config?.Labels?.['casaos.reborn.icon'] || '';
+    const oldPidMode = oldInspect.HostConfig?.PidMode || '';
+    const newPidMode = pidMode !== undefined ? pidMode : oldPidMode;
 
     // A full recreate is required if image string changed, image digest changed, or config changed
     const needsFullRecreate = 
@@ -138,6 +140,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       privileged !== !!oldInspect.HostConfig?.Privileged ||
       (displayName != null && displayName !== oldDisplayName) ||
       (icon != null && icon !== oldIcon) ||
+      newPidMode !== oldPidMode ||
       !isDeepStrictEqual(newPortBindings, oldPortBindings) ||
       !isDeepStrictEqual(newBinds.sort(), oldBinds.sort()) ||
       !isDeepStrictEqual(env?.sort(), oldEnv.sort()) ||
@@ -177,6 +180,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
         RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
         Privileged: !!privileged,
         NetworkMode: oldInspect.HostConfig?.NetworkMode || 'default',
+        PidMode: newPidMode,
       },
       NetworkingConfig: {
         EndpointsConfig: endpointsConfig
@@ -481,7 +485,7 @@ router.post('/containers/:id/:action', async (req, res) => {
 
 // Create a new container
 router.post('/containers/create', async (req, res) => {
-  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon, networkMode, hostname, cpuQuota, devices, cmd, capAdd } = req.body;
+  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon, networkMode, hostname, cpuQuota, devices, cmd, capAdd, pidMode } = req.body;
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
@@ -545,7 +549,8 @@ router.post('/containers/create', async (req, res) => {
         Binds: volumes || [],
         RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
         Privileged: !!privileged,
-        NetworkMode: networkMode || 'bridge'
+        NetworkMode: networkMode || 'bridge',
+        PidMode: pidMode || ''
       }
     };
     

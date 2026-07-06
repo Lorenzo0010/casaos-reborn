@@ -20,6 +20,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
     ports: [],
     volumes: [],
     restartPolicy: 'unless-stopped',
+    pidMode: '',
     privileged: false,
     memory: 0,
     webUI: { scheme: 'http://', port: '', path: '/' }
@@ -90,6 +91,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
           ports: parsedPorts,
           volumes: parsedVolumes,
           restartPolicy: info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped',
+          pidMode: info?.HostConfig?.PidMode || '',
           privileged: !!info?.HostConfig?.Privileged,
           memory: info?.HostConfig?.Memory ? Math.round(info.HostConfig.Memory / (1024 * 1024)) : 0,
           webUI: {
@@ -121,6 +123,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
         displayName: data.displayName,
         icon: data.icon,
         restartPolicy: data.restartPolicy,
+        pidMode: data.pidMode,
         privileged: data.privileged,
         memory: data.memory ? parseInt(data.memory) * 1024 * 1024 : 0,
         webUI: data.webUI,
@@ -182,6 +185,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
     };
     
     if (data.privileged) service.privileged = true;
+    if (data.pidMode) service.pid = data.pidMode;
     
     const validPorts = data.ports.filter(p => p.hostPort && p.containerPort);
     if (validPorts.length > 0) {
@@ -473,6 +477,14 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
                 <option value="on-failure">on-failure</option>
                 <option value="no">no</option>
               </select>
+            </div>
+
+            <div className="form-group">
+              <label>PID Mode</label>
+              <input type="text" value={data.pidMode} onChange={e => updateField('pidMode', e.target.value)} placeholder="es. host" list="pid-options-modal" style={{ width: '100%', padding: '10px' }} />
+              <datalist id="pid-options-modal">
+                <option value="host" />
+              </datalist>
             </div>
 
             <hr style={{ border: 'none', borderTop: '1px solid var(--card-border)', margin: '10px 0' }} />
