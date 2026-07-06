@@ -80,13 +80,14 @@ export default function Settings({ theme, toggleTheme, preferences, onSave }) {
               Tema Dark Mode {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
             </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
-              <label className="switch">
-                <input type="checkbox" checked={theme === 'dark'} onChange={toggleTheme} />
-                <span className="slider round"></span>
-              </label>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-color)' }}>
-                {theme === 'dark' ? 'Scuro abilitato' : 'Chiaro abilitato'}
-              </span>
+              <select value={theme} onChange={(e) => {
+                setTheme(e.target.value);
+                onSave({ ...preferences, theme: e.target.value });
+              }} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--bg-color)', color: 'var(--text-color)' }}>
+                <option value="light">Chiaro</option>
+                <option value="dark">Scuro</option>
+                <option value="auto">Auto (Sistema)</option>
+              </select>
             </div>
           </div>
 

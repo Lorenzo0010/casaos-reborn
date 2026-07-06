@@ -9,12 +9,30 @@ import Settings from './pages/Settings';
 import SystemLogs from './pages/SystemLogs';
 
 function App() {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [preferences, setPreferences] = useState(null);
+  const [actualTheme, setActualTheme] = useState('light');
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    const updateActualTheme = () => {
+      let current = theme;
+      if (theme === 'auto') {
+        current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      setActualTheme(current);
+      document.documentElement.setAttribute('data-theme', current);
+    };
+
+    updateActualTheme();
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const listener = () => updateActualTheme();
+    mediaQuery.addEventListener('change', listener);
+    return () => mediaQuery.removeEventListener('change', listener);
+  }, [theme]);
+
+  useEffect(() => {
     localStorage.setItem('theme', theme);
     if (token) {
       fetch('/api/system/preferences', {
@@ -40,7 +58,6 @@ function App() {
           setTheme(data.theme);
         }
         setPreferences(data);
-        applyCustomStyles(data, data.theme || theme);
       })
       .catch(console.error);
     }
@@ -54,6 +71,13 @@ function App() {
     let yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     return (yiq >= 128) ? '#000000' : '#ffffff';
   };
+
+  // Re-apply styles whenever actualTheme or preferences change
+  useEffect(() => {
+    if (preferences) {
+      applyCustomStyles(preferences, actualTheme);
+    }
+  }, [actualTheme, preferences]);
 
   const applyCustomStyles = (prefs, currentTheme) => {
     if (!prefs) return;
