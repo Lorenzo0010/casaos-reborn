@@ -5,6 +5,15 @@ import yaml from 'js-yaml';
 import { io } from 'socket.io-client';
 import { useDialog } from '../contexts/DialogContext';
 
+const CAPABILITIES = [
+  'AUDIT_CONTROL', 'AUDIT_READ', 'BLOCK_SUSPEND', 'BPF', 'CHECKPOINT_RESTORE',
+  'DAC_READ_SEARCH', 'IPC_LOCK', 'IPC_OWNER', 'LEASE', 'LINUX_IMMUTABLE',
+  'MAC_ADMIN', 'MAC_OVERRIDE', 'NET_ADMIN', 'NET_BROADCAST', 'PERFMON',
+  'SYS_ADMIN', 'SYS_BOOT', 'SYS_MODULE', 'SYS_NICE', 'SYS_PACCT',
+  'SYS_PTRACE', 'SYS_RAWIO', 'SYS_RESOURCE', 'SYS_TIME', 'SYS_TTY_CONFIG',
+  'SYSLOG', 'WAKE_ALARM'
+];
+
 export default function NewContainer() {
   const { showAlert } = useDialog();
   const navigate = useNavigate();
@@ -21,15 +30,21 @@ export default function NewContainer() {
     image: '',
     tag: 'latest',
     icon: '',
+    webUI: { scheme: 'http', port: '', path: '/' },
+    networkMode: 'bridge',
+    hostname: '',
     restartPolicy: 'unless-stopped',
     privileged: false,
-    memory: '',
+    memory: 0,
+    cpuQuota: 0,
     ports: [],
     volumes: [],
-    env: []
+    env: [],
+    devices: [],
+    commands: [],
+    capAdd: []
   });
 
-  // Connect socket for creation progress
   useEffect(() => {
     const token = localStorage.getItem('token');
     const socket = io({ auth: { type: 'ui', token } });
@@ -60,7 +75,6 @@ export default function NewContainer() {
       if (!parsed || typeof parsed !== 'object') throw new Error('Invalid YAML');
       
       let service = parsed;
-      // If it's a compose file, grab the first service
       if (parsed.services) {
         const serviceName = Object.keys(parsed.services)[0];
         service = parsed.services[serviceName];
@@ -86,6 +100,14 @@ export default function NewContainer() {
           else if (xCasaos.title.custom) res.title = xCasaos.title.custom;
           else if (xCasaos.title.en_us) res.title = xCasaos.title.en_us;
         }
+        if (xCasaos.ports) {
+            const uiPort = xCasaos.ports.find(p => p.ui || p.web);
+            if (uiPort) {
+                res.scheme = uiPort.scheme || 'http';
+                res.port = uiPort.target || uiPort.published || '';
+                res.path = uiPort.path || '/';
+            }
+        }
         return res;
       };
 
@@ -100,31 +122,55 @@ export default function NewContainer() {
       newData.icon = serviceCasaosData.icon || rootCasaosData.icon || '';
       newData.restartPolicy = service.restart || 'unless-stopped';
       newData.privileged = !!service.privileged;
+      newData.networkMode = service.network_mode || 'bridge';
+      newData.hostname = service.hostname || '';
       
-      // Parse ports
+      if (serviceCasaosData.port || rootCasaosData.port) {
+          newData.webUI = {
+              scheme: serviceCasaosData.scheme || rootCasaosData.scheme || 'http',
+              port: serviceCasaosData.port || rootCasaosData.port || '',
+              path: serviceCasaosData.path || rootCasaosData.path || '/'
+          };
+      }
+
       if (service.ports) {
         newData.ports = service.ports.map(p => {
           if (typeof p === 'string') {
             const parts = p.split(':');
-            if (parts.length === 2) return { host: parts[0], container: parts[1] };
-            if (parts.length === 3) return { host: parts[1], container: parts[2] };
+            let protocol = 'tcp';
+            let host = '';
+            let container = '';
+            if (parts.length === 2) { host = parts[0]; container = parts[1]; }
+            if (parts.length === 3) { host = parts[1]; container = parts[2]; }
+            if (container.includes('/')) {
+                const cParts = container.split('/');
+                container = cParts[0];
+                protocol = cParts[1].toLowerCase();
+            }
+            return { host, container, protocol };
+          } else if (typeof p === 'object') {
+              return {
+                  host: String(p.published || ''),
+                  container: String(p.target || ''),
+                  protocol: (p.protocol || 'tcp').toLowerCase()
+              };
           }
-          return { host: '', container: '' };
+          return { host: '', container: '', protocol: 'tcp' };
         }).filter(p => p.host && p.container);
       }
 
-      // Parse volumes
       if (service.volumes) {
         newData.volumes = service.volumes.map(v => {
           if (typeof v === 'string') {
             const parts = v.split(':');
             if (parts.length >= 2) return { host: parts[0], container: parts[1] };
+          } else if (typeof v === 'object') {
+              return { host: v.source || '', container: v.target || '' };
           }
           return { host: '', container: '' };
         }).filter(v => v.host && v.container);
       }
 
-      // Parse env
       if (service.environment) {
         if (Array.isArray(service.environment)) {
           newData.env = service.environment.map(e => {
@@ -134,6 +180,28 @@ export default function NewContainer() {
         } else {
           newData.env = Object.entries(service.environment).map(([k, v]) => ({ key: k, value: String(v) }));
         }
+      }
+
+      if (service.devices) {
+          newData.devices = service.devices.map(d => {
+              if (typeof d === 'string') {
+                  const parts = d.split(':');
+                  if (parts.length >= 2) return { host: parts[0], container: parts[1] };
+              }
+              return { host: '', container: '' };
+          }).filter(d => d.host && d.container);
+      }
+
+      if (service.command) {
+          if (Array.isArray(service.command)) {
+              newData.commands = service.command.map(c => ({ value: c }));
+          } else {
+              newData.commands = service.command.split(' ').map(c => ({ value: c }));
+          }
+      }
+      
+      if (service.cap_add) {
+          newData.capAdd = service.cap_add.filter(c => CAPABILITIES.includes(c.toUpperCase())).map(c => c.toUpperCase());
       }
 
       setFormData(newData);
@@ -151,14 +219,28 @@ export default function NewContainer() {
     
     setLoading(true);
     
-    // Transform arrays back to objects for API
     const portsObj = {};
     formData.ports.forEach(p => {
-      if (p.host && p.container) portsObj[`${p.container}/tcp`] = [{ HostPort: p.host }];
+      if (p.host && p.container) {
+          const key = `${p.container}/${p.protocol}`;
+          if (!portsObj[key]) portsObj[key] = [];
+          portsObj[key].push({ HostPort: p.host });
+      }
     });
 
     const envArray = formData.env.filter(e => e.key).map(e => `${e.key}=${e.value}`);
     const volumesArray = formData.volumes.filter(v => v.host && v.container).map(v => `${v.host}:${v.container}`);
+    const devicesArray = formData.devices.filter(d => d.host && d.container).map(d => ({
+        PathOnHost: d.host,
+        PathInContainer: d.container,
+        CgroupPermissions: 'rwm'
+    }));
+    const commandsArray = formData.commands.filter(c => c.value).map(c => c.value);
+
+    let cpuQuotaObj = 0;
+    if (formData.cpuQuota === 1) cpuQuotaObj = 25000;
+    else if (formData.cpuQuota === 2) cpuQuotaObj = 50000;
+    else if (formData.cpuQuota === 3) cpuQuotaObj = 75000;
 
     const payload = {
       image: formData.image,
@@ -166,12 +248,19 @@ export default function NewContainer() {
       name: formData.name,
       displayName: formData.displayName,
       icon: formData.icon,
+      webUI: formData.webUI.port ? formData.webUI : null,
+      networkMode: formData.networkMode,
+      hostname: formData.hostname,
       restartPolicy: formData.restartPolicy,
       privileged: formData.privileged,
       memory: formData.memory ? parseInt(formData.memory) * 1024 * 1024 : 0,
+      cpuQuota: cpuQuotaObj,
       ports: portsObj,
       volumes: volumesArray,
-      env: envArray
+      env: envArray,
+      devices: devicesArray,
+      cmd: commandsArray,
+      capAdd: formData.capAdd
     };
 
     try {
@@ -185,7 +274,6 @@ export default function NewContainer() {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to start creation process');
       }
-      // We don't setLoading(false) here, we wait for socket event
     } catch (err) {
       showAlert('Errore', err.message, true);
       setLoading(false);
@@ -200,6 +288,15 @@ export default function NewContainer() {
 
   const addList = (field, emptyObj) => setFormData({ ...formData, [field]: [...formData[field], emptyObj] });
   const removeList = (field, index) => setFormData({ ...formData, [field]: formData[field].filter((_, i) => i !== index) });
+
+  const handleCapToggle = (cap) => {
+      const isSelected = formData.capAdd.includes(cap);
+      if (isSelected) {
+          setFormData({ ...formData, capAdd: formData.capAdd.filter(c => c !== cap) });
+      } else {
+          setFormData({ ...formData, capAdd: [...formData.capAdd, cap] });
+      }
+  };
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '40px' }}>
@@ -249,7 +346,7 @@ export default function NewContainer() {
                 value={yamlInput}
                 onChange={e => setYamlInput(e.target.value)}
                 style={{ width: '100%', height: '300px', background: 'var(--bg-color)', color: 'var(--text-color)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '15px', fontFamily: 'monospace' }}
-                placeholder="version: '3'\nservices:\n  nginx:\n    image: nginx:latest\n    ports:\n      - '8080:80'"
+                placeholder={"version: '3'\nservices:\n  nginx:\n    image: nginx:latest\n    ports:\n      - '8080:80'"}
               />
               {yamlError && (
                 <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -264,16 +361,6 @@ export default function NewContainer() {
 
           {activeTab === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div>
-                  <label>Docker Container Name *</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="my-app" />
-                </div>
-                <div>
-                  <label>Display Name (Dashboard)</label>
-                  <input type="text" value={formData.displayName} onChange={e => setFormData({...formData, displayName: e.target.value})} placeholder={formData.name || "My App"} />
-                </div>
-              </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '10px' }}>
                 <div>
@@ -287,11 +374,46 @@ export default function NewContainer() {
               </div>
 
               <div>
+                <label>Display Name (Dashboard)</label>
+                <input type="text" value={formData.displayName} onChange={e => setFormData({...formData, displayName: e.target.value})} placeholder={formData.name || "My App"} />
+              </div>
+
+              <div>
                 <label>Icon URL</label>
                 <input type="text" value={formData.icon} onChange={e => setFormData({...formData, icon: e.target.value})} placeholder="https://example.com/icon.png" />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '10px', alignItems: 'end' }}>
+                <div>
+                  <label>Web UI Scheme</label>
+                  <select value={formData.webUI.scheme} onChange={e => setFormData({...formData, webUI: {...formData.webUI, scheme: e.target.value}})}>
+                    <option value="http">http://</option>
+                    <option value="https">https://</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Web UI Port</label>
+                  <input type="text" value={formData.webUI.port} onChange={e => setFormData({...formData, webUI: {...formData.webUI, port: e.target.value}})} placeholder="e.g. 8080" />
+                </div>
+                <div>
+                  <label>Web UI Path</label>
+                  <input type="text" value={formData.webUI.path} onChange={e => setFormData({...formData, webUI: {...formData.webUI, path: e.target.value}})} placeholder="e.g. /admin" />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                <div>
+                  <label>Network Mode</label>
+                  <select value={formData.networkMode} onChange={e => setFormData({...formData, networkMode: e.target.value})}>
+                    <option value="bridge">bridge</option>
+                    <option value="host">host</option>
+                    <option value="none">none</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hostname</label>
+                  <input type="text" value={formData.hostname} onChange={e => setFormData({...formData, hostname: e.target.value})} placeholder="Optional" />
+                </div>
                 <div>
                   <label>Restart Policy</label>
                   <select value={formData.restartPolicy} onChange={e => setFormData({...formData, restartPolicy: e.target.value})}>
@@ -301,9 +423,22 @@ export default function NewContainer() {
                     <option value="unless-stopped">Unless Stopped</option>
                   </select>
                 </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
-                  <label>Memory Limit (MB) - Optional</label>
-                  <input type="number" value={formData.memory} onChange={e => setFormData({...formData, memory: e.target.value})} placeholder="e.g. 512" />
+                  <label>Memory Limit</label>
+                  <input type="range" className="memory-slider" min="0" max="8192" step="256" value={formData.memory} onChange={e => setFormData({...formData, memory: parseInt(e.target.value)})} />
+                  <div style={{ textAlign: 'center', fontSize: '0.9rem', marginTop: '5px' }}>{formData.memory === 0 ? 'Unlimited' : `${formData.memory} MB`}</div>
+                </div>
+                <div>
+                  <label>CPU Quota</label>
+                  <select value={formData.cpuQuota} onChange={e => setFormData({...formData, cpuQuota: parseInt(e.target.value)})}>
+                    <option value={0}>Unlimited</option>
+                    <option value={1}>Low (25%)</option>
+                    <option value={2}>Medium (50%)</option>
+                    <option value={3}>High (75%)</option>
+                  </select>
                 </div>
               </div>
 
@@ -319,7 +454,7 @@ export default function NewContainer() {
               <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Port Mappings</span>
-                  <button className="btn-pill" onClick={() => addList('ports', { host: '', container: '' })}><Plus size={14}/> Add</button>
+                  <button className="btn-pill" onClick={() => addList('ports', { host: '', container: '', protocol: 'tcp' })}><Plus size={14}/> Add</button>
                 </div>
                 <div className="list-grid ports-grid" style={{ marginBottom: '8px' }}>
                   <span>Host Port</span><span>Container Port</span><span>Protocol</span><span></span>
@@ -328,7 +463,10 @@ export default function NewContainer() {
                   <div key={idx} className="list-grid ports-grid">
                     <input type="text" placeholder="8080" value={port.host} onChange={e => updateList('ports', idx, 'host', e.target.value)} />
                     <input type="text" placeholder="80" value={port.container} onChange={e => updateList('ports', idx, 'container', e.target.value)} />
-                    <select disabled><option>TCP</option></select>
+                    <select value={port.protocol} onChange={e => updateList('ports', idx, 'protocol', e.target.value)}>
+                        <option value="tcp">TCP</option>
+                        <option value="udp">UDP</option>
+                    </select>
                     <button className="btn-icon" onClick={() => removeList('ports', idx)}><Trash2 size={16}/></button>
                   </div>
                 ))}
@@ -354,6 +492,25 @@ export default function NewContainer() {
                 {formData.volumes.length === 0 && <p style={{ fontSize: '0.8rem', opacity: 0.6, textAlign: 'center' }}>No volumes mapped</p>}
               </div>
 
+              {/* Devices */}
+              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+                <div className="section-header">
+                  <span style={{ fontWeight: 'bold' }}>Devices</span>
+                  <button className="btn-pill" onClick={() => addList('devices', { host: '', container: '' })}><Plus size={14}/> Add</button>
+                </div>
+                <div className="list-grid devices-grid" style={{ marginBottom: '8px' }}>
+                  <span>Host Device</span><span>Container Device</span><span></span>
+                </div>
+                {formData.devices.map((dev, idx) => (
+                  <div key={idx} className="list-grid devices-grid">
+                    <input type="text" placeholder="/dev/dri" value={dev.host} onChange={e => updateList('devices', idx, 'host', e.target.value)} />
+                    <input type="text" placeholder="/dev/dri" value={dev.container} onChange={e => updateList('devices', idx, 'container', e.target.value)} />
+                    <button className="btn-icon" onClick={() => removeList('devices', idx)}><Trash2 size={16}/></button>
+                  </div>
+                ))}
+                {formData.devices.length === 0 && <p style={{ fontSize: '0.8rem', opacity: 0.6, textAlign: 'center' }}>No devices mapped</p>}
+              </div>
+
               {/* Environment Variables */}
               <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
                 <div className="section-header">
@@ -371,6 +528,55 @@ export default function NewContainer() {
                   </div>
                 ))}
                 {formData.env.length === 0 && <p style={{ fontSize: '0.8rem', opacity: 0.6, textAlign: 'center' }}>No env variables</p>}
+              </div>
+
+              {/* Commands */}
+              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+                <div className="section-header">
+                  <span style={{ fontWeight: 'bold' }}>Container Command</span>
+                  <button className="btn-pill" onClick={() => addList('commands', { value: '' })}><Plus size={14}/> Add</button>
+                </div>
+                <div className="list-grid commands-grid" style={{ marginBottom: '8px' }}>
+                  <span>Command</span><span></span>
+                </div>
+                {formData.commands.map((cmd, idx) => (
+                  <div key={idx} className="list-grid commands-grid">
+                    <input type="text" placeholder="--appendonly=yes" value={cmd.value} onChange={e => updateList('commands', idx, 'value', e.target.value)} />
+                    <button className="btn-icon" onClick={() => removeList('commands', idx)}><Trash2 size={16}/></button>
+                  </div>
+                ))}
+                {formData.commands.length === 0 && <p style={{ fontSize: '0.8rem', opacity: 0.6, textAlign: 'center' }}>No custom commands</p>}
+              </div>
+
+              {/* Capabilities */}
+              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+                <div className="section-header">
+                  <span style={{ fontWeight: 'bold' }}>Capabilities (cap-add)</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                    {CAPABILITIES.map(cap => (
+                        <div 
+                            key={cap} 
+                            onClick={() => handleCapToggle(cap)}
+                            style={{ 
+                                padding: '5px 10px', 
+                                borderRadius: '4px', 
+                                border: '1px solid var(--card-border)', 
+                                fontSize: '0.8rem',
+                                cursor: 'pointer',
+                                background: formData.capAdd.includes(cap) ? 'var(--primary)' : 'transparent',
+                                color: formData.capAdd.includes(cap) ? 'white' : 'inherit'
+                            }}
+                        >
+                            {cap}
+                        </div>
+                    ))}
+                </div>
+              </div>
+
+              <div>
+                  <label>Docker Container Name *</label>
+                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="my-app" />
               </div>
 
               <button className="btn btn-primary" onClick={handleCreate} style={{ padding: '15px', fontSize: '1.1rem', marginTop: '10px' }}>

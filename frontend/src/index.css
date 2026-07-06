@@ -597,3 +597,28 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+/* New Container Forms Additions */
+.casaos-form input[type="number"] {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: border-color 0.2s;
+}
+
+.memory-slider {
+  width: 100%;
+  accent-color: var(--primary);
+  margin-top: 10px;
+}
+
+.devices-grid {
+  grid-template-columns: 1fr 1fr 30px;
+}
+
+.commands-grid {
+  grid-template-columns: 1fr 30px;
+}

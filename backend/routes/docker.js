@@ -481,7 +481,7 @@ router.post('/containers/:id/:action', async (req, res) => {
 
 // Create a new container
 router.post('/containers/create', async (req, res) => {
-  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon } = req.body;
+  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon, networkMode, hostname, cpuQuota, devices, cmd, capAdd } = req.body;
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
@@ -545,11 +545,20 @@ router.post('/containers/create', async (req, res) => {
         Binds: volumes || [],
         RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
         Privileged: !!privileged,
+        NetworkMode: networkMode || 'bridge'
       }
     };
     
-    if (name) {
-      createOptions.name = name;
+    if (name) createOptions.name = name;
+    if (hostname) createOptions.Hostname = hostname;
+    if (cmd && cmd.length > 0) createOptions.Cmd = cmd;
+    
+    if (devices && devices.length > 0) {
+        createOptions.HostConfig.Devices = devices;
+    }
+    
+    if (capAdd && capAdd.length > 0) {
+        createOptions.HostConfig.CapAdd = capAdd;
     }
 
     if (webUI) {
@@ -571,6 +580,11 @@ router.post('/containers/create', async (req, res) => {
 
     if (memory) {
       createOptions.HostConfig.Memory = memory;
+    }
+    
+    if (cpuQuota) {
+        createOptions.HostConfig.CpuQuota = cpuQuota;
+        createOptions.HostConfig.CpuPeriod = 100000;
     }
 
     const newContainer = await Promise.race([
