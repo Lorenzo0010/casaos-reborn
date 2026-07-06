@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, Plus, Check, Image as ImageIcon, Download } from 'lucide-react';
+import { X, Plus, Check, Image as ImageIcon, Download, Copy } from 'lucide-react';
 import { useDialog } from '../contexts/DialogContext';
 import yaml from 'js-yaml';
 
@@ -8,6 +8,8 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
   const { showAlert, showConfirm } = useDialog();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showYamlExport, setShowYamlExport] = useState(false);
+  const [yamlContent, setYamlContent] = useState('');
   const [data, setData] = useState({
     image: '',
     tag: 'latest',
@@ -227,8 +229,12 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
     };
 
     const yamlStr = yaml.dump(compose);
-    
-    const blob = new Blob([yamlStr], { type: 'text/yaml' });
+    setYamlContent(yamlStr);
+    setShowYamlExport(true);
+  };
+
+  const downloadYaml = () => {
+    const blob = new Blob([yamlContent], { type: 'text/yaml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -237,6 +243,11 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const copyYaml = () => {
+    navigator.clipboard.writeText(yamlContent);
+    showAlert('Copiato', 'File YAML copiato negli appunti.');
   };
 
   const updateField = (field, value) => setData(prev => ({ ...prev, [field]: value }));
@@ -274,10 +285,37 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
   return (
     <div className="modal-overlay">
       <div className="modal-content glass casaos-form">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {data.icon ? (
-              <img src={data.icon} alt="" style={{ width: 36, height: 36, borderRadius: '8px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+        {showYamlExport ? (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>YAML Esportato</h2>
+              <button className="btn-icon" onClick={() => setShowYamlExport(false)}><X size={20} /></button>
+            </div>
+            <div className="form-body" style={{ flex: 1 }}>
+              <textarea 
+                readOnly 
+                value={yamlContent} 
+                style={{ width: '100%', height: '300px', background: 'var(--bg-color)', color: 'var(--text-color)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '15px', fontFamily: 'monospace' }}
+              />
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+              <button className="btn" onClick={() => setShowYamlExport(false)} style={{ background: 'var(--card-bg)' }}>Indietro</button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button className="btn" onClick={copyYaml} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                  <Copy size={16} /> Copia
+                </button>
+                <button className="btn btn-primary" onClick={downloadYaml}>
+                  <Download size={16} /> Scarica
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {data.icon ? (
+                  <img src={data.icon} alt="" style={{ width: 36, height: 36, borderRadius: '8px', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
             ) : null}
             <h2 style={{ margin: 0 }}>{data.displayName || data.name}</h2>
           </div>
@@ -454,6 +492,8 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
               </button>
             </div>
           </div>
+          </>
+        )}
       </div>
     </div>
   );
