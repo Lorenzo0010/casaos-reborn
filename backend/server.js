@@ -118,7 +118,11 @@ io.on('connection', (socket) => {
   
   if (type === 'terminal') {
     const shell = os.platform() === 'win32' ? 'powershell.exe' : 'ssh';
-    const args = os.platform() === 'win32' ? [] : [`${sshUser || 'root'}@${sshHost || '127.0.1.1'}`];
+    const args = os.platform() === 'win32' ? [] : [
+      '-o', 'StrictHostKeyChecking=no',
+      '-o', 'UserKnownHostsFile=/dev/null',
+      `${sshUser || 'root'}@${sshHost || '127.0.1.1'}`
+    ];
     
     const ptyProcess = pty.spawn(shell, args, {
       name: 'xterm-color',
