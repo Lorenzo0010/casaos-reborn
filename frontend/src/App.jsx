@@ -280,7 +280,7 @@ function App() {
               <Route path="/new" element={<NewContainer />} />
               <Route path="/terminal" element={<TerminalPage />} />
               <Route path="/logs" element={<SystemLogs />} />
-              <Route path="/settings" element={<Settings theme={theme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} />} />
+              <Route path="/settings" element={<Settings theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
