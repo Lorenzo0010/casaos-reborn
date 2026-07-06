@@ -242,7 +242,7 @@ function App() {
   const savePreferences = async (newPrefs) => {
     // Aggiornamento ottimistico per un feedback istantaneo
     setPreferences(newPrefs);
-    applyCustomStyles(newPrefs, theme);
+    applyCustomStyles(newPrefs, actualTheme);
     
     try {
       await fetch('/api/system/preferences', {
@@ -258,7 +258,6 @@ function App() {
     }
   };
 
-  const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -281,7 +280,7 @@ function App() {
               <Route path="/new" element={<NewContainer />} />
               <Route path="/terminal" element={<TerminalPage />} />
               <Route path="/logs" element={<SystemLogs />} />
-              <Route path="/settings" element={<Settings theme={theme} toggleTheme={toggleTheme} preferences={preferences || {}} onSave={savePreferences} />} />
+              <Route path="/settings" element={<Settings theme={theme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
