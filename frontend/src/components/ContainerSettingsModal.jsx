@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, Plus, Check, Image as ImageIcon } from 'lucide-react';
+import { X, Plus, Check, Image as ImageIcon, Download } from 'lucide-react';
 import { useDialog } from '../contexts/DialogContext';
+import yaml from 'js-yaml';
 
 export default function ContainerSettingsModal({ containerId, containerOverrides, onUpdateOverride, onClose, onSaved }) {
   const { showAlert, showConfirm } = useDialog();
@@ -169,6 +170,73 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
       showAlert('Errore Eliminazione', 'Failed to delete container: ' + (err.response?.data?.error || err.message), true);
       setSaving(false);
     }
+  };
+
+  const handleExportYaml = () => {
+    const service = {
+      image: data.tag ? `${data.image}:${data.tag}` : data.image,
+      container_name: data.name,
+      restart: data.restartPolicy,
+    };
+    
+    if (data.privileged) service.privileged = true;
+    
+    const validPorts = data.ports.filter(p => p.hostPort && p.containerPort);
+    if (validPorts.length > 0) {
+      service.ports = validPorts.map(p => {
+        let proto = p.protocol === 'tcp' ? '' : `/${p.protocol}`;
+        return `${p.hostPort}:${p.containerPort}${proto}`;
+      });
+    }
+
+    const validVolumes = data.volumes.filter(v => v.hostPath && v.containerPath);
+    if (validVolumes.length > 0) {
+      service.volumes = validVolumes.map(v => `${v.hostPath}:${v.containerPath}`);
+    }
+
+    const validEnv = data.env.filter(e => e.key);
+    if (validEnv.length > 0) {
+      service.environment = validEnv.map(e => `${e.key}=${e.value}`);
+    }
+    
+    const xCasaos = {};
+    if (data.displayName) {
+        xCasaos.title = { custom: data.displayName };
+    }
+    if (data.icon) {
+        xCasaos.icon = data.icon;
+    }
+    if (data.webUI && data.webUI.port) {
+        xCasaos.ports = [{
+            ui: true,
+            scheme: (data.webUI.scheme || 'http://').replace('://', ''),
+            target: data.webUI.port,
+            path: data.webUI.path || '/'
+        }];
+    }
+    
+    if (Object.keys(xCasaos).length > 0) {
+        service['x-casaos'] = xCasaos;
+    }
+
+    const compose = {
+      version: '3.9',
+      services: {
+        [data.name || 'app']: service
+      }
+    };
+
+    const yamlStr = yaml.dump(compose);
+    
+    const blob = new Blob([yamlStr], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.name || 'container'}-compose.yml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const updateField = (field, value) => setData(prev => ({ ...prev, [field]: value }));
@@ -370,10 +438,15 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             </div>
 
           </div>
-                <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-            <button className="btn btn-danger" onClick={handleDelete} disabled={saving}>
-              Elimina Container
-            </button>
+          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button className="btn btn-danger" onClick={handleDelete} disabled={saving}>
+                Elimina Container
+              </button>
+              <button className="btn" onClick={handleExportYaml} disabled={saving} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                <Download size={16} /> Esporta YAML
+              </button>
+            </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn" onClick={onClose} disabled={saving} style={{ background: 'var(--card-bg)' }}>Annulla</button>
               <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
