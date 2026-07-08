@@ -151,11 +151,12 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
       });
       
       if (res.status === 202 || res.status === 200) {
-        onSaved();
+        onSaved(); // Closes the modal immediately
       }
     } catch (err) {
       console.error(err);
       showAlert('Errore Salvataggio', 'Failed to save container: ' + (err.response?.data?.error || err.message), true);
+    } finally {
       setSaving(false);
     }
   };

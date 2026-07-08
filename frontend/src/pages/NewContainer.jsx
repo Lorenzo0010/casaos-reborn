@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2, PlusSquare, Download } from 'lucide-react';
 import yaml from 'js-yaml';
-import { io } from 'socket.io-client';
 import { useDialog } from '../contexts/DialogContext';
 import { generateYamlFromData, downloadYamlFile } from '../utils/yamlHelper';
 
@@ -22,8 +21,6 @@ export default function NewContainer() {
   const [yamlInput, setYamlInput] = useState('');
   const [yamlError, setYamlError] = useState('');
   
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(null);
   const [maxMemory, setMaxMemory] = useState(8192);
 
   const [formData, setFormData] = useState({
@@ -67,28 +64,7 @@ export default function NewContainer() {
       }
     };
     fetchSysInfo();
-
-    const token = localStorage.getItem('token');
-    const socket = io({ auth: { type: 'ui', token } });
-
-    socket.on('container.create.progress', (data) => {
-      setProgress(data);
-    });
-
-    socket.on('container.create.success', (data) => {
-      setLoading(false);
-      setProgress(null);
-      navigate('/');
-    });
-
-    socket.on('container.create.error', (data) => {
-      setLoading(false);
-      setProgress(null);
-      showAlert('Errore Creazione', 'Error: ' + data.error, true);
-    });
-
-    return () => socket.disconnect();
-  }, [navigate]);
+  }, []);
 
   const handleImportYaml = () => {
     setYamlError('');
@@ -244,8 +220,6 @@ export default function NewContainer() {
       return;
     }
     
-    setLoading(true);
-    
     const portsObj = {};
     formData.ports.forEach(p => {
       if (p.host && p.container) {
@@ -302,9 +276,11 @@ export default function NewContainer() {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to start creation process');
       }
+      
+      // Navigate to dashboard immediately, creation continues in background
+      navigate('/');
     } catch (err) {
       showAlert('Errore', err.message, true);
-      setLoading(false);
     }
   };
 
@@ -332,27 +308,7 @@ export default function NewContainer() {
         <PlusSquare size={24} /> Create New Container
       </h2>
 
-      {loading && progress && (
-        <div style={{
-          padding: '3px',
-          borderRadius: '20px',
-          background: `conic-gradient(from 0deg, var(--primary) ${progress.progressDetail?.total ? Math.round((progress.progressDetail.current / progress.progressDetail.total) * 100) : 0}%, transparent ${progress.progressDetail?.total ? Math.round((progress.progressDetail.current / progress.progressDetail.total) * 100) : 0}%)`,
-          marginBottom: '20px',
-          transition: 'background 0.3s ease'
-        }}>
-          <div className="glass" style={{ padding: '20px', textAlign: 'center', margin: 0, border: 'none', borderRadius: '17px', background: 'var(--bg-color)' }}>
-            <div className="spin" style={{ marginBottom: '10px' }}><Play size={32} color="var(--primary)" /></div>
-            <h3 style={{ margin: '0 0 10px 0' }}>{progress.status}</h3>
-            {progress.progressDetail?.current && (
-              <p style={{ opacity: 0.8, marginTop: '10px', marginBottom: 0, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                {Math.round((progress.progressDetail.current / progress.progressDetail.total) * 100)}%
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="glass" style={{ overflow: 'hidden', display: loading ? 'none' : 'block' }}>
+      <div className="glass" style={{ overflow: 'hidden' }}>
         
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--card-border)' }}>

@@ -8,6 +8,13 @@ const { checkUpdates, getUpdaterStatus } = require('../services/updater');
 // Connect to local docker socket
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 
+global.activeTasks = global.activeTasks || {};
+
+// Get active background tasks
+router.get('/tasks', (req, res) => {
+  res.json(Object.values(global.activeTasks));
+});
+
 // Get available updates from cache
 router.get('/updates', (req, res) => {
   res.json({
@@ -90,8 +97,18 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const oldImage = oldInspect.Config?.Image || '';
     const imageChanged = fullImage !== oldImage;
     
+    const taskId = `recreate_${id}`;
+    global.activeTasks[taskId] = {
+      id: taskId,
+      type: 'recreate',
+      name: containerName,
+      image: fullImage,
+      status: 'Pulling image...',
+      progressDetail: null
+    };
+
     // 1. Pull the image to check for updates
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Pulling image...' });
+    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
     let pullFailed = false;
     try {
       await new Promise((resolve, reject) => {
@@ -101,13 +118,18 @@ router.post('/containers/:id/recreate', async (req, res) => {
             if (err) return reject(err);
             resolve(output);
           }, (event) => {
+            if (global.activeTasks[taskId]) {
+              global.activeTasks[taskId].status = event.status;
+              global.activeTasks[taskId].progressDetail = event.progressDetail;
+            }
             if (io) {
               io.emit('container.recreate.progress', {
                 id,
                 name: containerName,
                 image: fullImage,
                 status: event.status,
-                progressDetail: event.progressDetail
+                progressDetail: event.progressDetail,
+                taskId
               });
             }
           });
@@ -480,11 +502,15 @@ router.post('/containers/:id/recreate', async (req, res) => {
         console.warn("Error restoring extra networks:", netErr.message);
     }
 
-    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName });
+    const taskId = `recreate_${id}`;
+    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName, taskId });
   } catch (error) {
     console.error('Error recreating container:', error);
     // Fix Bug 3: containerName is now in scope
-    if (io) io.emit('container.recreate.error', { id, name: containerName, error: error.message });
+    const taskId = `recreate_${id}`;
+    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (io) io.emit('container.recreate.error', { id, name: containerName, error: error.message, taskId });
   }
 });
 
@@ -500,16 +526,27 @@ router.post('/containers/:id/update', async (req, res) => {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect();
     const containerName = oldInspect.Name.replace('/', '');
+    const taskId = `recreate_${id}`;
+    global.activeTasks[taskId] = {
+      id: taskId,
+      type: 'recreate',
+      name: containerName,
+      image,
+      status: 'Stopping old container...',
+      progressDetail: null
+    };
 
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Stopping old container...' });
+    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
     try { await oldContainer.stop({ t: 10 }); } catch (e) {}
 
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Removing old container...' });
+    if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Removing old container...';
+    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
     try { await oldContainer.remove({ v: false }); } catch (e) {
       await oldContainer.remove({ force: true, v: false }).catch(() => {});
     }
 
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Creating updated container...' });
+    if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Creating updated container...';
+    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
     
     // Pass exactly the same config, just override the image
     const createOptions = {
@@ -533,7 +570,8 @@ router.post('/containers/:id/update', async (req, res) => {
 
     const newContainer = await docker.createContainer(createOptions);
     
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Starting updated container...' });
+    if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Starting updated container...';
+    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
     await newContainer.start();
 
     // Remove from available updates cache
@@ -542,10 +580,13 @@ router.post('/containers/:id/update', async (req, res) => {
       if (io) io.emit('updater.results', Object.values(global.availableUpdates));
     }
 
-    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName });
+    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName, taskId });
   } catch (error) {
     console.error('Error updating container:', error);
-    if (io) io.emit('container.recreate.error', { id, error: error.message });
+    const taskId = `recreate_${id}`;
+    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (io) io.emit('container.recreate.error', { id, error: error.message, taskId });
   }
 });
 
@@ -575,9 +616,19 @@ router.post('/containers/create', async (req, res) => {
 
   try {
     const containerName = (name || '').replace('/', '');
+    const taskId = `create_${containerName}`;
     
+    global.activeTasks[taskId] = {
+      id: taskId,
+      type: 'create',
+      name: containerName,
+      image: fullImage,
+      status: 'Pulling image...',
+      progressDetail: null
+    };
+
     // Always pull the image
-    if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Pulling image...' });
+    if (io) io.emit('container.create.progress', global.activeTasks[taskId]);
     let pullFailed = false;
     try {
       await new Promise((resolve, reject) => {
@@ -587,12 +638,17 @@ router.post('/containers/create', async (req, res) => {
             if (err) return reject(err);
             resolve(output);
           }, (event) => {
+            if (global.activeTasks[taskId]) {
+              global.activeTasks[taskId].status = event.status;
+              global.activeTasks[taskId].progressDetail = event.progressDetail;
+            }
             if (io) {
               io.emit('container.create.progress', {
                 name: containerName,
                 image: fullImage,
                 status: event.status,
-                progressDetail: event.progressDetail
+                progressDetail: event.progressDetail,
+                taskId
               });
             }
           });
@@ -680,10 +736,13 @@ router.post('/containers/create', async (req, res) => {
     ]);
     await newContainer.start();
     
-    if (io) io.emit('container.create.success', { id: newContainer.id, name: containerName });
+    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (io) io.emit('container.create.success', { id: newContainer.id, name: containerName, taskId });
   } catch (error) {
     console.error('Error creating container:', error);
-    if (io) io.emit('container.create.error', { name, error: error.message });
+    const taskId = `create_${(name || '').replace('/', '')}`;
+    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (io) io.emit('container.create.error', { name, error: error.message, taskId });
   }
 });
 

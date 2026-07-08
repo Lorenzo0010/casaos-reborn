@@ -7,6 +7,8 @@ import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Advanced from './pages/Advanced';
 import FileManager from './pages/FileManager';
+import { TaskProvider } from './contexts/TaskContext';
+import TaskOverlay from './components/TaskOverlay';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
@@ -269,27 +271,29 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="layout">
-        <Sidebar />
+    <TaskProvider>
+      <Router>
+        <div className="layout">
+          <Sidebar />
 
-        <div className="main-content">
-          <div className="main-scrollable">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/new" element={<NewContainer />} />
-              <Route path="/files" element={<FileManager />} />
-              <Route path="/terminal" element={<TerminalPage />} />
-              <Route path="/advanced" element={<Advanced theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
-              <Route path="/settings" element={<Navigate to="/advanced" />} />
-              <Route path="/logs" element={<Navigate to="/advanced" />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
+          <div className="main-content">
+            <div className="main-scrollable">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/new" element={<NewContainer />} />
+                <Route path="/files" element={<FileManager />} />
+                <Route path="/terminal" element={<TerminalPage />} />
+                <Route path="/advanced" element={<Advanced theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
+                <Route path="/settings" element={<Navigate to="/advanced" />} />
+                <Route path="/logs" element={<Navigate to="/advanced" />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </div>
           </div>
         </div>
-      </div>
-      
-    </Router>
+        <TaskOverlay />
+      </Router>
+    </TaskProvider>
   );
 }
 
