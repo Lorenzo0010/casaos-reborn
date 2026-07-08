@@ -274,7 +274,7 @@ export default function Updates() {
                           onClick={() => updateContainer(upd.id, upd.name, upd.image)}
                           disabled={updatingId === upd.id || isChecking}
                           style={{ 
-                            background: updatingId === upd.id ? 'var(--card-bg)' : '#10b981', 
+                            background: updatingId === upd.id ? 'var(--bg-color)' : '#10b981', 
                             color: updatingId === upd.id ? 'var(--primary)' : '#fff', 
                             border: 'none', 
                             fontWeight: 'bold',

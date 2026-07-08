@@ -654,7 +654,8 @@ export default function Dashboard() {
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedItem === stableId ? 0.5 : 1,
                 margin: 0,
-                border: progressData ? 'none' : ''
+                border: progressData ? 'none' : '',
+                background: progressData ? 'var(--bg-color)' : ''
               }}
             >
               
@@ -689,10 +690,7 @@ export default function Dashboard() {
                 }}>
                   <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
                   <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: '0.85rem' }}>{progressData.status}</h4>
-                  <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '6px', overflow: 'hidden' }}>
-                    <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.3s ease' }}></div>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', marginTop: '5px', opacity: 0.8 }}>{Math.round(progressPercent)}%</div>
+                  <div style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9, fontWeight: 'bold' }}>{Math.round(progressPercent)}%</div>
                 </div>
               )}
 
@@ -774,7 +772,7 @@ export default function Dashboard() {
                   transition: 'background 0.3s ease',
                   height: '100%'
                 }}>
-                <div className="glass container-card" style={{ margin: 0, border: 'none' }}>
+                <div className="glass container-card" style={{ margin: 0, border: 'none', background: 'var(--bg-color)' }}>
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -784,10 +782,7 @@ export default function Dashboard() {
                   }}>
                     <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
                     <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: '0.85rem' }}>{progressData.status}</h4>
-                    <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '6px', overflow: 'hidden' }}>
-                      <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.3s ease' }}></div>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', marginTop: '5px', opacity: 0.8 }}>{Math.round(progressPercent)}%</div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9, fontWeight: 'bold' }}>{Math.round(progressPercent)}%</div>
                   </div>
                   
                   {/* LED */}
