@@ -6,6 +6,12 @@ const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 global.availableUpdates = {};
 
 let isChecking = false;
+let currentTask = null;
+
+const getUpdaterStatus = () => ({
+  isChecking,
+  currentTask
+});
 
 const checkUpdates = async (io) => {
   if (isChecking) return;
@@ -30,12 +36,16 @@ const checkUpdates = async (io) => {
       
       try {
         // Notifica l'inizio del controllo
+        currentTask = {
+          container: containerInfo.Name.replace('/', ''),
+          action: 'Checking registry...',
+          percentage: 0
+        };
+
         if (io) {
           io.emit('updater.status', { 
             status: 'checking', 
-            container: containerInfo.Name.replace('/', ''),
-            action: 'Checking registry...',
-            percentage: 0
+            ...currentTask
           });
         }
 
@@ -96,6 +106,8 @@ const checkUpdates = async (io) => {
 
     console.log('[Updater] Check completed. Found:', Object.keys(global.availableUpdates).length);
     
+    currentTask = null;
+    
     if (io) {
       io.emit('updater.status', { status: 'idle', count: Object.keys(global.availableUpdates).length });
       io.emit('updater.results', Object.values(global.availableUpdates));
@@ -103,6 +115,7 @@ const checkUpdates = async (io) => {
 
   } catch (error) {
     console.error('[Updater] Global error during check:', error);
+    currentTask = null;
     if (io) io.emit('updater.status', { status: 'error', message: error.message });
   } finally {
     isChecking = false;
@@ -123,5 +136,6 @@ const initUpdater = (io) => {
 
 module.exports = {
   initUpdater,
-  checkUpdates
+  checkUpdates,
+  getUpdaterStatus
 };

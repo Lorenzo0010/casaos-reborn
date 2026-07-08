@@ -3,14 +3,17 @@ const { isDeepStrictEqual } = require('util');
 const fs = require('fs');
 const router = express.Router();
 const Docker = require('dockerode');
-const { checkUpdates } = require('../services/updater');
+const { checkUpdates, getUpdaterStatus } = require('../services/updater');
 
 // Connect to local docker socket
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 
 // Get available updates from cache
 router.get('/updates', (req, res) => {
-  res.json(Object.values(global.availableUpdates || {}));
+  res.json({
+    updates: Object.values(global.availableUpdates || {}),
+    status: getUpdaterStatus()
+  });
 });
 
 // Trigger manual update check

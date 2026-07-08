@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Wrench, Palette, Save, RefreshCcw, Moon, Sun, Terminal, RefreshCw, Trash2, ArrowDown, LogOut } from 'lucide-react';
+import { Wrench, Palette, Save, RefreshCcw, Moon, Sun, Terminal, RefreshCw, Trash2, ArrowDown, LogOut, ArrowUpCircle } from 'lucide-react';
 import { useDialog } from '../contexts/DialogContext';
+import { io } from 'socket.io-client';
 
 export default function Advanced({ theme, actualTheme, setTheme, preferences, onSave, logout }) {
   // ─── UI Settings state ───
@@ -13,6 +14,11 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
   const [logs, setLogs] = useState('');
   const [logsLoading, setLogsLoading] = useState(true);
   const logsEndRef = useRef(null);
+
+  // ─── Updates state ───
+  const [updates, setUpdates] = useState([]);
+  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const [checkStatus, setCheckStatus] = useState(null);
 
   const { showAlert, showConfirm } = useDialog();
 
@@ -82,6 +88,32 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
 
   useEffect(() => {
     fetchLogs();
+    fetchUpdates();
+
+    const token = localStorage.getItem('token');
+    const socket = io(window.location.origin, {
+      auth: { token, type: 'web' }
+    });
+
+    socket.on('updater.status', (data) => {
+      if (data.status === 'checking') {
+        setIsCheckingUpdates(true);
+        setCheckStatus({ container: data.container, action: data.action, percentage: data.percentage });
+      }
+      if (data.status === 'idle') {
+        setIsCheckingUpdates(false);
+        setCheckStatus(null);
+        fetchUpdates();
+      }
+    });
+
+    socket.on('updater.results', (data) => {
+      setUpdates(data);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const clearLogs = async () => {
@@ -117,8 +149,43 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
   };
 
   // ═══════════════════════════════════════
-  // Docker Prune logic
+  // Docker Updates & Prune logic
   // ═══════════════════════════════════════
+
+  const fetchUpdates = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/docker/updates', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data) {
+        setUpdates(res.data.updates || []);
+        if (res.data.status?.isChecking) {
+          setIsCheckingUpdates(true);
+          setCheckStatus(res.data.status.currentTask);
+        } else {
+          setIsCheckingUpdates(false);
+          setCheckStatus(null);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const triggerUpdateCheck = async () => {
+    try {
+      setIsCheckingUpdates(true);
+      const token = localStorage.getItem('token');
+      await axios.post('/api/docker/check-updates', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error(err);
+      setIsCheckingUpdates(false);
+      showAlert('Errore', 'Impossibile avviare la ricerca aggiornamenti.', true);
+    }
+  };
 
   const handlePruneImages = async () => {
     const confirmed = await showConfirm('Pulizia Immagini', 'Sei sicuro di voler eliminare tutte le immagini Docker non utilizzate da alcun container?');
@@ -253,18 +320,73 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
         </div>
       </div>
 
-      {/* ─── Section 3: Docker Maintenance ─── */}
-      <div className="widget glass" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 5px 0' }}>
-            🐋 Manutenzione Docker
-          </h2>
-          <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Rimuovi le immagini docker non collegate ad alcun container per liberare spazio su disco.</p>
+      {/* ─── Section 3: Docker Maintenance & Updates ─── */}
+      <div className="widget glass" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 5px 0', borderBottom: '1px solid var(--card-border)', paddingBottom: '10px' }}>
+          <ArrowUpCircle size={20} /> Gestione Docker & Aggiornamenti
+        </h2>
+        
+        {/* Updates Section */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+          <div style={{ flex: 1, minWidth: '250px' }}>
+            <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>Aggiornamenti Immagini</h3>
+            <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>
+              Cerca nuove versioni delle immagini per i container in esecuzione.
+            </p>
+          </div>
+          <button 
+            className="btn btn-primary" 
+            onClick={triggerUpdateCheck} 
+            disabled={isCheckingUpdates}
+            style={{ padding: '8px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
+          >
+            <RefreshCw size={16} className={isCheckingUpdates ? 'spin' : ''} />
+            {isCheckingUpdates ? 'Ricerca in corso...' : 'Controlla Ora'}
+          </button>
         </div>
-        <button className="btn btn-danger" onClick={handlePruneImages}>
-          <Trash2 size={16} style={{ marginRight: '8px' }} />
-          Pulisci Immagini
-        </button>
+
+        {isCheckingUpdates && checkStatus && checkStatus.container && (
+          <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '10px', border: '1px solid var(--card-border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
+              <span>Scansione: <strong>{checkStatus.container}</strong></span>
+              <span style={{ opacity: 0.8 }}>{checkStatus.action}</span>
+            </div>
+            <div style={{ height: '4px', background: 'var(--card-bg)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div className="progress-bar-inner" style={{ width: '100%', height: '100%', background: 'var(--primary)', animation: 'pulse 1s infinite' }}></div>
+            </div>
+          </div>
+        )}
+
+        {updates.length > 0 && !isCheckingUpdates && (
+          <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '15px', borderRadius: '10px', border: '1px solid var(--danger)' }}>
+            <h4 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--danger)' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)' }}></div>
+              Container da aggiornare ({updates.length})
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+              {updates.map(upd => (
+                <div key={upd.id} style={{ background: 'var(--bg-color)', padding: '10px', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
+                  <div style={{ fontWeight: '600', marginBottom: '2px' }}>{upd.name}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.6, wordBreak: 'break-all' }}>{upd.image}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={{ width: '100%', height: '1px', background: 'var(--card-border)', margin: '5px 0' }}></div>
+
+        {/* Prune Section */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+          <div>
+            <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>Pulizia Sistema</h3>
+            <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Rimuovi le immagini docker orfane per liberare spazio su disco.</p>
+          </div>
+          <button className="btn btn-danger" onClick={handlePruneImages} style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', borderRadius: '8px' }}>
+            <Trash2 size={16} style={{ marginRight: '8px' }} />
+            Pulisci Immagini
+          </button>
+        </div>
       </div>
 
       {/* ─── Section 4: Logout ─── */}
