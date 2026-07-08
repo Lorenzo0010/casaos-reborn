@@ -441,12 +441,12 @@ export default function Dashboard() {
             <PlusCircle size={18} /> Nuovo Container
           </Link>
           <button 
-            className={`btn-icon ${editMode ? 'active' : ''}`} 
+            className="btn" 
             onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }} 
-            title="Modifica Layout" 
-            style={{ padding: '8px', color: editMode ? 'var(--primary)' : 'var(--text-color)', background: editMode ? 'var(--card-bg)' : 'transparent', border: editMode ? '1px solid var(--primary)' : '1px solid transparent', borderRadius: '8px' }}
+            title={editMode ? "Fine Modifica" : "Modifica Layout"}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: editMode ? 'var(--card-bg)' : 'var(--primary)', color: editMode ? 'var(--primary)' : 'var(--primary-text)', borderRadius: '10px', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem', border: editMode ? '1px solid var(--primary)' : '1px solid transparent', cursor: 'pointer' }}
           >
-            <Edit size={24} />
+            <Edit size={18} /> {editMode ? "Fine" : "Modifica"}
           </button>
         </div>
       </div>
