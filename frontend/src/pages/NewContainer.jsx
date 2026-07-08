@@ -121,12 +121,16 @@ export default function NewContainer() {
           else if (xCasaos.title.custom) res.title = xCasaos.title.custom;
           else if (xCasaos.title.en_us) res.title = xCasaos.title.en_us;
         }
+        if (xCasaos.port_map) res.port = String(xCasaos.port_map);
+        if (xCasaos.scheme) res.scheme = xCasaos.scheme;
+        if (xCasaos.index) res.path = xCasaos.index;
+
         if (xCasaos.ports) {
             const uiPort = xCasaos.ports.find(p => p.ui || p.web);
             if (uiPort) {
-                res.scheme = uiPort.scheme || 'http';
-                res.port = uiPort.target || uiPort.published || '';
-                res.path = uiPort.path || '/';
+                res.scheme = uiPort.scheme || res.scheme || 'http';
+                res.port = uiPort.target || uiPort.published || res.port || '';
+                res.path = uiPort.path || res.path || '/';
             }
         }
         return res;
