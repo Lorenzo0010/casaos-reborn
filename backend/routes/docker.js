@@ -485,6 +485,67 @@ router.post('/containers/:id/recreate', async (req, res) => {
   }
 });
 
+// Update a container preserving ALL its existing settings
+router.post('/containers/:id/update', async (req, res) => {
+  const { id } = req.params;
+  const { image } = req.body;
+  const io = req.io;
+
+  res.status(202).json({ success: true, message: 'Update started', id });
+
+  try {
+    const oldContainer = docker.getContainer(id);
+    const oldInspect = await oldContainer.inspect();
+    const containerName = oldInspect.Name.replace('/', '');
+
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Stopping old container...' });
+    try { await oldContainer.stop({ t: 10 }); } catch (e) {}
+
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Removing old container...' });
+    try { await oldContainer.remove({ v: false }); } catch (e) {
+      await oldContainer.remove({ force: true, v: false }).catch(() => {});
+    }
+
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Creating updated container...' });
+    
+    // Pass exactly the same config, just override the image
+    const createOptions = {
+      name: containerName,
+      Image: image,
+      Env: oldInspect.Config.Env,
+      Labels: oldInspect.Config.Labels,
+      ExposedPorts: oldInspect.Config.ExposedPorts,
+      HostConfig: oldInspect.HostConfig,
+      NetworkingConfig: {
+        EndpointsConfig: oldInspect.NetworkSettings.Networks
+      }
+    };
+
+    // Remove MacAddress to avoid conflicts
+    if (createOptions.NetworkingConfig?.EndpointsConfig) {
+      for (const net of Object.values(createOptions.NetworkingConfig.EndpointsConfig)) {
+        delete net.MacAddress;
+      }
+    }
+
+    const newContainer = await docker.createContainer(createOptions);
+    
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Starting updated container...' });
+    await newContainer.start();
+
+    // Remove from available updates cache
+    if (global.availableUpdates && global.availableUpdates[id]) {
+      delete global.availableUpdates[id];
+      if (io) io.emit('updater.results', Object.values(global.availableUpdates));
+    }
+
+    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName });
+  } catch (error) {
+    console.error('Error updating container:', error);
+    if (io) io.emit('container.recreate.error', { id, error: error.message });
+  }
+});
+
 router.post('/containers/:id/:action', async (req, res) => {
   const { id, action } = req.params;
   try {

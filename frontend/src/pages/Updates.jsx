@@ -47,8 +47,8 @@ export default function Updates() {
       
       // Chiamiamo la route di recreate esistente. L'immagine è già stata pullata dal background job,
       // quindi il recreate userà istantaneamente la nuova immagine e il container si riavvierà aggiornato.
-      await axios.post(`/api/docker/containers/${containerId}/recreate`, {
-        name,
+      // Usiamo la nuova rotta sicura /update che preserva TUTTE le impostazioni!
+      await axios.post(`/api/docker/containers/${containerId}/update`, {
         image
       }, {
         headers: { Authorization: `Bearer ${token}` }
