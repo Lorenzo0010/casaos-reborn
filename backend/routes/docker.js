@@ -3,8 +3,26 @@ const { isDeepStrictEqual } = require('util');
 const fs = require('fs');
 const router = express.Router();
 const Docker = require('dockerode');
+const { checkUpdates } = require('../services/updater');
+
 // Connect to local docker socket
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+
+// Get available updates from cache
+router.get('/updates', (req, res) => {
+  res.json(Object.values(global.availableUpdates || {}));
+});
+
+// Trigger manual update check
+router.post('/check-updates', async (req, res) => {
+  try {
+    // Run asynchronously
+    checkUpdates(req.io).catch(err => console.error("Error during manual check:", err));
+    res.json({ success: true, message: 'Update check started' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 router.get('/containers', async (req, res) => {
   try {

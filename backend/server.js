@@ -101,6 +101,10 @@ app.use('/api/files', authenticateToken, filesRoutes);
 
 const pty = require('node-pty');
 const os = require('os');
+const { initUpdater } = require('./services/updater');
+
+// Initialize the background updater
+initUpdater(io);
 
 // Socket.io for Terminal & real-time updates
 io.use((socket, next) => {
