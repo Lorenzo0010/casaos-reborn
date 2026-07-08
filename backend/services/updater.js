@@ -29,60 +29,62 @@ const checkUpdates = async (io) => {
       console.log(`[Updater] Checking ${containerInfo.Name.replace('/', '')} (${fullImage})`);
       
       try {
-        // 1. Pull the image with progress tracking
-        let layers = {};
-        await new Promise((resolve, reject) => {
-          docker.pull(fullImage, (err, stream) => {
+        // Notifica l'inizio del controllo
+        if (io) {
+          io.emit('updater.status', { 
+            status: 'checking', 
+            container: containerInfo.Name.replace('/', ''),
+            action: 'Checking registry...',
+            percentage: 0
+          });
+        }
+
+        // 1. Ottieni il digest remoto tramite API distribution
+        const remoteInfo = await new Promise((resolve, reject) => {
+          docker.modem.dial({
+            path: `/distribution/${fullImage}/json`,
+            method: 'GET',
+            statusCodes: {
+              200: true,
+              401: 'unauthorized',
+              404: 'not found',
+              500: 'server error'
+            }
+          }, (err, data) => {
             if (err) return reject(err);
-            docker.modem.followProgress(stream, (err) => {
-              if (err) return reject(err);
-              resolve();
-            }, (event) => {
-              if (event.id && event.progressDetail && event.progressDetail.total) {
-                layers[event.id] = { current: event.progressDetail.current, total: event.progressDetail.total };
-              }
-              let totalBytes = 0;
-              let currentBytes = 0;
-              for (const layer of Object.values(layers)) {
-                totalBytes += layer.total;
-                currentBytes += layer.current;
-              }
-              let percentage = 0;
-              if (totalBytes > 0) percentage = Math.round((currentBytes / totalBytes) * 100);
-              
-              if (io) {
-                io.emit('updater.status', { 
-                  status: 'checking', 
-                  container: containerInfo.Name.replace('/', ''),
-                  action: event.status || 'Pulling',
-                  percentage
-                });
-              }
-            });
+            resolve(data);
           });
         });
 
-        // 2. Confronto ID immagine locale (nuova) vs ID immagine nel container (vecchia)
-        const newImageInspect = await docker.getImage(fullImage).inspect();
-        const oldImageHash = containerInfo.Image; // The sha256 of the current container's image
-        const newImageHash = newImageInspect.Id;
+        const remoteDigest = remoteInfo?.Descriptor?.digest;
+        if (!remoteDigest) {
+          throw new Error('No remote digest found for ' + fullImage);
+        }
 
-        if (newImageHash !== oldImageHash) {
-          console.log(`[Updater] Update found for ${containerInfo.Name}!`);
+        // 2. Confronta con i RepoDigests locali
+        const oldImageInspect = await docker.getImage(containerInfo.Image).inspect();
+        const repoDigests = oldImageInspect.RepoDigests || [];
+        
+        // Verifica se il remoteDigest è presente nei repoDigests locali
+        const isUpToDate = repoDigests.some(digestStr => digestStr.includes(remoteDigest));
+
+        if (!isUpToDate) {
+          console.log(`[Updater] Update found for ${containerInfo.Name}! Remote: ${remoteDigest}`);
           global.availableUpdates[container.Id] = {
             id: container.Id,
             name: containerInfo.Name.replace('/', ''),
             image: fullImage,
-            oldHash: oldImageHash,
-            newHash: newImageHash,
+            oldHash: repoDigests[0] || 'unknown',
+            newHash: remoteDigest,
             timestamp: new Date().toISOString()
           };
         } else {
-          // If it was previously marked as having an update but now matches, remove it
+          // Se era precedentemente marcato come da aggiornare ma ora corrisponde, rimuovilo
           if (global.availableUpdates[container.Id]) {
             delete global.availableUpdates[container.Id];
           }
         }
+
       } catch (err) {
         console.warn(`[Updater] Failed to check update for ${fullImage}:`, err.message);
       }

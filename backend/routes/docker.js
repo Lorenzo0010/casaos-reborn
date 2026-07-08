@@ -708,13 +708,23 @@ router.get('/containers/:id/logs', async (req, res) => {
       stderr: true,
       since: startedAt
     });
-    // The logs stream returned by dockerode for non-TTY containers has a header for each line (8 bytes)
-    // We can just strip non-printable characters for a quick and dirty plain text response,
-    // or properly demux it. For simplicity, we'll convert to string and remove docker's 8-byte stream header.
-    // However, if we just send it as binary buffer, we can do a simple replace or just send it as text.
-    // A more robust way: 
-    const logString = logs.toString('utf8');
-    const cleanLogs = logString.replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, '');
+    let cleanLogs = '';
+    if (inspectData.Config.Tty) {
+      // Se Tty è abilitato, il log è già testo puro
+      cleanLogs = logs.toString('utf8');
+    } else {
+      // Se Tty è disabilitato, il log è multiplexato con un header di 8 byte per ogni riga
+      let offset = 0;
+      while (offset < logs.length) {
+        if (logs.length - offset < 8) break;
+        const payloadSize = logs.readUInt32BE(offset + 4);
+        offset += 8;
+        if (offset + payloadSize > logs.length) break;
+        cleanLogs += logs.toString('utf8', offset, offset + payloadSize);
+        offset += payloadSize;
+      }
+    }
+    
     res.send(cleanLogs);
   } catch (error) {
     console.error('Error fetching logs:', error);

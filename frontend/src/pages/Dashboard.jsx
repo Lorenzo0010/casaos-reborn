@@ -112,8 +112,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
+    // Il polling è stato sostituito dai WebSocket (system.stats)
   }, []);
 
   useEffect(() => {
@@ -132,6 +131,16 @@ export default function Dashboard() {
 
     socket.on('container.update.progress', (data) => {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
+    });
+
+    // Ascolto statistiche di sistema via WebSocket
+    socket.on('system.stats', (data) => {
+      setStats(data);
+    });
+
+    // Ascolto lista container via WebSocket
+    socket.on('docker.containers', (data) => {
+      setContainers(data);
     });
 
     const handleSuccess = (data) => {
@@ -199,13 +208,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchContainers();
-    const interval = setInterval(() => {
-      if (!editingContainerId) {
-        fetchContainers();
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [editingContainerId]);
+    // Il polling è stato rimosso, i container si aggiornano tramite WebSocket (docker.containers)
+  }, []);
 
   const handleAction = async (id, action) => {
     try {
