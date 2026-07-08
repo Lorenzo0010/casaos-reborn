@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Trash2, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp } from 'lucide-react';
+import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp } from 'lucide-react';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
 import { io } from 'socket.io-client';
@@ -218,20 +218,7 @@ export default function Dashboard() {
     }
   };
 
-  const handlePruneImages = async () => {
-    const confirmed = await showConfirm('Pulizia Immagini', 'Sei sicuro di voler eliminare tutte le immagini Docker non utilizzate da alcun container?');
-    if (!confirmed) return;
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`/api/docker/images/prune`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const deletedSpace = (res.data.result?.SpaceReclaimed || 0) / 1024 / 1024;
-      showAlert('Pulizia Completata', `Spazio liberato: ${deletedSpace.toFixed(2)} MB`);
-    } catch (err) {
-      showAlert('Errore', `Errore durante la pulizia delle immagini: ` + err.message, true);
-    }
-  };
+
 
   const getWebUrl = (container) => {
     const labels = container.Labels || {};
@@ -799,16 +786,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div style={{ marginTop: '40px', padding: '20px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--card-bg)', borderRadius: '12px' }}>
-        <div>
-          <h3 style={{ margin: '0 0 5px 0' }}>Manutenzione Docker</h3>
-          <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Rimuovi le immagini docker non collegate ad alcun container per liberare spazio su disco.</p>
-        </div>
-        <button className="btn btn-danger" onClick={handlePruneImages}>
-          <Trash2 size={16} style={{ marginRight: '8px' }} />
-          Pulisci Immagini
-        </button>
-      </div>
+
 
       {editingContainerId && (
         <ContainerSettingsModal 

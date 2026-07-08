@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Server, Box, Terminal as TermIcon, LogOut, PlusSquare, Menu, X, ChevronLeft, ChevronRight, Settings as SettingsIcon, FileText } from 'lucide-react';
+import { Monitor, Server, Box, Terminal as TermIcon, LogOut, PlusSquare, Menu, X, ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
 
 export default function Sidebar({ logout }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -77,11 +77,8 @@ export default function Sidebar({ logout }) {
         <NavLink to="/terminal" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
           <TermIcon /> <span className="sidebar-link-text">Terminal</span>
         </NavLink>
-        <NavLink to="/settings" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
-          <SettingsIcon /> <span className="sidebar-link-text">UI Settings</span>
-        </NavLink>
-        <NavLink to="/logs" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
-          <FileText /> <span className="sidebar-link-text">Log di Sistema</span>
+        <NavLink to="/advanced" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
+          <Wrench /> <span className="sidebar-link-text">Avanzate</span>
         </NavLink>
         
         {/* Footer actions */}
