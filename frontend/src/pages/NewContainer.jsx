@@ -328,14 +328,27 @@ export default function NewContainer() {
       </h2>
 
       {loading && progress && (
-        <div className="glass" style={{ padding: '20px', marginBottom: '20px', textAlign: 'center' }}>
-          <div className="spin" style={{ marginBottom: '10px' }}><Play size={32} color="var(--primary)" /></div>
-          <h3>{progress.status}</h3>
-          {progress.progressDetail?.current && (
-            <p style={{ opacity: 0.7 }}>
-              {Math.round((progress.progressDetail.current / progress.progressDetail.total) * 100)}%
-            </p>
-          )}
+        <div style={{
+          padding: '3px',
+          borderRadius: '20px',
+          background: `conic-gradient(from 0deg, var(--primary) ${progress.progressDetail?.total ? Math.round((progress.progressDetail.current / progress.progressDetail.total) * 100) : 0}%, transparent ${progress.progressDetail?.total ? Math.round((progress.progressDetail.current / progress.progressDetail.total) * 100) : 0}%)`,
+          marginBottom: '20px',
+          transition: 'background 0.3s ease'
+        }}>
+          <div className="glass" style={{ padding: '20px', textAlign: 'center', margin: 0, border: 'none', borderRadius: '17px' }}>
+            <div className="spin" style={{ marginBottom: '10px' }}><Play size={32} color="var(--primary)" /></div>
+            <h3 style={{ margin: '0 0 10px 0' }}>{progress.status}</h3>
+            {progress.progressDetail?.total && (
+              <div style={{ width: '100%', backgroundColor: 'var(--card-border)', borderRadius: '10px', height: '8px', overflow: 'hidden', marginTop: '15px' }}>
+                <div style={{ width: `${(progress.progressDetail.current / progress.progressDetail.total) * 100}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.3s ease' }}></div>
+              </div>
+            )}
+            {progress.progressDetail?.current && (
+              <p style={{ opacity: 0.8, marginTop: '10px', marginBottom: 0, fontWeight: 'bold' }}>
+                {Math.round((progress.progressDetail.current / progress.progressDetail.total) * 100)}%
+              </p>
+            )}
+          </div>
         </div>
       )}
 
