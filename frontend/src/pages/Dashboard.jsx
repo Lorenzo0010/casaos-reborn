@@ -624,7 +624,9 @@ export default function Dashboard() {
             const progressData = recreating[c.Id];
             
             let progressPercent = 0;
-            if (progressData?.progressDetail?.total) {
+            if (progressData?.percentage) {
+              progressPercent = progressData.percentage;
+            } else if (progressData?.progressDetail?.total) {
               progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
             }
 
@@ -633,7 +635,16 @@ export default function Dashboard() {
 
             return (
             <div 
-              key={c.Id} 
+              key={c.Id}
+              style={{
+                padding: progressData ? '3px' : '0',
+                borderRadius: '16px',
+                background: progressData ? `conic-gradient(from 0deg, var(--primary) ${progressPercent}%, transparent ${progressPercent}%)` : 'transparent',
+                transition: 'background 0.3s ease',
+                height: '100%'
+              }}
+            >
+            <div 
               className={`glass container-card ${editMode ? 'edit-mode' : ''}`} 
               draggable={editMode && !isMobile}
               onDragStart={(e) => handleDragStart(e, stableId)}
@@ -642,6 +653,8 @@ export default function Dashboard() {
               style={{ 
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedItem === stableId ? 0.5 : 1,
+                margin: 0,
+                border: progressData ? 'none' : ''
               }}
             >
               
@@ -676,11 +689,10 @@ export default function Dashboard() {
                 }}>
                   <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
                   <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: '0.85rem' }}>{progressData.status}</h4>
-                  {progressData.progressDetail?.total && (
-                    <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '6px', overflow: 'hidden' }}>
-                      <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.2s' }}></div>
-                    </div>
-                  )}
+                  <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '6px', overflow: 'hidden' }}>
+                    <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.3s ease' }}></div>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', marginTop: '5px', opacity: 0.8 }}>{Math.round(progressPercent)}%</div>
                 </div>
               )}
 
@@ -742,17 +754,27 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+            </div>
           )})}
 
           {Object.entries(recreating)
             .filter(([recreId]) => !containers.some(c => c.Id === recreId))
             .map(([recreId, progressData]) => {
               let progressPercent = 0;
-              if (progressData?.progressDetail?.total) {
+              if (progressData?.percentage) {
+                progressPercent = progressData.percentage;
+              } else if (progressData?.progressDetail?.total) {
                 progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
               }
               return (
-                <div key={recreId} className="glass container-card">
+                <div key={recreId} style={{
+                  padding: '3px',
+                  borderRadius: '16px',
+                  background: `conic-gradient(from 0deg, var(--primary) ${progressPercent}%, transparent ${progressPercent}%)`,
+                  transition: 'background 0.3s ease',
+                  height: '100%'
+                }}>
+                <div className="glass container-card" style={{ margin: 0, border: 'none' }}>
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -762,11 +784,10 @@ export default function Dashboard() {
                   }}>
                     <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
                     <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: '0.85rem' }}>{progressData.status}</h4>
-                    {progressData.progressDetail?.total && (
-                      <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '6px', overflow: 'hidden' }}>
-                        <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.2s' }}></div>
-                      </div>
-                    )}
+                    <div style={{ width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '6px', overflow: 'hidden' }}>
+                      <div style={{ width: `${progressPercent}%`, backgroundColor: 'var(--primary)', height: '100%', transition: 'width 0.3s ease' }}></div>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', marginTop: '5px', opacity: 0.8 }}>{Math.round(progressPercent)}%</div>
                   </div>
                   
                   {/* LED */}
@@ -788,6 +809,7 @@ export default function Dashboard() {
                       <Loader size={18} className="spin" />
                     </button>
                   </div>
+                </div>
                 </div>
               );
             })}

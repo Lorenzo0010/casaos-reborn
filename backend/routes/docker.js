@@ -357,7 +357,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
     };
     
     // Fix Bug 1: Graceful stop and remove without force
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Stopping old container...' });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Stopping old container...', percentage: 20 });
     try {
         // Try graceful stop with 10s timeout
         await oldContainer.stop({ t: 10 });
@@ -367,7 +367,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
         }
     }
 
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...' });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...', percentage: 40 });
     
     // Remove without force first. If it fails, fallback to force remove.
     try {
@@ -378,7 +378,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
     }
 
     // Wait for the container to be fully removed to prevent Name or Port conflicts (up to 30 seconds)
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Waiting for Docker to release resources...' });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Waiting for Docker to release resources...', percentage: 60 });
     let isFullyRemoved = false;
     for (let i = 0; i < 60; i++) {
       try {
@@ -398,7 +398,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
     }
 
     // 3. Create the new container
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Creating new container...' });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Creating new container...', percentage: 80 });
     
     let newContainer;
     let createError;
@@ -456,7 +456,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       }
     }
 
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Starting new container...' });
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Starting new container...', percentage: 95 });
     await newContainer.start();
     
     // Fix Bug 6: Ensure the container connects to all required custom networks

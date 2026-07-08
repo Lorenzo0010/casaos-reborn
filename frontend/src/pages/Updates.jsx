@@ -11,6 +11,7 @@ export default function Updates() {
   const [checkStatus, setCheckStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
+  const [updateProgress, setUpdateProgress] = useState({});
 
   const fetchUpdates = async () => {
     try {
@@ -159,9 +160,14 @@ export default function Updates() {
       setUpdates(data);
     });
 
+    socket.on('container.recreate.progress', (data) => {
+      setUpdateProgress(prev => ({...prev, [data.id]: data.percentage || 0}));
+    });
+
     socket.on('container.recreate.success', ({ id, oldId }) => {
       if (updatingId === oldId) {
         setUpdatingId(null);
+        setUpdateProgress(prev => { const n = {...prev}; delete n[oldId]; return n; });
         showAlert('Aggiornato', 'Container aggiornato con successo!');
         fetchUpdates();
       }
@@ -170,6 +176,7 @@ export default function Updates() {
     socket.on('container.recreate.error', ({ id, error }) => {
       if (updatingId === id) {
         setUpdatingId(null);
+        setUpdateProgress(prev => { const n = {...prev}; delete n[id]; return n; });
         showAlert('Errore', 'Impossibile aggiornare: ' + error, true);
       }
     });
@@ -255,18 +262,33 @@ export default function Updates() {
                       {new Date(upd.timestamp).toLocaleString()}
                     </td>
                     <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                      <button 
-                        className="btn" 
-                        onClick={() => updateContainer(upd.id, upd.name, upd.image)}
-                        disabled={updatingId === upd.id || isChecking}
-                        style={{ background: updatingId === upd.id ? 'var(--card-border)' : '#10b981', color: '#fff', border: 'none', fontWeight: 'bold' }}
-                      >
-                        {updatingId === upd.id ? (
-                          <><RefreshCw size={16} className="spin" style={{ marginRight: '5px' }}/> In Corso...</>
-                        ) : (
-                          <><Download size={16} style={{ marginRight: '5px' }}/> Aggiorna</>
-                        )}
-                      </button>
+                      <div style={{
+                        display: 'inline-block',
+                        padding: updatingId === upd.id ? '3px' : '0',
+                        borderRadius: '10px',
+                        background: updatingId === upd.id ? `conic-gradient(from 0deg, var(--primary) ${updateProgress[upd.id] || 0}%, transparent ${updateProgress[upd.id] || 0}%)` : 'transparent',
+                        transition: 'background 0.3s ease'
+                      }}>
+                        <button 
+                          className="btn" 
+                          onClick={() => updateContainer(upd.id, upd.name, upd.image)}
+                          disabled={updatingId === upd.id || isChecking}
+                          style={{ 
+                            background: updatingId === upd.id ? 'var(--card-bg)' : '#10b981', 
+                            color: updatingId === upd.id ? 'var(--primary)' : '#fff', 
+                            border: 'none', 
+                            fontWeight: 'bold',
+                            margin: 0,
+                            borderRadius: updatingId === upd.id ? '7px' : '8px'
+                          }}
+                        >
+                          {updatingId === upd.id ? (
+                            <><RefreshCw size={16} className="spin" style={{ marginRight: '5px' }}/> {updateProgress[upd.id] || 0}%</>
+                          ) : (
+                            <><Download size={16} style={{ marginRight: '5px' }}/> Aggiorna</>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
