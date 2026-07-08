@@ -8,6 +8,7 @@ export default function Updates() {
   const { showAlert } = useDialog();
   const [updates, setUpdates] = useState([]);
   const [isChecking, setIsChecking] = useState(false);
+  const [checkStatus, setCheckStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
 
@@ -40,24 +41,96 @@ export default function Updates() {
     }
   };
 
-  const updateContainer = async (containerId, name, image) => {
+  const updateContainer = async (containerId, name, newFullImage) => {
     try {
       setUpdatingId(containerId);
       const token = localStorage.getItem('token');
       
-      // Chiamiamo la route di recreate esistente. L'immagine è già stata pullata dal background job,
-      // quindi il recreate userà istantaneamente la nuova immagine e il container si riavvierà aggiornato.
-      // Usiamo la nuova rotta sicura /update che preserva TUTTE le impostazioni!
-      await axios.post(`/api/docker/containers/${containerId}/update`, {
-        image
-      }, {
+      // Recupera le info correnti per replicare la logica del Salva e Ricrea
+      const inspectRes = await axios.get(`/api/docker/containers/${containerId}/inspect`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const info = inspectRes.data;
+
+      // Parsing delle proprietà (stesso codice di ContainerSettingsModal)
+      const parsedEnv = (info?.Config?.Env || []).map(e => {
+        const idx = e.indexOf('=');
+        return { key: e.substring(0, idx), value: e.substring(idx + 1) };
+      });
+      
+      const parsedPorts = [];
+      const portBindings = info?.HostConfig?.PortBindings || {};
+      for (const [key, valArray] of Object.entries(portBindings)) {
+        const [cPort, proto] = key.split('/');
+        if (valArray && valArray.length > 0) {
+          parsedPorts.push({
+            hostPort: valArray[0].HostPort || '',
+            containerPort: cPort,
+            protocol: proto
+          });
+        }
+      }
+
+      let parsedVolumes = [];
+      if (info?.HostConfig?.Binds && info.HostConfig.Binds.length > 0) {
+        parsedVolumes = info.HostConfig.Binds.map(b => {
+          const parts = b.split(':');
+          return { hostPath: parts[0] || '', containerPath: parts[1] || '' };
+        });
+      } else if (info?.Mounts && info.Mounts.length > 0) {
+        parsedVolumes = info.Mounts.map(m => {
+          return { hostPath: m.Source || '', containerPath: m.Destination || '' };
+        });
+      }
+
+      const labels = info?.Config?.Labels || {};
+      
+      // Separazione immagine e tag
+      let imageName = newFullImage;
+      let imageTag = 'latest';
+      const colonIdx = newFullImage.lastIndexOf(':');
+      if (colonIdx > 0 && !newFullImage.substring(colonIdx).includes('/')) {
+        imageName = newFullImage.substring(0, colonIdx);
+        imageTag = newFullImage.substring(colonIdx + 1);
+      }
+
+      // Costruzione Payload (uguale a handleSave di ContainerSettingsModal)
+      const payload = {
+        image: imageName,
+        tag: imageTag,
+        name: (info?.Name || '').replace('/', ''),
+        displayName: labels['casaos.reborn.name'] || '',
+        icon: labels['casaos.reborn.icon'] || '',
+        restartPolicy: info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped',
+        pidMode: info?.HostConfig?.PidMode || '',
+        privileged: !!info?.HostConfig?.Privileged,
+        memory: info?.HostConfig?.Memory || 0,
+        webUI: {
+          scheme: labels['casaos.reborn.web.scheme'] || 'http://',
+          port: labels['casaos.reborn.web.port'] || '',
+          path: labels['casaos.reborn.web.path'] || '/'
+        },
+        env: parsedEnv.filter(e => e.key).map(e => `${e.key}=${e.value}`),
+        ports: {},
+        volumes: parsedVolumes.filter(v => v.hostPath && v.containerPath).map(v => `${v.hostPath}:${v.containerPath}`)
+      };
+
+      parsedPorts.forEach(p => {
+        if (p.containerPort) {
+          const key = `${p.containerPort}/${p.protocol}`;
+          payload.ports[key] = [{ HostPort: p.hostPort }];
+        }
+      });
+
+      // Esegue la chiamata identica al Salva e Ricrea (che sappiamo funzionare perfettamente!)
+      await axios.post(`/api/docker/containers/${containerId}/recreate`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Il processo è gestito asincronamente. Ascoltiamo via socket per rimuoverlo dalla lista.
+      // Il processo è gestito asincronamente tramite socket
     } catch (err) {
       console.error(err);
-      showAlert('Errore', 'Errore durante l\'aggiornamento: ' + err.message, true);
+      showAlert('Errore', 'Errore durante l\'aggiornamento: ' + (err.response?.data?.error || err.message), true);
       setUpdatingId(null);
     }
   };
@@ -71,9 +144,13 @@ export default function Updates() {
     });
 
     socket.on('updater.status', (data) => {
-      if (data.status === 'checking') setIsChecking(true);
+      if (data.status === 'checking') {
+        setIsChecking(true);
+        setCheckStatus({ container: data.container, action: data.action, percentage: data.percentage });
+      }
       if (data.status === 'idle') {
         setIsChecking(false);
+        setCheckStatus(null);
         fetchUpdates(); // Ricarica la lista aggiornata
       }
     });
@@ -126,6 +203,21 @@ export default function Updates() {
           {isChecking ? 'Ricerca in corso...' : 'Cerca Aggiornamenti Ora'}
         </button>
       </div>
+
+      {isChecking && checkStatus && checkStatus.container && (
+        <div className="glass widget" style={{ padding: '15px 20px', animation: 'fadeIn 0.3s ease' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '0.95rem' }}>
+            <span><strong>Scansione: </strong> {checkStatus.container}</span>
+            <span style={{ opacity: 0.8 }}>{checkStatus.action}</span>
+          </div>
+          <div style={{ width: '100%', background: 'var(--card-border)', borderRadius: '10px', height: '10px', overflow: 'hidden' }}>
+            <div style={{ width: `${checkStatus.percentage || 0}%`, background: 'var(--primary)', height: '100%', transition: 'width 0.2s linear' }}></div>
+          </div>
+          <div style={{ textAlign: 'right', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8, fontWeight: 'bold' }}>
+            {checkStatus.percentage || 0}%
+          </div>
+        </div>
+      )}
 
       <div className="glass widget" style={{ flex: 1, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {loading ? (

@@ -29,13 +29,35 @@ const checkUpdates = async (io) => {
       console.log(`[Updater] Checking ${containerInfo.Name.replace('/', '')} (${fullImage})`);
       
       try {
-        // 1. Pull the image silently
+        // 1. Pull the image with progress tracking
+        let layers = {};
         await new Promise((resolve, reject) => {
           docker.pull(fullImage, (err, stream) => {
             if (err) return reject(err);
             docker.modem.followProgress(stream, (err) => {
               if (err) return reject(err);
               resolve();
+            }, (event) => {
+              if (event.id && event.progressDetail && event.progressDetail.total) {
+                layers[event.id] = { current: event.progressDetail.current, total: event.progressDetail.total };
+              }
+              let totalBytes = 0;
+              let currentBytes = 0;
+              for (const layer of Object.values(layers)) {
+                totalBytes += layer.total;
+                currentBytes += layer.current;
+              }
+              let percentage = 0;
+              if (totalBytes > 0) percentage = Math.round((currentBytes / totalBytes) * 100);
+              
+              if (io) {
+                io.emit('updater.status', { 
+                  status: 'checking', 
+                  container: containerInfo.Name.replace('/', ''),
+                  action: event.status || 'Pulling',
+                  percentage
+                });
+              }
             });
           });
         });
