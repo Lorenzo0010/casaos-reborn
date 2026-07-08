@@ -270,7 +270,7 @@ function App() {
   return (
     <Router>
       <div className="layout">
-        <Sidebar logout={logout} />
+        <Sidebar />
 
         <div className="main-content">
           <div className="main-scrollable">
@@ -278,7 +278,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/new" element={<NewContainer />} />
               <Route path="/terminal" element={<TerminalPage />} />
-              <Route path="/advanced" element={<Advanced theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} />} />
+              <Route path="/advanced" element={<Advanced theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
               <Route path="/settings" element={<Navigate to="/advanced" />} />
               <Route path="/logs" element={<Navigate to="/advanced" />} />
               <Route path="*" element={<Navigate to="/" />} />

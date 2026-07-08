@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp } from 'lucide-react';
+import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp, PlusCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
 import { io } from 'socket.io-client';
@@ -431,14 +432,23 @@ export default function Dashboard() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{ margin: 0 }}>{getGreeting()}!</h1>
-        <button 
-          className={`btn-icon ${editMode ? 'active' : ''}`} 
-          onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }} 
-          title="Modifica Layout" 
-          style={{ padding: '8px', color: editMode ? 'var(--primary)' : 'var(--text-color)', background: editMode ? 'var(--card-bg)' : 'transparent', border: editMode ? '1px solid var(--primary)' : '1px solid transparent', borderRadius: '8px' }}
-        >
-          <Edit size={24} />
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <Link 
+            to="/new" 
+            className="btn" 
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'var(--primary)', color: 'var(--primary-text)', borderRadius: '10px', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}
+          >
+            <PlusCircle size={18} /> Nuovo Container
+          </Link>
+          <button 
+            className={`btn-icon ${editMode ? 'active' : ''}`} 
+            onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }} 
+            title="Modifica Layout" 
+            style={{ padding: '8px', color: editMode ? 'var(--primary)' : 'var(--text-color)', background: editMode ? 'var(--card-bg)' : 'transparent', border: editMode ? '1px solid var(--primary)' : '1px solid transparent', borderRadius: '8px' }}
+          >
+            <Edit size={24} />
+          </button>
+        </div>
       </div>
 
       {selfUpdating && (

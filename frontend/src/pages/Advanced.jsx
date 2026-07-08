@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Wrench, Palette, Save, RefreshCcw, Moon, Sun, Terminal, RefreshCw, Trash2, ArrowDown } from 'lucide-react';
+import { Wrench, Palette, Save, RefreshCcw, Moon, Sun, Terminal, RefreshCw, Trash2, ArrowDown, LogOut } from 'lucide-react';
 import { useDialog } from '../contexts/DialogContext';
 
-export default function Advanced({ theme, actualTheme, setTheme, preferences, onSave }) {
+export default function Advanced({ theme, actualTheme, setTheme, preferences, onSave, logout }) {
   // ─── UI Settings state ───
   const [accentColor, setAccentColor] = useState(preferences?.accentColor || '#3b82f6');
   const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
@@ -264,6 +264,28 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
         <button className="btn btn-danger" onClick={handlePruneImages}>
           <Trash2 size={16} style={{ marginRight: '8px' }} />
           Pulisci Immagini
+        </button>
+      </div>
+
+      {/* ─── Section 4: Logout ─── */}
+      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '8px' }}>
+        <button 
+          onClick={logout} 
+          className="btn" 
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: '8px', 
+            padding: '10px 28px', 
+            background: 'transparent', 
+            border: '1px solid var(--card-border)', 
+            color: 'var(--text-color)', 
+            borderRadius: '10px',
+            opacity: 0.7,
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
+          onMouseOut={e => { e.currentTarget.style.opacity = '0.7'; e.currentTarget.style.borderColor = 'var(--card-border)'; e.currentTarget.style.color = 'var(--text-color)'; }}
+        >
+          <LogOut size={18} /> Logout
         </button>
       </div>
 
