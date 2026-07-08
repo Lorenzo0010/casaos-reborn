@@ -502,7 +502,6 @@ router.post('/containers/:id/recreate', async (req, res) => {
         console.warn("Error restoring extra networks:", netErr.message);
     }
 
-    const taskId = `recreate_${id}`;
     if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
     if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName, taskId });
   } catch (error) {
