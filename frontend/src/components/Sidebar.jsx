@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Server, Terminal as TermIcon, Menu, X, ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
+import { Monitor, Server, Terminal as TermIcon, Menu, X, ChevronLeft, ChevronRight, Wrench, Folder } from 'lucide-react';
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -70,6 +70,9 @@ export default function Sidebar() {
         {/* Links */}
         <NavLink to="/" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
           <Monitor /> <span className="sidebar-link-text">Dashboard</span>
+        </NavLink>
+        <NavLink to="/files" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
+          <Folder /> <span className="sidebar-link-text">Files</span>
         </NavLink>
         <NavLink to="/terminal" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
           <TermIcon /> <span className="sidebar-link-text">Terminal</span>

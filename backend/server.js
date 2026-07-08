@@ -94,8 +94,10 @@ app.get('/api/health', (req, res) => {
 // API Routes will be imported here
 const systemRoutes = require('./routes/system');
 const dockerRoutes = require('./routes/docker');
+const filesRoutes = require('./routes/files');
 app.use('/api/system', authenticateToken, systemRoutes);
 app.use('/api/docker', authenticateToken, dockerRoutes);
+app.use('/api/files', authenticateToken, filesRoutes);
 
 const pty = require('node-pty');
 const os = require('os');

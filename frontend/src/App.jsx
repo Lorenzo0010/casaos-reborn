@@ -6,6 +6,7 @@ import TerminalPage from './pages/Terminal';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Advanced from './pages/Advanced';
+import FileManager from './pages/FileManager';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
@@ -277,6 +278,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/new" element={<NewContainer />} />
+              <Route path="/files" element={<FileManager />} />
               <Route path="/terminal" element={<TerminalPage />} />
               <Route path="/advanced" element={<Advanced theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
               <Route path="/settings" element={<Navigate to="/advanced" />} />
