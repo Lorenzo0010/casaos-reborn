@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Plus, Check, Image as ImageIcon, Download, Copy } from 'lucide-react';
 import { useDialog } from '../contexts/DialogContext';
-import yaml from 'js-yaml';
+import { generateYamlFromData, downloadYamlFile } from '../utils/yamlHelper';
 
 export default function ContainerSettingsModal({ containerId, containerOverrides, onUpdateOverride, onClose, onSaved }) {
   const { showAlert, showConfirm } = useDialog();
@@ -178,75 +178,13 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
   };
 
   const handleExportYaml = () => {
-    const service = {
-      image: data.tag ? `${data.image}:${data.tag}` : data.image,
-      container_name: data.name,
-      restart: data.restartPolicy,
-    };
-    
-    if (data.privileged) service.privileged = true;
-    if (data.pidMode) service.pid = data.pidMode;
-    
-    const validPorts = data.ports.filter(p => p.hostPort && p.containerPort);
-    if (validPorts.length > 0) {
-      service.ports = validPorts.map(p => {
-        let proto = p.protocol === 'tcp' ? '' : `/${p.protocol}`;
-        return `${p.hostPort}:${p.containerPort}${proto}`;
-      });
-    }
-
-    const validVolumes = data.volumes.filter(v => v.hostPath && v.containerPath);
-    if (validVolumes.length > 0) {
-      service.volumes = validVolumes.map(v => `${v.hostPath}:${v.containerPath}`);
-    }
-
-    const validEnv = data.env.filter(e => e.key);
-    if (validEnv.length > 0) {
-      service.environment = validEnv.map(e => `${e.key}=${e.value}`);
-    }
-    
-    const xCasaos = {};
-    if (data.displayName) {
-        xCasaos.title = { custom: data.displayName };
-    }
-    if (data.icon) {
-        xCasaos.icon = data.icon;
-    }
-    if (data.webUI && data.webUI.port) {
-        xCasaos.ports = [{
-            ui: true,
-            scheme: (data.webUI.scheme || 'http://').replace('://', ''),
-            target: data.webUI.port,
-            path: data.webUI.path || '/'
-        }];
-    }
-    
-    if (Object.keys(xCasaos).length > 0) {
-        service['x-casaos'] = xCasaos;
-    }
-
-    const compose = {
-      version: '3.9',
-      services: {
-        [data.name || 'app']: service
-      }
-    };
-
-    const yamlStr = yaml.dump(compose);
+    const yamlStr = generateYamlFromData(data);
     setYamlContent(yamlStr);
     setShowYamlExport(true);
   };
 
   const downloadYaml = () => {
-    const blob = new Blob([yamlContent], { type: 'text/yaml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${data.name || 'container'}-compose.yml`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadYamlFile(yamlContent, `${data.name || 'container'}-compose.yml`);
   };
 
   const copyYaml = () => {

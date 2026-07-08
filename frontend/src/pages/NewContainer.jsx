@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2, PlusSquare } from 'lucide-react';
+import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2, PlusSquare, Download } from 'lucide-react';
 import yaml from 'js-yaml';
 import { io } from 'socket.io-client';
 import { useDialog } from '../contexts/DialogContext';
+import { generateYamlFromData, downloadYamlFile } from '../utils/yamlHelper';
 
 const CAPABILITIES = [
   'AUDIT_CONTROL', 'AUDIT_READ', 'BLOCK_SUSPEND', 'BPF', 'CHECKPOINT_RESTORE',
@@ -621,9 +622,21 @@ export default function NewContainer() {
                 </div>
               </div>
 
-              <button className="btn btn-primary" onClick={handleCreate} style={{ padding: '15px', fontSize: '1.1rem', marginTop: '10px' }}>
-                <Save size={20} /> Deploy Container
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button className="btn btn-primary" onClick={handleCreate} style={{ flex: 1, padding: '15px', fontSize: '1.1rem' }}>
+                  <Save size={20} /> Deploy Container
+                </button>
+                <button 
+                  className="btn" 
+                  onClick={() => {
+                    const yamlStr = generateYamlFromData(formData);
+                    downloadYamlFile(yamlStr, `${formData.name || 'container'}-compose.yml`);
+                  }} 
+                  style={{ padding: '15px', fontSize: '1.1rem', background: 'var(--card-bg)' }}
+                >
+                  <Download size={20} /> Esporta YAML
+                </button>
+              </div>
             </div>
           )}
         </div>
