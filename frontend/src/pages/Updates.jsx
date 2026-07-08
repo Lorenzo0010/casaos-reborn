@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { RefreshCw, Download, Server, Play, AlertCircle, ArrowUpCircle } from 'lucide-react';
+import { RefreshCw, Server, AlertCircle, ArrowUpCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useDialog } from '../contexts/DialogContext';
 
@@ -10,8 +10,6 @@ export default function Updates() {
   const [isChecking, setIsChecking] = useState(false);
   const [checkStatus, setCheckStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState(null);
-  const [updateProgress, setUpdateProgress] = useState({});
 
   const fetchUpdates = async () => {
     try {
@@ -34,105 +32,10 @@ export default function Updates() {
       await axios.post('/api/docker/check-updates', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Il backend manderà 'updater.status' via socket
     } catch (err) {
       console.error(err);
       setIsChecking(false);
       showAlert('Errore', 'Impossibile avviare la ricerca aggiornamenti.', true);
-    }
-  };
-
-  const updateContainer = async (containerId, name, newFullImage) => {
-    try {
-      setUpdatingId(containerId);
-      const token = localStorage.getItem('token');
-      
-      // Recupera le info correnti per replicare la logica del Salva e Ricrea
-      const inspectRes = await axios.get(`/api/docker/containers/${containerId}/inspect`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const info = inspectRes.data;
-
-      // Parsing delle proprietà (stesso codice di ContainerSettingsModal)
-      const parsedEnv = (info?.Config?.Env || []).map(e => {
-        const idx = e.indexOf('=');
-        return { key: e.substring(0, idx), value: e.substring(idx + 1) };
-      });
-      
-      const parsedPorts = [];
-      const portBindings = info?.HostConfig?.PortBindings || {};
-      for (const [key, valArray] of Object.entries(portBindings)) {
-        const [cPort, proto] = key.split('/');
-        if (valArray && valArray.length > 0) {
-          parsedPorts.push({
-            hostPort: valArray[0].HostPort || '',
-            containerPort: cPort,
-            protocol: proto
-          });
-        }
-      }
-
-      let parsedVolumes = [];
-      if (info?.HostConfig?.Binds && info.HostConfig.Binds.length > 0) {
-        parsedVolumes = info.HostConfig.Binds.map(b => {
-          const parts = b.split(':');
-          return { hostPath: parts[0] || '', containerPath: parts[1] || '' };
-        });
-      } else if (info?.Mounts && info.Mounts.length > 0) {
-        parsedVolumes = info.Mounts.map(m => {
-          return { hostPath: m.Source || '', containerPath: m.Destination || '' };
-        });
-      }
-
-      const labels = info?.Config?.Labels || {};
-      
-      // Separazione immagine e tag
-      let imageName = newFullImage;
-      let imageTag = 'latest';
-      const colonIdx = newFullImage.lastIndexOf(':');
-      if (colonIdx > 0 && !newFullImage.substring(colonIdx).includes('/')) {
-        imageName = newFullImage.substring(0, colonIdx);
-        imageTag = newFullImage.substring(colonIdx + 1);
-      }
-
-      // Costruzione Payload (uguale a handleSave di ContainerSettingsModal)
-      const payload = {
-        image: imageName,
-        tag: imageTag,
-        name: (info?.Name || '').replace('/', ''),
-        displayName: labels['casaos.reborn.name'] || '',
-        icon: labels['casaos.reborn.icon'] || '',
-        restartPolicy: info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped',
-        pidMode: info?.HostConfig?.PidMode || '',
-        privileged: !!info?.HostConfig?.Privileged,
-        memory: info?.HostConfig?.Memory || 0,
-        webUI: {
-          scheme: labels['casaos.reborn.web.scheme'] || 'http://',
-          port: labels['casaos.reborn.web.port'] || '',
-          path: labels['casaos.reborn.web.path'] || '/'
-        },
-        env: parsedEnv.filter(e => e.key).map(e => `${e.key}=${e.value}`),
-        ports: {},
-        volumes: parsedVolumes.filter(v => v.hostPath && v.containerPath).map(v => `${v.hostPath}:${v.containerPath}`)
-      };
-
-      parsedPorts.forEach(p => {
-        if (p.containerPort) {
-          const key = `${p.containerPort}/${p.protocol}`;
-          payload.ports[key] = [{ HostPort: p.hostPort }];
-        }
-      });
-
-      // Esegue la chiamata identica al Salva e Ricrea (che sappiamo funzionare perfettamente!)
-      await axios.post(`/api/docker/containers/${containerId}/recreate`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Il processo è gestito asincronamente tramite socket
-    } catch (err) {
-      console.error(err);
-      showAlert('Errore', 'Errore durante l\'aggiornamento: ' + (err.response?.data?.error || err.message), true);
-      setUpdatingId(null);
     }
   };
 
@@ -152,7 +55,7 @@ export default function Updates() {
       if (data.status === 'idle') {
         setIsChecking(false);
         setCheckStatus(null);
-        fetchUpdates(); // Ricarica la lista aggiornata
+        fetchUpdates();
       }
     });
 
@@ -160,31 +63,10 @@ export default function Updates() {
       setUpdates(data);
     });
 
-    socket.on('container.recreate.progress', (data) => {
-      setUpdateProgress(prev => ({...prev, [data.id]: data.percentage || 0}));
-    });
-
-    socket.on('container.recreate.success', ({ id, oldId }) => {
-      if (updatingId === oldId) {
-        setUpdatingId(null);
-        setUpdateProgress(prev => { const n = {...prev}; delete n[oldId]; return n; });
-        showAlert('Aggiornato', 'Container aggiornato con successo!');
-        fetchUpdates();
-      }
-    });
-
-    socket.on('container.recreate.error', ({ id, error }) => {
-      if (updatingId === id) {
-        setUpdatingId(null);
-        setUpdateProgress(prev => { const n = {...prev}; delete n[id]; return n; });
-        showAlert('Errore', 'Impossibile aggiornare: ' + error, true);
-      }
-    });
-
     return () => {
       socket.disconnect();
     };
-  }, [updatingId]);
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '20px' }}>
@@ -243,7 +125,6 @@ export default function Updates() {
                   <th style={{ padding: '15px 20px' }}>Container</th>
                   <th style={{ padding: '15px 20px' }}>Immagine (Nuova Versione)</th>
                   <th style={{ padding: '15px 20px' }}>Ultimo Controllo</th>
-                  <th style={{ padding: '15px 20px', textAlign: 'right' }}>Azione</th>
                 </tr>
               </thead>
               <tbody>
@@ -260,35 +141,6 @@ export default function Updates() {
                     </td>
                     <td style={{ padding: '15px 20px', opacity: 0.7 }}>
                       {new Date(upd.timestamp).toLocaleString()}
-                    </td>
-                    <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                      <div style={{
-                        display: 'inline-block',
-                        padding: updatingId === upd.id ? '3px' : '0',
-                        borderRadius: '10px',
-                        background: updatingId === upd.id ? `conic-gradient(from 0deg, var(--primary) ${updateProgress[upd.id] || 0}%, transparent ${updateProgress[upd.id] || 0}%)` : 'transparent',
-                        transition: 'background 0.3s ease'
-                      }}>
-                        <button 
-                          className="btn" 
-                          onClick={() => updateContainer(upd.id, upd.name, upd.image)}
-                          disabled={updatingId === upd.id || isChecking}
-                          style={{ 
-                            background: updatingId === upd.id ? 'var(--bg-color)' : '#10b981', 
-                            color: updatingId === upd.id ? 'var(--primary)' : '#fff', 
-                            border: 'none', 
-                            fontWeight: 'bold',
-                            margin: 0,
-                            borderRadius: updatingId === upd.id ? '7px' : '8px'
-                          }}
-                        >
-                          {updatingId === upd.id ? (
-                            <><RefreshCw size={16} className="spin" style={{ marginRight: '5px' }}/> {updateProgress[upd.id] || 0}%</>
-                          ) : (
-                            <><Download size={16} style={{ marginRight: '5px' }}/> Aggiorna</>
-                          )}
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))}
