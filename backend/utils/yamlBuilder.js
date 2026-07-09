@@ -6,7 +6,7 @@ function dumpYAML(obj, indent = 0) {
 
   if (typeof obj === 'string') {
     // Escape strings that might cause issues
-    if (obj === '' || obj.includes(':') || obj.includes('\n') || obj.includes('#') || obj.trim() !== obj || /^[0-9]+$/.test(obj) || obj === 'true' || obj === 'false') {
+    if (obj === '' || obj.includes(':') || obj.includes('\n') || obj.includes('#') || obj.trim() !== obj || !isNaN(Number(obj)) || obj === 'true' || obj === 'false') {
       return `"${obj.replace(/"/g, '\\"')}"`;
     }
     return obj;
