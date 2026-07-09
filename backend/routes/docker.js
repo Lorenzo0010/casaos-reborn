@@ -256,16 +256,48 @@ router.post('/containers/:id/update', async (req, res) => {
     const oldInspect = await oldContainer.inspect();
     const containerName = oldInspect.Name.replace('/', '');
     const taskId = `recreate_${id}`;
+    
     global.activeTasks[taskId] = {
       id: id,
       taskId,
       type: 'recreate',
       name: containerName,
       image,
-      status: 'Stopping old container...',
+      status: 'Inizializzazione aggiornamento...',
       progressDetail: null
     };
 
+    const projectName = oldInspect.Config.Labels?.['com.docker.compose.project'];
+    
+    if (projectName) {
+      // Compose Engine
+      const appDir = path.join(CASAOS_APPS_DIR, projectName);
+      if (fs.existsSync(appDir)) {
+        if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling latest image via Compose...', taskId });
+        
+        await new Promise((resolve, reject) => {
+          exec('docker compose pull', { cwd: appDir }, (error) => {
+            if (error) console.warn(`docker compose pull error: ${error.message}`);
+            resolve();
+          });
+        });
+
+        if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Recreating container via Compose...', taskId });
+        
+        await new Promise((resolve, reject) => {
+          exec('docker compose up -d', { cwd: appDir }, (error, stdout) => {
+            if (error) return reject(error);
+            resolve(stdout);
+          });
+        });
+        
+        if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+        if (io) io.emit('container.recreate.success', { id, name: containerName, taskId });
+        return;
+      }
+    }
+
+    // Fallback: Legacy / Standalone Container Update
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Stopping old container...', taskId });
     try { await oldContainer.stop({ t: 10 }); } catch (e) {}
 
@@ -278,7 +310,6 @@ router.post('/containers/:id/update', async (req, res) => {
     if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Creating updated container...';
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Creating updated container...', taskId });
     
-    // Pass exactly the same config, just override the image
     const createOptions = {
       name: containerName,
       Image: image,
@@ -291,7 +322,6 @@ router.post('/containers/:id/update', async (req, res) => {
       }
     };
 
-    // Remove MacAddress to avoid conflicts
     if (createOptions.NetworkingConfig?.EndpointsConfig) {
       for (const net of Object.values(createOptions.NetworkingConfig.EndpointsConfig)) {
         delete net.MacAddress;
@@ -299,9 +329,6 @@ router.post('/containers/:id/update', async (req, res) => {
     }
 
     const newContainer = await docker.createContainer(createOptions);
-    
-    if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Starting updated container...';
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Starting updated container...', taskId });
     await newContainer.start();
 
     // Remove from available updates cache
