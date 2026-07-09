@@ -133,6 +133,10 @@ export default function Dashboard() {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
     });
 
+    socket.on('container.create.progress', (data) => {
+      setRecreating(prev => ({ ...prev, [data.taskId]: data }));
+    });
+
     // Ascolto statistiche di sistema via WebSocket
     socket.on('system.stats', (data) => {
       setStats(data);
@@ -146,7 +150,7 @@ export default function Dashboard() {
     const handleSuccess = (data) => {
       setRecreating(prev => {
         const p = { ...prev };
-        delete p[data.oldId];
+        delete p[data.oldId || data.taskId];
         return p;
       });
       fetchContainers();
@@ -154,6 +158,7 @@ export default function Dashboard() {
 
     socket.on('container.recreate.success', handleSuccess);
     socket.on('container.update.success', handleSuccess);
+    socket.on('container.create.success', handleSuccess);
 
     socket.on('container.recreate.error', (data) => {
       setRecreating(prev => {
@@ -162,6 +167,15 @@ export default function Dashboard() {
         return p;
       });
       showAlert('Errore Creazione', 'Error recreating container: ' + data.error, true);
+    });
+
+    socket.on('container.create.error', (data) => {
+      setRecreating(prev => {
+        const p = { ...prev };
+        delete p[data.taskId];
+        return p;
+      });
+      showAlert('Errore Creazione', 'Error creating container: ' + data.error, true);
     });
 
     socket.on('container.recreate.rollback', (data) => {
@@ -799,7 +813,7 @@ export default function Dashboard() {
 
                   {/* Title */}
                   <h3 className="card-title">
-                    {progressData.name || 'Recreating...'}
+                    {progressData.name || 'Operazione in corso...'}
                   </h3>
 
                   {/* Disabled Action Button */}
