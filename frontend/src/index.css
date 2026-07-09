@@ -707,3 +707,87 @@ input:checked + .slider:before {
 .commands-grid {
   grid-template-columns: 1fr 30px;
 }
+
+/* ════════════════════════════════════════════
+   MISSING LAYOUT CLASSES (Forms & Widgets)
+   ════════════════════════════════════════════ */
+
+/* Dashboard Widgets Row (Horizontal Scroll on Mobile) */
+.widgets-row {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+  /* Snap scrolling for better mobile experience */
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.widgets-row > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+/* File Manager Table Mobile Wrapper */
+.table-responsive-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* Missing btn-icon class for generic icon buttons */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--text-color);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+.btn-icon:hover {
+  background-color: rgba(128, 128, 128, 0.2);
+  opacity: 1;
+}
+
+/* Missing Form Grid Classes used in NewContainer.jsx */
+.casaos-form-section {
+  padding: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.form-grid-webui {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr;
+  gap: 15px;
+}
+
+/* Responsive adjustments for forms */
+@media (max-width: 768px) {
+  .form-grid-4,
+  .form-grid-2,
+  .form-grid-webui {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}

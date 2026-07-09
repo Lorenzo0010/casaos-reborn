@@ -8,7 +8,6 @@ import Sidebar from './components/Sidebar';
 import Advanced from './pages/Advanced';
 import FileManager from './pages/FileManager';
 import { TaskProvider } from './contexts/TaskContext';
-import TaskOverlay from './components/TaskOverlay';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
@@ -291,7 +290,6 @@ function App() {
             </div>
           </div>
         </div>
-        <TaskOverlay />
       </Router>
     </TaskProvider>
   );

@@ -243,65 +243,67 @@ export default function FileManager() {
         {loading && files.length === 0 ? (
           <div style={{ padding: '20px', textAlign: 'center', opacity: 0.7 }}>Caricamento...</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.05)' }}>
-                <th style={{ padding: '12px 20px', width: '50%' }}>Nome</th>
-                <th style={{ padding: '12px 20px' }}>Dimensione</th>
-                <th style={{ padding: '12px 20px' }}>Ultima Modifica</th>
-                <th style={{ padding: '12px 20px', textAlign: 'right' }}>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {files.length === 0 && (
-                <tr>
-                  <td colSpan="4" style={{ padding: '20px', textAlign: 'center', opacity: 0.5 }}>Cartella vuota</td>
+          <div className="table-responsive-wrapper">
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.05)' }}>
+                  <th style={{ padding: '12px 20px', width: '50%' }}>Nome</th>
+                  <th style={{ padding: '12px 20px' }}>Dimensione</th>
+                  <th style={{ padding: '12px 20px' }}>Ultima Modifica</th>
+                  <th style={{ padding: '12px 20px', textAlign: 'right' }}>Azioni</th>
                 </tr>
-              )}
-              {files.map((file) => (
-                <tr key={file.path} style={{ borderBottom: '1px solid var(--card-border)', transition: 'background 0.2s' }} className="file-row">
-                  <td style={{ padding: '12px 20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => handleItemClick(file)}>
-                      {getFileIcon(file)}
-                      <span style={{ fontWeight: file.isDir ? '600' : 'normal' }}>{file.name}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px 20px', opacity: 0.7 }}>
-                    {file.isDir ? '--' : formatSize(file.size)}
-                  </td>
-                  <td style={{ padding: '12px 20px', opacity: 0.7 }}>
-                    {new Date(file.modifiedAt).toLocaleString()}
-                  </td>
-                  <td style={{ padding: '12px 20px', textAlign: 'right', position: 'relative' }}>
-                    <button 
-                      className="btn-icon" 
-                      onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === file.path ? null : file.path); }}
-                    >
-                      <MoreVertical size={18} />
-                    </button>
-                    
-                    {/* Context Menu Dropdown */}
-                    {activeMenu === file.path && (
-                      <div className="glass" style={{ 
-                        position: 'absolute', right: '40px', top: '20px', zIndex: 10, 
-                        display: 'flex', flexDirection: 'column', padding: '5px', borderRadius: '8px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)', minWidth: '150px'
-                      }}>
-                        {!file.isDir && (
-                          <button className="btn" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }} onClick={(e) => { e.stopPropagation(); downloadFile(file); setActiveMenu(null); }}>
-                            <Download size={16} style={{ marginRight: '8px' }} /> Download
-                          </button>
-                        )}
-                        <button className="btn btn-danger" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }} onClick={(e) => { e.stopPropagation(); deleteFile(file); setActiveMenu(null); }}>
-                          <Trash2 size={16} style={{ marginRight: '8px' }} /> Elimina
-                        </button>
+              </thead>
+              <tbody>
+                {files.length === 0 && (
+                  <tr>
+                    <td colSpan="4" style={{ padding: '20px', textAlign: 'center', opacity: 0.5 }}>Cartella vuota</td>
+                  </tr>
+                )}
+                {files.map((file) => (
+                  <tr key={file.path} style={{ borderBottom: '1px solid var(--card-border)', transition: 'background 0.2s' }} className="file-row">
+                    <td style={{ padding: '12px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => handleItemClick(file)}>
+                        {getFileIcon(file)}
+                        <span style={{ fontWeight: file.isDir ? '600' : 'normal' }}>{file.name}</span>
                       </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                    <td style={{ padding: '12px 20px', opacity: 0.7 }}>
+                      {file.isDir ? '--' : formatSize(file.size)}
+                    </td>
+                    <td style={{ padding: '12px 20px', opacity: 0.7 }}>
+                      {new Date(file.modifiedAt).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '12px 20px', textAlign: 'right', position: 'relative' }}>
+                      <button 
+                        className="btn-icon" 
+                        onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === file.path ? null : file.path); }}
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+                      
+                      {/* Context Menu Dropdown */}
+                      {activeMenu === file.path && (
+                        <div className="glass" style={{ 
+                          position: 'absolute', right: '40px', top: '20px', zIndex: 10, 
+                          display: 'flex', flexDirection: 'column', padding: '5px', borderRadius: '8px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.2)', minWidth: '150px'
+                        }}>
+                          {!file.isDir && (
+                            <button className="btn" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }} onClick={(e) => { e.stopPropagation(); downloadFile(file); setActiveMenu(null); }}>
+                              <Download size={16} style={{ marginRight: '8px' }} /> Download
+                            </button>
+                          )}
+                          <button className="btn btn-danger" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }} onClick={(e) => { e.stopPropagation(); deleteFile(file); setActiveMenu(null); }}>
+                            <Trash2 size={16} style={{ marginRight: '8px' }} /> Elimina
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
