@@ -9,10 +9,9 @@ export default function TaskOverlay() {
   if (taskList.length === 0) return null;
 
   return (
-    <div style={{
+    <div className="task-overlay-container" style={{
       position: 'fixed',
       bottom: '20px',
-      right: '20px',
       zIndex: 9999,
       display: 'flex',
       flexDirection: 'column',

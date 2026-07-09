@@ -354,7 +354,7 @@ export default function NewContainer() {
           {activeTab === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '10px' }}>
+              <div className="form-grid-image-tag">
                 <div>
                   <label>Docker Image *</label>
                   <input type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} placeholder="nginx" />
@@ -380,7 +380,7 @@ export default function NewContainer() {
                 <input type="text" value={formData.icon} onChange={e => setFormData({...formData, icon: e.target.value})} placeholder="https://example.com/icon.png" />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '10px', alignItems: 'end' }}>
+              <div className="form-grid-webui">
                 <div>
                   <label>Web UI Scheme</label>
                   <select value={formData.webUI.scheme} onChange={e => setFormData({...formData, webUI: {...formData.webUI, scheme: e.target.value}})}>
@@ -398,7 +398,7 @@ export default function NewContainer() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px' }}>
+              <div className="form-grid-4">
                 <div>
                   <label>Network Mode</label>
                   <select value={formData.networkMode} onChange={e => setFormData({...formData, networkMode: e.target.value})}>
@@ -429,7 +429,7 @@ export default function NewContainer() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="form-grid-2">
                 <div>
                   <label>Memory Limit</label>
                   <input type="range" className="memory-slider" min="0" max={maxMemory} step="256" value={formData.memory} onChange={e => setFormData({...formData, memory: parseInt(e.target.value)})} />
@@ -455,7 +455,7 @@ export default function NewContainer() {
               </div>
 
               {/* Ports */}
-              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Port Mappings</span>
                   <button className="btn-pill" onClick={() => addList('ports', { host: '', container: '', protocol: 'tcp' })}><Plus size={14}/> Add</button>
@@ -478,7 +478,7 @@ export default function NewContainer() {
               </div>
 
               {/* Volumes */}
-              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Volumes</span>
                   <button className="btn-pill" onClick={() => addList('volumes', { host: '', container: '' })}><Plus size={14}/> Add</button>
@@ -497,7 +497,7 @@ export default function NewContainer() {
               </div>
 
               {/* Devices */}
-              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Devices</span>
                   <button className="btn-pill" onClick={() => addList('devices', { host: '', container: '' })}><Plus size={14}/> Add</button>
@@ -516,7 +516,7 @@ export default function NewContainer() {
               </div>
 
               {/* Environment Variables */}
-              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Environment Variables</span>
                   <button className="btn-pill" onClick={() => addList('env', { key: '', value: '' })}><Plus size={14}/> Add</button>
@@ -535,7 +535,7 @@ export default function NewContainer() {
               </div>
 
               {/* Commands */}
-              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Container Command</span>
                   <button className="btn-pill" onClick={() => addList('commands', { value: '' })}><Plus size={14}/> Add</button>

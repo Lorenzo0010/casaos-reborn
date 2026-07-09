@@ -439,18 +439,18 @@ export default function Dashboard() {
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <Link 
             to="/new" 
-            className="btn" 
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'var(--primary)', color: 'var(--primary-text)', borderRadius: '10px', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}
+            className="btn-action-square neutral"
+            title="Nuovo Container"
+            style={{ textDecoration: 'none' }}
           >
-            <PlusCircle size={18} /> Nuovo Container
+            <PlusCircle size={20} />
           </Link>
           <button 
-            className="btn" 
+            className={`btn-action-square ${editMode ? 'success' : 'neutral'}`}
             onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }} 
             title={editMode ? "Fine Modifica" : "Modifica Layout"}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: editMode ? 'var(--card-bg)' : 'var(--primary)', color: editMode ? 'var(--primary)' : 'var(--primary-text)', borderRadius: '10px', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem', border: editMode ? '1px solid var(--primary)' : '1px solid transparent', cursor: 'pointer' }}
           >
-            <Edit size={18} /> {editMode ? "Fine" : "Modifica"}
+            {editMode ? <Check size={20} /> : <Edit size={20} />}
           </button>
         </div>
       </div>
