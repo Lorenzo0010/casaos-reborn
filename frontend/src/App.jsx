@@ -7,7 +7,7 @@ import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Advanced from './pages/Advanced';
 import FileManager from './pages/FileManager';
-import { TaskProvider } from './contexts/TaskContext';
+import { DialogProvider } from './contexts/DialogContext';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
@@ -270,7 +270,7 @@ function App() {
   }
 
   return (
-    <TaskProvider>
+    <DialogProvider>
       <Router>
         <div className="layout">
           <Sidebar />
@@ -291,7 +291,7 @@ function App() {
           </div>
         </div>
       </Router>
-    </TaskProvider>
+    </DialogProvider>
   );
 }
 

@@ -422,6 +422,7 @@ router.post('/containers/create', async (req, res) => {
     // Always pull the image
     if (io) io.emit('container.create.progress', global.activeTasks[taskId]);
     let pullFailed = false;
+    let pullLayers = {}; // Track progress per layer
     try {
       await new Promise((resolve, reject) => {
         docker.pull(fullImage, (err, stream) => {
@@ -430,16 +431,26 @@ router.post('/containers/create', async (req, res) => {
             if (err) return reject(err);
             resolve(output);
           }, (event) => {
+            let unifiedProgress = event.progressDetail;
+            if (event.id && event.progressDetail && event.progressDetail.total) {
+              pullLayers[event.id] = { current: event.progressDetail.current || 0, total: event.progressDetail.total || 0 };
+              let overallCurrent = 0, overallTotal = 0;
+              for (let layerId in pullLayers) {
+                overallCurrent += pullLayers[layerId].current;
+                overallTotal += pullLayers[layerId].total;
+              }
+              unifiedProgress = { current: overallCurrent, total: overallTotal };
+            }
             if (global.activeTasks[taskId]) {
               global.activeTasks[taskId].status = event.status;
-              global.activeTasks[taskId].progressDetail = event.progressDetail;
+              global.activeTasks[taskId].progressDetail = unifiedProgress;
             }
             if (io) {
               io.emit('container.create.progress', {
                 name: containerName,
                 image: fullImage,
                 status: event.status,
-                progressDetail: event.progressDetail,
+                progressDetail: unifiedProgress,
                 taskId
               });
             }

@@ -231,7 +231,7 @@ export default function FileManager() {
           <button className="btn" onClick={() => createItem(false)} title="Nuovo File">
             <FilePlus size={18} />
           </button>
-          <button className="btn" style={{ background: 'var(--primary)', color: 'var(--primary-text)' }} onClick={handleUploadClick}>
+          <button className="btn btn-primary" onClick={handleUploadClick}>
             <Upload size={18} style={{ marginRight: '5px' }} /> Upload
           </button>
           <input type="file" multiple ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
@@ -327,10 +327,10 @@ export default function FileManager() {
                 }}
               />
             </div>
-            <div style={{ padding: '15px 20px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button className="btn" onClick={() => setEditorFile(null)}>Annulla</button>
-              <button className="btn" style={{ background: 'var(--primary)', color: 'var(--primary-text)' }} onClick={saveEditor}>
-                <Save size={18} style={{ marginRight: '5px' }} /> Salva
+            <div className="modal-footer" style={{ padding: '15px 20px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn" style={{ background: 'var(--card-bg)' }} onClick={() => setEditorFile(null)}>Annulla</button>
+              <button className="btn btn-primary" onClick={saveEditor}>
+                <Save size={16} /> Salva
               </button>
             </div>
           </div>

@@ -75,16 +75,17 @@ export const generateYamlFromData = (data) => {
       }];
   }
   
-  if (Object.keys(xCasaos).length > 0) {
-      service['x-casaos'] = xCasaos;
-  }
-
   const compose = {
+    name: data.name || 'app',
     version: '3.9',
     services: {
       [data.name || 'app']: service
     }
   };
+
+  if (Object.keys(xCasaos).length > 0) {
+      compose['x-casaos'] = xCasaos;
+  }
 
   return yaml.dump(compose);
 };
