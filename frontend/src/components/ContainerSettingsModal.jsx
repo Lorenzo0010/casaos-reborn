@@ -98,7 +98,11 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             scheme: (labels['casaos.reborn.web.scheme'] || 'http').replace('://', ''),
             port: labels['casaos.reborn.web.port'] || '',
             path: labels['casaos.reborn.web.path'] || '/'
-          }
+          },
+          networkMode: info?.HostConfig?.NetworkMode || 'bridge',
+          devices: info?.HostConfig?.Devices || [],
+          capAdd: info?.HostConfig?.CapAdd || [],
+          cmd: info?.Config?.Cmd || []
         });
       } catch (err) {
         console.error(err);
@@ -129,7 +133,11 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
         webUI: data.webUI,
         env: data.env.filter(e => e.key).map(e => `${e.key}=${e.value}`),
         ports: {},
-        volumes: data.volumes.filter(v => v.hostPath && v.containerPath).map(v => `${v.hostPath}:${v.containerPath}`)
+        volumes: data.volumes.filter(v => v.hostPath && v.containerPath).map(v => `${v.hostPath}:${v.containerPath}`),
+        networkMode: data.networkMode,
+        devices: data.devices,
+        capAdd: data.capAdd,
+        cmd: data.cmd
       };
 
       data.ports.forEach(p => {

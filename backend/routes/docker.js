@@ -133,7 +133,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
-  let containerName = (name || '').replace('/', '');
+  let containerName = (name || '').replace('/', '').replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
   res.status(202).json({ success: true, message: 'Recreate started', id });
 
@@ -141,9 +141,9 @@ router.post('/containers/:id/recreate', async (req, res) => {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect();
     if (!containerName) {
-      containerName = oldInspect.Name.replace('/', '');
-      req.body.name = containerName;
+      containerName = oldInspect.Name.replace('/', '').replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9_-]/g, '');
     }
+    req.body.name = containerName;
     const oldImage = oldInspect.Config.Image;
     
     const taskId = `recreate_${id}`;
@@ -208,6 +208,18 @@ router.post('/containers/:id/recreate', async (req, res) => {
       });
       child.unref();
       return; // We will be killed shortly
+    }
+
+    // Se il container non era originariamente gestito da Compose, rimuoviamolo 
+    // forzatamente prima per evitare errori di 'name conflict' con docker compose up.
+    const isCompose = oldInspect.Config.Labels && oldInspect.Config.Labels['com.docker.compose.project'];
+    if (!isCompose) {
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing legacy container...', taskId });
+      try {
+        await oldContainer.remove({ force: true });
+      } catch (removeErr) {
+        console.warn('Failed to remove legacy container (might be already gone):', removeErr.message);
+      }
     }
 
     // Execute Docker Compose
@@ -407,7 +419,8 @@ router.post('/containers/create', async (req, res) => {
   res.status(202).json({ success: true, message: 'Creation started' });
 
   try {
-    const containerName = (name || '').replace('/', '');
+    let containerName = (name || '').replace('/', '').replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    req.body.name = containerName;
     const taskId = `create_${containerName}`;
     
     global.activeTasks[taskId] = {

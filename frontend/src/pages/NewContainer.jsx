@@ -125,7 +125,7 @@ export default function NewContainer() {
       const newData = { ...formData };
       newData.image = imageName;
       newData.tag = imageTag;
-      newData.name = service.container_name || '';
+      newData.name = parsed.name || service.container_name || Object.keys(parsed.services)[0] || '';
       newData.displayName = serviceCasaosData.title || rootCasaosData.title || '';
       // Icon: try x-casaos first, then docker labels
       newData.icon = serviceCasaosData.icon || rootCasaosData.icon || (service.labels && service.labels.icon) || '';

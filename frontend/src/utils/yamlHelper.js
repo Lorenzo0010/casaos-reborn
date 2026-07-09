@@ -42,15 +42,19 @@ export const generateYamlFromData = (data) => {
   }
 
   // Aggiunta supporto per comandi custom (usati in NewContainer)
-  const validCommands = (data.commands || []).filter(c => c.value);
+  const validCommands = (data.commands || data.cmd || []);
   if (validCommands.length > 0) {
-    service.command = validCommands.map(c => c.value);
+    service.command = validCommands.map(c => typeof c === 'object' ? c.value : c).filter(c => c);
   }
 
   // Aggiunta supporto per devices
-  const validDevices = (data.devices || []).filter(d => d.host && d.container);
+  const validDevices = (data.devices || []).filter(d => (d.PathOnHost && d.PathInContainer) || (d.host && d.container));
   if (validDevices.length > 0) {
-    service.devices = validDevices.map(d => `${d.host}:${d.container}`);
+    service.devices = validDevices.map(d => {
+      const hDev = d.PathOnHost || d.host;
+      const cDev = d.PathInContainer || d.container;
+      return `${hDev}:${cDev}`;
+    });
   }
 
   // Aggiunta supporto per cap_add
