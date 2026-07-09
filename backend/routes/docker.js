@@ -210,16 +210,12 @@ router.post('/containers/:id/recreate', async (req, res) => {
       return; // We will be killed shortly
     }
 
-    // Se il container non era originariamente gestito da Compose, rimuoviamolo 
-    // forzatamente prima per evitare errori di 'name conflict' con docker compose up.
-    const isCompose = oldInspect.Config.Labels && oldInspect.Config.Labels['com.docker.compose.project'];
-    if (!isCompose) {
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing legacy container...', taskId });
-      try {
-        await oldContainer.remove({ force: true });
-      } catch (removeErr) {
-        console.warn('Failed to remove legacy container (might be already gone):', removeErr.message);
-      }
+    // Rimuoviamo il container forzatamente prima per evitare errori di 'name conflict' con docker compose up.
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...', taskId });
+    try {
+      await oldContainer.remove({ force: true });
+    } catch (removeErr) {
+      console.warn('Failed to remove old container (might be already gone):', removeErr.message);
     }
 
     // Execute Docker Compose

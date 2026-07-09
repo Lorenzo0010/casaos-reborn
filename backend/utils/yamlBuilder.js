@@ -143,7 +143,6 @@ function buildCasaOSCompose(data) {
 
   const compose = {
     name: data.name,
-    version: '3.9',
     services: {
       [data.name]: service
     },
