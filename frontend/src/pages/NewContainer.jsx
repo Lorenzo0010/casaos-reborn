@@ -89,6 +89,12 @@ export default function NewContainer() {
         imageTag = service.image.substring(colonIdx + 1);
       }
 
+      // Helper to normalize scheme: always store as 'http' or 'https' (without ://)
+      const normalizeScheme = (s) => {
+        if (!s) return 'http';
+        return s.replace('://', '').toLowerCase();
+      };
+
       const getCasaOSData = (xCasaos) => {
         if (!xCasaos) return {};
         const res = {};
@@ -99,13 +105,13 @@ export default function NewContainer() {
           else if (xCasaos.title.en_us) res.title = xCasaos.title.en_us;
         }
         if (xCasaos.port_map) res.port = String(xCasaos.port_map);
-        if (xCasaos.scheme) res.scheme = xCasaos.scheme;
+        if (xCasaos.scheme) res.scheme = normalizeScheme(xCasaos.scheme);
         if (xCasaos.index) res.path = xCasaos.index;
 
         if (xCasaos.ports) {
             const uiPort = xCasaos.ports.find(p => p.ui || p.web);
             if (uiPort) {
-                res.scheme = uiPort.scheme || res.scheme || 'http';
+                res.scheme = normalizeScheme(uiPort.scheme) || res.scheme || 'http';
                 res.port = uiPort.target || uiPort.published || res.port || '';
                 res.path = uiPort.path || res.path || '/';
             }
@@ -121,13 +127,29 @@ export default function NewContainer() {
       newData.tag = imageTag;
       newData.name = service.container_name || '';
       newData.displayName = serviceCasaosData.title || rootCasaosData.title || '';
-      newData.icon = serviceCasaosData.icon || rootCasaosData.icon || '';
+      // Icon: try x-casaos first, then docker labels
+      newData.icon = serviceCasaosData.icon || rootCasaosData.icon || (service.labels && service.labels.icon) || '';
       newData.restartPolicy = service.restart || 'unless-stopped';
       newData.privileged = !!service.privileged;
       newData.networkMode = service.network_mode || 'bridge';
       newData.pidMode = service.pid || '';
       newData.hostname = service.hostname || '';
       
+      // Parse memory from deploy.resources.limits.memory or mem_limit
+      const memStr = service.deploy?.resources?.limits?.memory || service.mem_limit || '';
+      if (memStr) {
+        const memMatch = String(memStr).match(/^(\d+)\s*([kmgt]?)b?$/i);
+        if (memMatch) {
+          let memMB = parseInt(memMatch[1]);
+          const unit = (memMatch[2] || '').toLowerCase();
+          if (unit === 'k') memMB = Math.round(memMB / 1024);
+          else if (unit === 'g') memMB = memMB * 1024;
+          else if (unit === 't') memMB = memMB * 1024 * 1024;
+          // If no unit or 'm', it's already in MB
+          newData.memory = memMB;
+        }
+      }
+
       if (serviceCasaosData.port || rootCasaosData.port) {
           newData.webUI = {
               scheme: serviceCasaosData.scheme || rootCasaosData.scheme || 'http',
@@ -162,7 +184,7 @@ export default function NewContainer() {
         }).filter(p => p.host && p.container);
       }
 
-      if (service.volumes) {
+      if (service.volumes && service.volumes.length > 0) {
         newData.volumes = service.volumes.map(v => {
           if (typeof v === 'string') {
             const parts = v.split(':');
@@ -185,7 +207,7 @@ export default function NewContainer() {
         }
       }
 
-      if (service.devices) {
+      if (service.devices && service.devices.length > 0) {
           newData.devices = service.devices.map(d => {
               if (typeof d === 'string') {
                   const parts = d.split(':');
@@ -195,7 +217,7 @@ export default function NewContainer() {
           }).filter(d => d.host && d.container);
       }
 
-      if (service.command) {
+      if (service.command && (typeof service.command === 'string' || service.command.length > 0)) {
           if (Array.isArray(service.command)) {
               newData.commands = service.command.map(c => ({ value: c }));
           } else {
@@ -203,7 +225,7 @@ export default function NewContainer() {
           }
       }
       
-      if (service.cap_add) {
+      if (service.cap_add && service.cap_add.length > 0) {
           newData.capAdd = service.cap_add.filter(c => CAPABILITIES.includes(c.toUpperCase())).map(c => c.toUpperCase());
       }
 

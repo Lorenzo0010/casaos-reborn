@@ -1,0 +1,189 @@
+// Simple YAML serializer for docker-compose files
+
+function dumpYAML(obj, indent = 0) {
+  let yaml = '';
+  const spaces = ' '.repeat(indent);
+
+  if (typeof obj === 'string') {
+    // Escape strings that might cause issues
+    if (obj === '' || obj.includes(':') || obj.includes('\n') || obj.includes('#') || obj.trim() !== obj || /^[0-9]+$/.test(obj) || obj === 'true' || obj === 'false') {
+      return `"${obj.replace(/"/g, '\\"')}"`;
+    }
+    return obj;
+  }
+
+  if (typeof obj === 'number' || typeof obj === 'boolean') {
+    return String(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '[]';
+    yaml += '\n';
+    for (const item of obj) {
+      yaml += `${spaces}- ${dumpYAML(item, indent + 2)}\n`;
+    }
+    return yaml.trimEnd();
+  }
+
+  if (typeof obj === 'object' && obj !== null) {
+    if (Object.keys(obj).length === 0) return '{}';
+    if (indent !== 0) yaml += '\n';
+    
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === undefined || value === null) continue;
+      
+      const safeKey = /^[a-zA-Z0-9_-]+$/.test(key) ? key : `"${key.replace(/"/g, '\\"')}"`;
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 0) {
+        yaml += `${spaces}${safeKey}: {}\n`;
+      } else if (Array.isArray(value) && value.length === 0) {
+        yaml += `${spaces}${safeKey}: []\n`;
+      } else {
+        yaml += `${spaces}${safeKey}: ${dumpYAML(value, indent + 2)}\n`;
+      }
+    }
+    return yaml.trimEnd();
+  }
+
+  return '';
+}
+
+/**
+ * Generates a CasaOS-compatible docker-compose string from container parameters
+ */
+function buildCasaOSCompose(data) {
+  const service = {
+    image: data.tag && data.tag !== 'latest' ? `${data.image}:${data.tag}` : data.image,
+    container_name: data.name,
+    restart: data.restartPolicy || 'unless-stopped',
+  };
+
+  if (data.networkMode && data.networkMode !== 'bridge') {
+    service.network_mode = data.networkMode;
+  }
+
+  if (data.privileged) service.privileged = true;
+  if (data.pidMode) service.pid = data.pidMode;
+  
+  // memory
+  if (data.memory && data.memory > 0) {
+    service.deploy = {
+      resources: {
+        limits: {
+          memory: `${data.memory}b`
+        }
+      }
+    };
+  }
+
+  if (data.cpuQuota && data.cpuQuota > 0) {
+    service.cpu_shares = data.cpuQuota; // simplified equivalent
+  }
+
+  // Ports
+  const validPorts = [];
+  if (data.ports) {
+    for (const key of Object.keys(data.ports)) {
+      const [containerPort, protocol] = key.split('/');
+      for (const p of data.ports[key]) {
+        const protoStr = protocol === 'tcp' ? '' : `/${protocol}`;
+        validPorts.push(`${p.HostPort}:${containerPort}${protoStr}`);
+      }
+    }
+  }
+  if (validPorts.length > 0) service.ports = validPorts;
+
+  // Volumes
+  if (data.volumes && data.volumes.length > 0) {
+    service.volumes = data.volumes;
+  }
+
+  // Environment
+  if (data.env && data.env.length > 0) {
+    service.environment = data.env;
+  }
+
+  // Devices
+  if (data.devices && data.devices.length > 0) {
+    service.devices = data.devices.map(d => `${d.PathOnHost}:${d.PathInContainer}`);
+  }
+
+  // Command
+  if (data.cmd && data.cmd.length > 0) {
+    service.command = data.cmd;
+  }
+
+  // CapAdd
+  if (data.capAdd && data.capAdd.length > 0) {
+    service.cap_add = data.capAdd;
+  }
+
+  // x-casaos metadata (official CasaOS schema)
+  const xCasaos = {
+    author: "casaos-reborn",
+    category: data.webUI ? "Web" : "App",
+    title: {
+      custom: data.displayName || data.name
+    }
+  };
+
+  if (data.icon) xCasaos.icon = data.icon;
+
+  if (data.webUI) {
+    xCasaos.scheme = data.webUI.scheme ? data.webUI.scheme.replace('://', '') : 'http';
+    xCasaos.index = data.webUI.path || '/';
+    xCasaos.port_map = String(data.webUI.port);
+    xCasaos.ports = [{
+      ui: true,
+      scheme: xCasaos.scheme,
+      target: xCasaos.port_map,
+      path: xCasaos.index
+    }];
+  }
+
+  service['x-casaos'] = xCasaos;
+
+  const compose = {
+    version: '3.9',
+    services: {
+      [data.name]: service
+    }
+  };
+
+  return dumpYAML(compose) + '\n';
+}
+
+/**
+ * Extracts x-casaos metadata from a compose file string using regex
+ */
+function parseCasaOSMetadata(yamlStr) {
+  const metadata = {};
+  
+  // Extract custom title
+  const titleMatch = yamlStr.match(/custom:\s*(.+)$/m);
+  if (titleMatch) metadata.name = titleMatch[1].replace(/["']/g, '').trim();
+
+  // Extract icon
+  const iconMatch = yamlStr.match(/icon:\s*(.+)$/m);
+  if (iconMatch) metadata.icon = iconMatch[1].replace(/["']/g, '').trim();
+
+  // Extract scheme
+  const schemeMatch = yamlStr.match(/scheme:\s*(.+)$/m);
+  if (schemeMatch) metadata.scheme = schemeMatch[1].replace(/["']/g, '').trim();
+
+  // Extract index/path
+  const indexMatch = yamlStr.match(/index:\s*(.+)$/m);
+  if (indexMatch) metadata.path = indexMatch[1].replace(/["']/g, '').trim();
+
+  // Extract port_map
+  const portMapMatch = yamlStr.match(/port_map:\s*(.+)$/m);
+  if (portMapMatch) metadata.port = portMapMatch[1].replace(/["']/g, '').trim();
+
+  return metadata;
+}
+
+module.exports = {
+  buildCasaOSCompose,
+  dumpYAML,
+  parseCasaOSMetadata
+};

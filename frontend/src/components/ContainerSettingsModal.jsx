@@ -23,7 +23,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
     pidMode: '',
     privileged: false,
     memory: 0,
-    webUI: { scheme: 'http://', port: '', path: '/' }
+    webUI: { scheme: 'http', port: '', path: '/' }
   });
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
           privileged: !!info?.HostConfig?.Privileged,
           memory: info?.HostConfig?.Memory ? Math.round(info.HostConfig.Memory / (1024 * 1024)) : 0,
           webUI: {
-            scheme: labels['casaos.reborn.web.scheme'] || 'http://',
+            scheme: (labels['casaos.reborn.web.scheme'] || 'http').replace('://', ''),
             port: labels['casaos.reborn.web.port'] || '',
             path: labels['casaos.reborn.web.path'] || '/'
           }
@@ -313,8 +313,8 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
                   value={data.webUI.scheme} 
                   onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, scheme: e.target.value } }))}
                 >
-                  <option value="http://">http://</option>
-                  <option value="https://">https://</option>
+                  <option value="http">http://</option>
+                  <option value="https">https://</option>
                 </select>
                 <input 
                   type="text" 

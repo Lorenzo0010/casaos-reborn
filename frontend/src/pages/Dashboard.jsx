@@ -121,6 +121,7 @@ export default function Dashboard() {
       auth: { type: 'ui', token }
     });
     
+    // Recreate progress: key by container ID
     socket.on('container.recreate.progress', (data) => {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
       if (data.status === 'Rebooting system...') {
@@ -129,12 +130,16 @@ export default function Dashboard() {
       }
     });
 
+    // Update progress: key by container ID
     socket.on('container.update.progress', (data) => {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
     });
 
+    // Create progress: key by taskId (no existing container)
     socket.on('container.create.progress', (data) => {
-      setRecreating(prev => ({ ...prev, [data.taskId]: data }));
+      if (data.taskId) {
+        setRecreating(prev => ({ ...prev, [data.taskId]: data }));
+      }
     });
 
     // Ascolto statistiche di sistema via WebSocket
@@ -147,10 +152,13 @@ export default function Dashboard() {
       setContainers(data);
     });
 
+    // Success: clean up by both oldId and taskId to ensure no phantoms
     const handleSuccess = (data) => {
       setRecreating(prev => {
         const p = { ...prev };
-        delete p[data.oldId || data.taskId];
+        if (data.oldId) delete p[data.oldId];
+        if (data.taskId) delete p[data.taskId];
+        if (data.id) delete p[data.id];
         return p;
       });
       fetchContainers();
@@ -160,19 +168,21 @@ export default function Dashboard() {
     socket.on('container.update.success', handleSuccess);
     socket.on('container.create.success', handleSuccess);
 
+    // Error: clean up by both id and taskId
     socket.on('container.recreate.error', (data) => {
       setRecreating(prev => {
         const p = { ...prev };
-        delete p[data.id];
+        if (data.id) delete p[data.id];
+        if (data.taskId) delete p[data.taskId];
         return p;
       });
-      showAlert('Errore Creazione', 'Error recreating container: ' + data.error, true);
+      showAlert('Errore Ricreazione', 'Error recreating container: ' + data.error, true);
     });
 
     socket.on('container.create.error', (data) => {
       setRecreating(prev => {
         const p = { ...prev };
-        delete p[data.taskId];
+        if (data.taskId) delete p[data.taskId];
         return p;
       });
       showAlert('Errore Creazione', 'Error creating container: ' + data.error, true);
@@ -181,7 +191,8 @@ export default function Dashboard() {
     socket.on('container.recreate.rollback', (data) => {
       setRecreating(prev => {
         const p = { ...prev };
-        delete p[data.oldId];
+        if (data.oldId) delete p[data.oldId];
+        if (data.taskId) delete p[data.taskId];
         return p;
       });
       fetchContainers();
@@ -243,7 +254,9 @@ export default function Dashboard() {
     const labels = container.Labels || {};
     const port = labels['casaos.reborn.web.port'];
     if (port) {
-      const scheme = labels['casaos.reborn.web.scheme'] || 'http://';
+      let scheme = labels['casaos.reborn.web.scheme'] || 'http';
+      // Normalize: ensure scheme always has ://
+      if (!scheme.includes('://')) scheme = scheme + '://';
       const path = labels['casaos.reborn.web.path'] || '/';
       return `${scheme}${window.location.hostname}:${port}${path}`;
     }
@@ -453,18 +466,19 @@ export default function Dashboard() {
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <Link 
             to="/new" 
-            className="btn-action-square neutral"
+            className="btn-icon-only"
             title="Nuovo Container"
             style={{ textDecoration: 'none' }}
           >
-            <PlusCircle size={20} />
+            <PlusCircle size={24} />
           </Link>
           <button 
-            className={`btn-action-square ${editMode ? 'success' : 'neutral'}`}
+            className="btn-icon-only"
             onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }} 
             title={editMode ? "Fine Modifica" : "Modifica Layout"}
+            style={{ color: editMode ? 'var(--success)' : 'inherit' }}
           >
-            {editMode ? <Check size={20} /> : <Edit size={20} />}
+            {editMode ? <Check size={24} /> : <Edit size={24} />}
           </button>
         </div>
       </div>
@@ -793,14 +807,16 @@ export default function Dashboard() {
                 <div className="glass container-card" style={{ margin: 0, border: 'none', background: 'var(--bg-color)' }}>
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                    backdropFilter: 'blur(3px)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    backdropFilter: 'blur(4px)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 10, padding: '16px', color: 'white', borderRadius: 'inherit'
+                    zIndex: 10, padding: '10px', color: 'white', borderRadius: 'inherit', textAlign: 'center'
                   }}>
-                    <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
-                    <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: '0.85rem' }}>{progressData.status}</h4>
-                    <div style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9, fontWeight: 'bold' }}>{Math.round(progressPercent)}%</div>
+                    <Loader className="spin" size={24} style={{ marginBottom: '8px', flexShrink: 0 }} />
+                    <h4 style={{ margin: '0 0 5px 0', fontSize: '0.8rem', whiteSpace: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      {progressData.status}
+                    </h4>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 'bold' }}>{Math.round(progressPercent)}%</div>
                   </div>
                   
                   {/* LED */}

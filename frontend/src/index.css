@@ -265,6 +265,29 @@ h1, h2, h3 {
 .btn-action-square:hover {
   transform: scale(1.1);
 }
+.btn-action-square:active { transform: translateY(0); }
+
+/* Nuova classe per pulsanti solo icona (es. header dashboard) */
+.btn-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: transparent;
+  color: var(--text-color);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.btn-icon-only:hover {
+  background-color: var(--card-bg);
+  opacity: 1;
+}
+
 .btn-action-square.success:hover { background-color: var(--success); color: white; }
 .btn-action-square.danger:hover { background-color: var(--danger); color: white; }
 .btn-action-square.neutral:hover { background-color: var(--primary); color: white; }

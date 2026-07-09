@@ -1,9 +1,19 @@
 const express = require('express');
 const { isDeepStrictEqual } = require('util');
 const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { exec } = require('child_process');
 const router = express.Router();
 const Docker = require('dockerode');
 const { checkUpdates, getUpdaterStatus } = require('../services/updater');
+const { buildCasaOSCompose } = require('../utils/yamlBuilder');
+
+// Base directory for CasaOS compose apps
+const CASAOS_APPS_DIR = process.env.CASAOS_APPS_DIR || (process.platform === 'win32' ? path.join(os.homedir(), 'casaos-apps') : '/var/lib/casaos/apps');
+if (!fs.existsSync(CASAOS_APPS_DIR)) {
+  fs.mkdirSync(CASAOS_APPS_DIR, { recursive: true });
+}
 
 // Connect to local docker socket
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
@@ -37,6 +47,28 @@ router.post('/check-updates', async (req, res) => {
 router.get('/containers', async (req, res) => {
   try {
     const containers = await docker.listContainers({ all: true });
+    
+    // Inject x-casaos metadata from docker-compose.yml if available
+    for (const c of containers) {
+      const projectName = c.Labels?.['com.docker.compose.project'];
+      if (projectName) {
+        const appDir = path.join(CASAOS_APPS_DIR, projectName);
+        const composePath = path.join(appDir, 'docker-compose.yml');
+        if (fs.existsSync(composePath)) {
+          const yamlStr = fs.readFileSync(composePath, 'utf8');
+          const { parseCasaOSMetadata } = require('../utils/yamlBuilder');
+          const metadata = parseCasaOSMetadata(yamlStr);
+          
+          if (!c.Labels) c.Labels = {};
+          if (metadata.name) c.Labels['casaos.reborn.name'] = metadata.name;
+          if (metadata.icon) c.Labels['casaos.reborn.icon'] = metadata.icon;
+          if (metadata.scheme) c.Labels['casaos.reborn.web.scheme'] = metadata.scheme;
+          if (metadata.path) c.Labels['casaos.reborn.web.path'] = metadata.path;
+          if (metadata.port) c.Labels['casaos.reborn.web.port'] = metadata.port;
+        }
+      }
+    }
+    
     res.json(containers);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -48,6 +80,25 @@ router.get('/containers/:id/inspect', async (req, res) => {
   try {
     const container = docker.getContainer(req.params.id);
     const data = await container.inspect();
+    
+    const projectName = data.Config?.Labels?.['com.docker.compose.project'];
+    if (projectName) {
+      const appDir = path.join(CASAOS_APPS_DIR, projectName);
+      const composePath = path.join(appDir, 'docker-compose.yml');
+      if (fs.existsSync(composePath)) {
+        const yamlStr = fs.readFileSync(composePath, 'utf8');
+        const { parseCasaOSMetadata } = require('../utils/yamlBuilder');
+        const metadata = parseCasaOSMetadata(yamlStr);
+        
+        if (!data.Config.Labels) data.Config.Labels = {};
+        if (metadata.name) data.Config.Labels['casaos.reborn.name'] = metadata.name;
+        if (metadata.icon) data.Config.Labels['casaos.reborn.icon'] = metadata.icon;
+        if (metadata.scheme) data.Config.Labels['casaos.reborn.web.scheme'] = metadata.scheme;
+        if (metadata.path) data.Config.Labels['casaos.reborn.web.path'] = metadata.path;
+        if (metadata.port) data.Config.Labels['casaos.reborn.web.port'] = metadata.port;
+      }
+    }
+    
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -75,187 +126,67 @@ function getOwnContainerId() {
   return null;
 }
 
-// Recreate container with new settings
+// Recreate a container with new settings
 router.post('/containers/:id/recreate', async (req, res) => {
   const { id } = req.params;
-  const { image, tag, name, displayName, ports, env, volumes, restartPolicy, privileged, memory, webUI, icon, pidMode } = req.body;
+  const { image, tag, name, displayName } = req.body;
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
-  // Return early, continue processing in background
-  res.status(202).json({ success: true, message: 'Recreation started', id });
+  let containerName = (name || '').replace('/', '');
 
-  // Fix Bug 3: Declare containerName outside try-catch
-  let containerName = name ? name.replace('/', '') : '';
+  res.status(202).json({ success: true, message: 'Recreate started', id });
 
   try {
     const oldContainer = docker.getContainer(id);
-    const oldInspect = await oldContainer.inspect().catch(() => ({}));
-    
-    containerName = containerName || (oldInspect.Name || '').replace('/', '');
-    const nameChanged = containerName !== (oldInspect.Name || '').replace('/', '');
-    const oldImage = oldInspect.Config?.Image || '';
-    const imageChanged = fullImage !== oldImage;
+    const oldInspect = await oldContainer.inspect();
+    if (!containerName) {
+      containerName = oldInspect.Name.replace('/', '');
+      req.body.name = containerName;
+    }
+    const oldImage = oldInspect.Config.Image;
     
     const taskId = `recreate_${id}`;
+    
     global.activeTasks[taskId] = {
-      id: taskId,
+      id: id,
+      taskId,
       type: 'recreate',
       name: containerName,
       image: fullImage,
-      status: 'Pulling image...',
+      status: 'Generating compose file...',
       progressDetail: null
     };
 
-    // 1. Pull the image to check for updates
-    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
-    let pullFailed = false;
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Generating compose file...', taskId });
+
+    const composeYaml = buildCasaOSCompose(req.body);
+    const appDir = path.join(CASAOS_APPS_DIR, containerName);
+    
+    if (!fs.existsSync(appDir)) {
+      fs.mkdirSync(appDir, { recursive: true });
+    }
+    
+    const composePath = path.join(appDir, 'docker-compose.yml');
+    fs.writeFileSync(composePath, composeYaml, 'utf8');
+
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Pulling latest image...', taskId });
+
+    // Pull image using compose
     try {
       await new Promise((resolve, reject) => {
-        docker.pull(fullImage, (err, stream) => {
-          if (err) return reject(err);
-          docker.modem.followProgress(stream, (err, output) => {
-            if (err) return reject(err);
-            resolve(output);
-          }, (event) => {
-            if (global.activeTasks[taskId]) {
-              global.activeTasks[taskId].status = event.status;
-              global.activeTasks[taskId].progressDetail = event.progressDetail;
-            }
-            if (io) {
-              io.emit('container.recreate.progress', {
-                id,
-                name: containerName,
-                image: fullImage,
-                status: event.status,
-                progressDetail: event.progressDetail,
-                taskId
-              });
-            }
-          });
+        exec('docker compose pull', { cwd: appDir }, (error, stdout, stderr) => {
+          if (error) {
+             console.warn(`docker compose pull error: ${error.message}`);
+             // We don't reject here, we allow up -d to try
+          }
+          resolve();
         });
       });
-    } catch (pullError) {
-      console.warn('Failed to pull image, continuing with local image if available:', pullError.message);
-      pullFailed = true;
-    }
-
-    // 2. Check if the pulled image has a different hash than the one currently used
-    let newImageInspect;
-    try {
-      newImageInspect = await docker.getImage(fullImage).inspect();
-    } catch (e) {
-      console.error('Failed to inspect new image:', e);
-      if (pullFailed) {
-        throw new Error(`Failed to pull image and it is not available locally: ${fullImage}`);
-      }
-    }
-    const oldImageHash = oldInspect.Image; // The sha256 of the current container's image
-    const newImageHash = newImageInspect ? newImageInspect.Id : null;
-    const imageDigestChanged = newImageHash && oldImageHash && newImageHash !== oldImageHash;
-
-    const imageStringChanged = fullImage !== oldImage;
-    
-    // Check if we can do an in-place update (fast path)
-    const oldPortBindings = oldInspect.HostConfig?.PortBindings || {};
-    const oldBinds = oldInspect.HostConfig?.Binds || [];
-    const oldEnv = oldInspect.Config?.Env || [];
-    
-    const newPortBindings = ports || {};
-    const newBinds = volumes || [];
-
-    const oldWebUI = {
-      scheme: oldInspect.Config?.Labels?.['casaos.reborn.web.scheme'] || 'http://',
-      port: oldInspect.Config?.Labels?.['casaos.reborn.web.port'] || '',
-      path: oldInspect.Config?.Labels?.['casaos.reborn.web.path'] || '/'
-    };
-    const newWebUI = webUI || oldWebUI;
-    const oldDisplayName = oldInspect.Config?.Labels?.['casaos.reborn.name'] || '';
-    const oldIcon = oldInspect.Config?.Labels?.['casaos.reborn.icon'] || '';
-    const oldPidMode = oldInspect.HostConfig?.PidMode || '';
-    const newPidMode = pidMode !== undefined ? pidMode : oldPidMode;
-
-    // A full recreate is required if image string changed, image digest changed, or config changed
-    const needsFullRecreate = 
-      nameChanged ||
-      imageStringChanged ||
-      imageDigestChanged ||
-      privileged !== !!oldInspect.HostConfig?.Privileged ||
-      (displayName != null && displayName !== oldDisplayName) ||
-      (icon != null && icon !== oldIcon) ||
-      newPidMode !== oldPidMode ||
-      !isDeepStrictEqual(newPortBindings, oldPortBindings) ||
-      !isDeepStrictEqual(newBinds.sort(), oldBinds.sort()) ||
-      !isDeepStrictEqual(env?.sort(), oldEnv.sort()) ||
-      !isDeepStrictEqual(newWebUI, oldWebUI);
-
-    if (!needsFullRecreate) {
-      if (io) io.emit('container.update.progress', { id, name: containerName, status: 'Image up to date. Applying hot settings...' });
-      
-      await oldContainer.update({
-        RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
-        Memory: memory || 0
-      });
-      
-      if (io) io.emit('container.update.success', { id, oldId: id, name: containerName });
-      return; // done!
-    }
-
-    // Build createOptions
-    const portBindings = ports || {};
-    const exposedPorts = {};
-    for (const key of Object.keys(portBindings)) {
-      exposedPorts[key] = {};
-    }
-
-    // Fix Bug 6: Save endpoints config for custom networks
-    const endpointsConfig = oldInspect.NetworkSettings?.Networks || {};
-
-    const createOptions = {
-      name: containerName,
-      Image: fullImage,
-      Env: env || [],
-      Labels: oldInspect.Config?.Labels || {},
-      ExposedPorts: exposedPorts,
-      HostConfig: {
-        PortBindings: portBindings,
-        Binds: volumes || [],
-        RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
-        Privileged: !!privileged,
-        NetworkMode: oldInspect.HostConfig?.NetworkMode || 'default',
-        PidMode: newPidMode,
-      },
-      NetworkingConfig: {
-        EndpointsConfig: endpointsConfig
-      }
-    };
-
-    if (webUI) {
-      createOptions.Labels = {
-        ...createOptions.Labels,
-        'casaos.reborn.web.scheme': webUI.scheme || 'http://',
-        'casaos.reborn.web.port': webUI.port || '',
-        'casaos.reborn.web.path': webUI.path || '/'
-      };
-    }
-
-    // Icon label
-    if (icon != null) {
-      createOptions.Labels['casaos.reborn.icon'] = icon;
-    }
-
-    // Display Name label
-    if (displayName != null) {
-      createOptions.Labels['casaos.reborn.name'] = displayName;
-    }
-
-    if (memory) {
-      createOptions.HostConfig.Memory = memory;
-    }
+    } catch(e) {}
 
     // --- DETACHED UPDATER FOR SELF-UPDATE ---
     const ownId = getOwnContainerId();
-    // Use startsWith just in case the ID in request is short or long
     let isSelfUpdate = false;
     if (ownId && (id.startsWith(ownId) || ownId.startsWith(id))) {
       isSelfUpdate = true;
@@ -263,253 +194,52 @@ router.post('/containers/:id/recreate', async (req, res) => {
       isSelfUpdate = true;
     }
 
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Recreating container via Compose...', taskId });
+
     if (isSelfUpdate) {
-      console.log('Initiating detached self-update for container', id);
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Rebooting system...' });
-      
-      const updaterScript = `
-        const http = require('http');
-        const createOptions = JSON.parse(process.env.CREATE_OPTIONS);
-        const oldId = process.env.OLD_CONTAINER_ID;
-        const containerName = process.env.CONTAINER_NAME;
-
-        function log(msg) { console.log(new Date().toISOString() + ' - ' + msg); }
-        
-        function dockerRequest(method, path, data = null) {
-          return new Promise((resolve, reject) => {
-            const payload = data ? JSON.stringify(data) : '';
-            const headers = data ? { 
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(payload)
-            } : {};
-            const req = http.request({
-              socketPath: '/var/run/docker.sock',
-              path: '/v1.41' + path,
-              method: method,
-              headers: headers
-            }, res => {
-              let body = '';
-              res.on('data', chunk => body += chunk);
-              res.on('end', () => resolve({ statusCode: res.statusCode, body }));
-            });
-            req.on('error', reject);
-            if (data) req.write(payload);
-            req.end();
-          });
-        }
-
-        (async () => {
-          try {
-            log('Starting detached updater for ' + containerName);
-            await new Promise(r => setTimeout(r, 2000));
-            
-            log('Stopping old container...');
-            await dockerRequest('POST', '/containers/' + oldId + '/stop?t=10');
-            
-            log('Removing old container...');
-            await dockerRequest('DELETE', '/containers/' + oldId + '?force=true');
-            
-            log('Waiting for old container to be fully removed...');
-            for (let i = 0; i < 20; i++) {
-               const checkRes = await dockerRequest('GET', '/containers/' + oldId + '/json');
-               if (checkRes.statusCode === 404) break;
-               await new Promise(r => setTimeout(r, 500));
-            }
-            
-            let created = false;
-            for (let i = 0; i < 5; i++) {
-              log('Creating new container... (attempt ' + (i+1) + ')');
-              const createRes = await dockerRequest('POST', '/containers/create?name=' + containerName, createOptions);
-              log('Create response: ' + createRes.statusCode + ' ' + createRes.body);
-              if (createRes.statusCode === 201) {
-                const resObj = JSON.parse(createRes.body);
-                log('Starting new container: ' + resObj.Id);
-                const startRes = await dockerRequest('POST', '/containers/' + resObj.Id + '/start');
-                log('Start response: ' + startRes.statusCode);
-                created = true;
-                break;
-              }
-              await new Promise(r => setTimeout(r, 1500));
-            }
-            if (!created) log('Failed to create container after 5 retries.');
-          } catch(e) {
-            log('Updater error: ' + e.message + '\\n' + e.stack);
-          }
-        })();
-      `;
-
-      const updaterCreateOptions = { ...createOptions };
-      delete updaterCreateOptions.name;
-
-      try {
-        const oldUpdater = docker.getContainer('casaos-reborn-updater');
-        await oldUpdater.remove({ force: true });
-      } catch (e) {}
-
-      // Fix Bug 7: Use fullImage instead of image
-      const updaterContainer = await docker.createContainer({
-        Image: fullImage, 
-        name: 'casaos-reborn-updater',
-        Cmd: ['node', '-e', updaterScript],
-        Env: [
-          'CREATE_OPTIONS=' + JSON.stringify(updaterCreateOptions),
-          'OLD_CONTAINER_ID=' + id,
-          'CONTAINER_NAME=' + containerName
-        ],
-        HostConfig: {
-          Binds: ['/var/run/docker.sock:/var/run/docker.sock']
-        }
+      console.log('Initiating detached self-update via compose for container', id);
+      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Rebooting system...', taskId });
+      // Spawn docker compose detached so it kills us and restarts us
+      const { spawn } = require('child_process');
+      const child = spawn('docker', ['compose', 'up', '-d'], {
+        detached: true,
+        stdio: 'ignore',
+        cwd: appDir
       });
-
-      await updaterContainer.start();
-      
-      // Do NOT proceed with normal remove/create since the updater will do it and kill us.
-      // We just return and let ourselves be killed in a few seconds.
-      return;
+      child.unref();
+      return; // We will be killed shortly
     }
 
-    // Fix Bug 2: Save old container configuration for rollback
-    const rollbackOptions = {
-        name: (oldInspect.Name || '').replace('/', ''),
-        Image: oldInspect.Image,
-        Env: oldInspect.Config?.Env || [],
-        Labels: oldInspect.Config?.Labels || {},
-        ExposedPorts: oldInspect.Config?.ExposedPorts || {},
-        HostConfig: oldInspect.HostConfig || {},
-        NetworkingConfig: {
-            EndpointsConfig: oldInspect.NetworkSettings?.Networks || {}
+    // Execute Docker Compose
+    await new Promise((resolve, reject) => {
+      exec('docker compose up -d', { cwd: appDir }, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`docker compose up error: ${error.message}`);
+          return reject(error);
         }
-    };
-    
-    // Fix Bug 1: Graceful stop and remove without force
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Stopping old container...', percentage: 20 });
-    try {
-        // Try graceful stop with 10s timeout
-        await oldContainer.stop({ t: 10 });
-    } catch (e) {
-        if (e.statusCode !== 304) { // 304 means already stopped
-            console.warn(`Graceful stop failed for ${id}, will force remove:`, e.message);
-        }
-    }
+        resolve(stdout);
+      });
+    });
 
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...', percentage: 40 });
-    
-    // Remove without force first. If it fails, fallback to force remove.
-    try {
-        await oldContainer.remove({ v: false }); // v: false to preserve volumes
-    } catch (e) {
-        console.warn(`Standard remove failed for ${id}, falling back to force remove:`, e.message);
-        await oldContainer.remove({ force: true, v: false }).catch(err => console.warn('Force remove old container error:', err.message));
-    }
-
-    // Wait for the container to be fully removed to prevent Name or Port conflicts (up to 30 seconds)
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Waiting for Docker to release resources...', percentage: 60 });
-    let isFullyRemoved = false;
-    for (let i = 0; i < 60; i++) {
-      try {
-        await docker.getContainer(id).inspect();
-        await new Promise(r => setTimeout(r, 500));
-      } catch (e) {
-        if (e.statusCode === 404) {
-          isFullyRemoved = true;
-          break;
-        }
-        await new Promise(r => setTimeout(r, 500));
-      }
-    }
-    
-    if (!isFullyRemoved) {
-      console.warn(`Container ${id} might not be fully removed yet, creation might fail with 409 Conflict.`);
-    }
-
-    // 3. Create the new container
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Creating new container...', percentage: 80 });
-    
-    let newContainer;
-    let createError;
-    
-    // Fix Bug 4 & 5: Increase timeout and use exponential backoff
-    const delays = [1000, 2000, 4000, 8000, 16000, 30000, 30000]; // 7 attempts
-    for (let i = 0; i < delays.length; i++) {
-      try {
-        // Wrap createContainer in a timeout to prevent indefinite hanging (30s)
-        newContainer = await Promise.race([
-          docker.createContainer(createOptions),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_CREATE')), 30000))
-        ]);
-        break;
-      } catch (err) {
-        createError = err;
-        console.warn(`Creation attempt ${i+1} failed:`, err.message || err.statusCode);
-        
-        // Retry on 409 (Conflict), network errors, timeouts
-        if (err.statusCode === 409 || err.code === 'ECONNRESET' || err.code === 'EPIPE' || err.message === 'TIMEOUT_CREATE') {
-          if (i < delays.length - 1) {
-              console.log(`Waiting ${delays[i]}ms before next attempt...`);
-              await new Promise(r => setTimeout(r, delays[i]));
-          }
-        } else {
-          // If it's a specific configuration error (e.g., invalid port binding), stop retrying
-          break;
-        }
-      }
-    }
-    
-    if (!newContainer) {
-      const errorMsg = createError ? (createError.message || JSON.stringify(createError)) : 'Unknown error';
-      console.error(`Failed to create container: ${errorMsg}. Initiating rollback...`);
-      
-      // Fix Bug 2: ROLLBACK
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Creation failed, rolling back...' });
-      
-      try {
-          // Verify if name conflict exists and remove if so
-          try {
-             const conflictCheck = docker.getContainer(containerName);
-             await conflictCheck.inspect();
-             await conflictCheck.remove({force: true});
-          } catch(e) {}
-
-          const rollbackContainer = await docker.createContainer(rollbackOptions);
-          await rollbackContainer.start();
-          
-          if (io) io.emit('container.recreate.rollback', { id: rollbackContainer.id, oldId: id, name: containerName, error: errorMsg });
-          return; // Stop processing further since rollback succeeded
-      } catch (rollbackErr) {
-          console.error('Fatal: Rollback failed!', rollbackErr);
-          throw new Error(`Failed to create container: ${errorMsg}. Rollback also failed: ${rollbackErr.message}`);
-      }
-    }
-
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Starting new container...', percentage: 95 });
-    await newContainer.start();
-    
-    // Fix Bug 6: Ensure the container connects to all required custom networks
-    try {
-        const primaryNetwork = oldInspect.HostConfig?.NetworkMode || 'default';
-        for (const [netName, netConfig] of Object.entries(endpointsConfig)) {
-            // Skip the primary network as it's already connected during creation
-            if (netName !== primaryNetwork && netName !== 'default' && netName !== 'bridge' && netName !== 'host' && netName !== 'none') {
-                console.log(`Reconnecting ${containerName} to network ${netName}`);
-                const network = docker.getNetwork(netName);
-                await network.connect({
-                    Container: newContainer.id,
-                    EndpointConfig: netConfig
-                }).catch(e => console.warn(`Failed to connect to network ${netName}:`, e.message));
-            }
-        }
-    } catch (netErr) {
-        console.warn("Error restoring extra networks:", netErr.message);
-    }
+    // Find the new container ID to return it
+    const containers = await docker.listContainers();
+    const newContainerInfo = containers.find(c => 
+      c.Names.includes(`/${containerName}`) || 
+      (c.Labels && c.Labels['com.docker.compose.project'] === containerName)
+    );
 
     if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
-    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName, taskId });
+    if (io) io.emit('container.recreate.success', { 
+      id: newContainerInfo ? newContainerInfo.Id : id, 
+      oldId: id, 
+      name: containerName, 
+      taskId 
+    });
   } catch (error) {
     console.error('Error recreating container:', error);
-    // Fix Bug 3: containerName is now in scope
     const taskId = `recreate_${id}`;
     if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
-    if (io) io.emit('container.recreate.error', { id, name: containerName, error: error.message, taskId });
+    if (io) io.emit('container.recreate.error', { id, name: req.body.name || id, error: error.message, taskId });
   }
 });
 
@@ -527,7 +257,8 @@ router.post('/containers/:id/update', async (req, res) => {
     const containerName = oldInspect.Name.replace('/', '');
     const taskId = `recreate_${id}`;
     global.activeTasks[taskId] = {
-      id: taskId,
+      id: id,
+      taskId,
       type: 'recreate',
       name: containerName,
       image,
@@ -535,17 +266,17 @@ router.post('/containers/:id/update', async (req, res) => {
       progressDetail: null
     };
 
-    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Stopping old container...', taskId });
     try { await oldContainer.stop({ t: 10 }); } catch (e) {}
 
     if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Removing old container...';
-    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Removing old container...', taskId });
     try { await oldContainer.remove({ v: false }); } catch (e) {
       await oldContainer.remove({ force: true, v: false }).catch(() => {});
     }
 
     if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Creating updated container...';
-    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Creating updated container...', taskId });
     
     // Pass exactly the same config, just override the image
     const createOptions = {
@@ -570,7 +301,7 @@ router.post('/containers/:id/update', async (req, res) => {
     const newContainer = await docker.createContainer(createOptions);
     
     if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Starting updated container...';
-    if (io) io.emit('container.recreate.progress', global.activeTasks[taskId]);
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Starting updated container...', taskId });
     await newContainer.start();
 
     // Remove from available updates cache
@@ -593,10 +324,45 @@ router.post('/containers/:id/:action', async (req, res) => {
   const { id, action } = req.params;
   try {
     const container = docker.getContainer(id);
+    let inspectData;
+    try {
+      inspectData = await container.inspect();
+    } catch (e) {
+      if (action === 'delete') {
+         // Already doesn't exist, just return success
+         return res.json({ success: true, action, id });
+      }
+      throw e;
+    }
+    
     if (action === 'start') await container.start();
     else if (action === 'stop') await container.stop();
     else if (action === 'restart') await container.restart();
-    else if (action === 'delete') await container.remove({ force: true });
+    else if (action === 'delete') {
+      const composeProject = inspectData.Config?.Labels?.['com.docker.compose.project'];
+      
+      if (composeProject) {
+         // It's a compose app, we should docker compose down and remove directory
+         const appDir = path.join(CASAOS_APPS_DIR, composeProject);
+         if (fs.existsSync(appDir)) {
+           await new Promise((resolve, reject) => {
+             exec('docker compose down', { cwd: appDir }, (error) => {
+               if (error) console.warn('docker compose down error:', error.message);
+               resolve();
+             });
+           });
+           
+           // Remove the folder
+           fs.rmSync(appDir, { recursive: true, force: true });
+         } else {
+           // Fallback to normal remove
+           await container.remove({ force: true });
+         }
+      } else {
+         // Regular container
+         await container.remove({ force: true });
+      }
+    }
     else return res.status(400).json({ error: 'Invalid action' });
     
     res.json({ success: true, action, id });
@@ -667,76 +433,45 @@ router.post('/containers/create', async (req, res) => {
       }
     }
 
-    if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Applying settings...' });
+    if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Applying settings...', taskId });
 
-    // 2. Create the new container
-    const portBindings = ports || {};
-    const exposedPorts = {};
-    for (const key of Object.keys(portBindings)) {
-      exposedPorts[key] = {};
-    }
-
-    const createOptions = {
-      Image: fullImage,
-      Env: env || [],
-      Labels: {},
-      ExposedPorts: exposedPorts,
-      HostConfig: {
-        PortBindings: portBindings,
-        Binds: volumes || [],
-        RestartPolicy: { Name: restartPolicy || 'unless-stopped' },
-        Privileged: !!privileged,
-        NetworkMode: networkMode || 'bridge',
-        PidMode: pidMode || ''
-      }
-    };
+    // 2. Build Compose File
+    if (io) io.emit('container.create.progress', { name: containerName, image: fullImage, status: 'Applying settings (Compose)...', taskId });
     
-    if (name) createOptions.name = name;
-    if (hostname) createOptions.Hostname = hostname;
-    if (cmd && cmd.length > 0) createOptions.Cmd = cmd;
+    const composeYaml = buildCasaOSCompose(req.body);
+    const appDir = path.join(CASAOS_APPS_DIR, containerName);
     
-    if (devices && devices.length > 0) {
-        createOptions.HostConfig.Devices = devices;
+    if (!fs.existsSync(appDir)) {
+      fs.mkdirSync(appDir, { recursive: true });
     }
     
-    if (capAdd && capAdd.length > 0) {
-        createOptions.HostConfig.CapAdd = capAdd;
-    }
+    const composePath = path.join(appDir, 'docker-compose.yml');
+    fs.writeFileSync(composePath, composeYaml, 'utf8');
 
-    if (webUI) {
-      createOptions.Labels = {
-        ...createOptions.Labels,
-        'casaos.reborn.web.scheme': webUI.scheme || 'http://',
-        'casaos.reborn.web.port': webUI.port || '',
-        'casaos.reborn.web.path': webUI.path || '/'
-      };
-    }
-
-    if (icon != null) {
-      createOptions.Labels['casaos.reborn.icon'] = icon;
-    }
-
-    if (displayName != null) {
-      createOptions.Labels['casaos.reborn.name'] = displayName;
-    }
-
-    if (memory) {
-      createOptions.HostConfig.Memory = memory;
-    }
+    // 3. Execute Docker Compose
+    await new Promise((resolve, reject) => {
+      exec('docker compose up -d', { cwd: appDir }, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`docker compose error: ${error.message}`);
+          return reject(error);
+        }
+        resolve(stdout);
+      });
+    });
     
-    if (cpuQuota) {
-        createOptions.HostConfig.CpuQuota = cpuQuota;
-        createOptions.HostConfig.CpuPeriod = 100000;
-    }
-
-    const newContainer = await Promise.race([
-      docker.createContainer(createOptions),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_CREATE')), 15000))
-    ]);
-    await newContainer.start();
+    // Find the new container ID to return it
+    const containers = await docker.listContainers();
+    const newContainerInfo = containers.find(c => 
+      c.Names.includes(`/${containerName}`) || 
+      (c.Labels && c.Labels['com.docker.compose.project'] === containerName)
+    );
     
     if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
-    if (io) io.emit('container.create.success', { id: newContainer.id, name: containerName, taskId });
+    if (io) io.emit('container.create.success', { 
+      id: newContainerInfo ? newContainerInfo.Id : containerName, 
+      name: containerName, 
+      taskId 
+    });
   } catch (error) {
     console.error('Error creating container:', error);
     const taskId = `create_${(name || '').replace('/', '')}`;
