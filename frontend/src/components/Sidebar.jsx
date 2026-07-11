@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Server, Terminal as TermIcon, Menu, X, Wrench, Folder, LayoutGrid, Cpu, HardDrive, MemoryStick, Activity, Globe, ArrowDown, ArrowUp } from 'lucide-react';
+import { Monitor, Server, Terminal as TermIcon, Menu, Wrench, Folder, LayoutGrid, Cpu, HardDrive, MemoryStick, Activity, Globe, ArrowDown, ArrowUp } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
@@ -154,12 +154,12 @@ export default function Sidebar() {
             {/* Widget items rendered vertically */}
             <div className="glass widget" style={{ padding: '15px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
-                <Cpu size={18} /> <span>CPU ({stats.cpu.cores} Core)</span>
+                <Cpu size={18} /> <span>CPU ({stats.cpu?.cores || 0} Core)</span>
               </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.cpu.load}%</div>
-              <progress value={stats.cpu.load} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
+              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.cpu?.load || 0}%</div>
+              <progress value={stats.cpu?.load || 0} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
               <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>
-                {stats.cpu.temperature != null ? `${Math.round(stats.cpu.temperature)}°C` : 'Temp N/A'}
+                {stats.cpu?.temperature != null ? `${Math.round(stats.cpu.temperature)}°C` : 'Temp N/A'}
               </div>
             </div>
 
@@ -167,10 +167,10 @@ export default function Sidebar() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
                 <MemoryStick size={18} /> <span>RAM</span>
               </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.memory.percent}%</div>
-              <progress value={stats.memory.percent} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
+              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.memory?.percent || 0}%</div>
+              <progress value={stats.memory?.percent || 0} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
               <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>
-                {(stats.memory.used / 1024 / 1024 / 1024).toFixed(1)} GB / {(stats.memory.total / 1024 / 1024 / 1024).toFixed(1)} GB
+                {((stats.memory?.used || 0) / 1024 / 1024 / 1024).toFixed(1)} GB / {((stats.memory?.total || 0) / 1024 / 1024 / 1024).toFixed(1)} GB
               </div>
             </div>
 
@@ -178,10 +178,10 @@ export default function Sidebar() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
                 <HardDrive size={18} /> <span>Disco Primario</span>
               </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.disk.percent}%</div>
-              <progress value={stats.disk.percent} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
+              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.disk?.percent || 0}%</div>
+              <progress value={stats.disk?.percent || 0} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
               <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>
-                {(stats.disk.used / 1024 / 1024 / 1024).toFixed(1)} GB / {(stats.disk.total / 1024 / 1024 / 1024).toFixed(1)} GB
+                {((stats.disk?.used || 0) / 1024 / 1024 / 1024).toFixed(1)} GB / {((stats.disk?.total || 0) / 1024 / 1024 / 1024).toFixed(1)} GB
               </div>
             </div>
 
@@ -189,8 +189,8 @@ export default function Sidebar() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
                 <Activity size={18} /> <span>Container Attivi</span>
               </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{containers.filter(c => c.State === 'running').length} <span style={{fontSize: '0.9rem', color: 'var(--text-color)', fontWeight: 'normal'}}>su {containers.length}</span></div>
-              <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>OS: {stats.os.distro}</div>
+              <div className="value" style={{ fontSize: '1.5rem' }}>{containers ? containers.filter(c => c.State === 'running').length : 0} <span style={{fontSize: '0.9rem', color: 'var(--text-color)', fontWeight: 'normal'}}>su {containers ? containers.length : 0}</span></div>
+              <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>OS: {stats.os?.distro || 'Sconosciuto'}</div>
             </div>
 
             <div className="glass widget" style={{ padding: '15px' }}>
@@ -200,11 +200,11 @@ export default function Sidebar() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowDown size={14} color="#10b981" /> Down</span>
-                  <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
+                  <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network?.rx_sec != null ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                   <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUp size={14} color="#3b82f6" /> Up</span>
-                  <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
+                  <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network?.tx_sec != null ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
                 </div>
               </div>
             </div>

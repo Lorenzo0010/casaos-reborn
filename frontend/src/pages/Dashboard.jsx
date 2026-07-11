@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [containerOverrides, setContainerOverrides] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [draggedItem, setDraggedItem] = useState(null);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   // Load preferences from server on mount
@@ -244,13 +245,7 @@ export default function Dashboard() {
     return null;
   };
 
-  const formatSpeed = (bytesPerSec) => {
-    if (!bytesPerSec || bytesPerSec === 0) return '0 B/s';
-    const k = 1024;
-    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-    const i = Math.floor(Math.log(bytesPerSec) / Math.log(k));
-    return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
+
 
   const getContainerName = (container) => {
     const stableId = container.Names ? container.Names[0].replace('/', '') : container.Id;
@@ -279,7 +274,7 @@ export default function Dashboard() {
     return `data:image/svg+xml;base64,${btoa(svg)}`;
   };
 
-  const runningContainers = containers.filter(c => c.State === 'running').length;
+
 
   const getGreeting = () => {
     const hour = new Date().getHours();
