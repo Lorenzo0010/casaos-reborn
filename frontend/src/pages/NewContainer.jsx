@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2, PlusSquare, Download } from 'lucide-react';
+import { Play, Save, Code, FileText, Check, AlertTriangle, Plus, Trash2, PlusSquare, Download, Menu } from 'lucide-react';
 import yaml from 'js-yaml';
 import { useDialog } from '../contexts/DialogContext';
 import { generateYamlFromData, downloadYamlFile } from '../utils/yamlHelper';
@@ -14,7 +14,7 @@ const CAPABILITIES = [
   'SYSLOG', 'WAKE_ALARM'
 ];
 
-export default function NewContainer() {
+export default function NewContainer({ togglePanel }) {
   const { showAlert } = useDialog();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('manual');
@@ -326,9 +326,18 @@ export default function NewContainer() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '40px' }}>
-      <h2 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <PlusSquare size={24} /> Create New Container
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+        <button 
+          onClick={() => togglePanel('menu')} 
+          className="btn-icon-only" 
+          title="Menu"
+        >
+          <Menu size={24} />
+        </button>
+        <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <PlusSquare size={24} /> Create New Container
+        </h2>
+      </div>
 
       <div className="glass" style={{ overflow: 'hidden' }}>
         

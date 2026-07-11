@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, PlusCircle } from 'lucide-react';
+import { Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, PlusCircle, Menu, LayoutGrid } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
 import { io } from 'socket.io-client';
 import { useDialog } from '../contexts/DialogContext';
 
-export default function Dashboard() {
+export default function Dashboard({ togglePanel, activePanel }) {
   const { showAlert, showConfirm } = useDialog();
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -389,9 +389,38 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0 }}>{getGreeting()}!</h1>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'nowrap', gap: '10px' }}>
+        
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
+          <button 
+            onClick={() => togglePanel('menu')} 
+            className="btn-icon-only" 
+            style={{ 
+              background: activePanel === 'menu' ? 'var(--primary)' : 'transparent', 
+              color: activePanel === 'menu' ? '#fff' : 'inherit'
+            }}
+            title="Menu"
+          >
+            <Menu size={24} />
+          </button>
+          <button 
+            onClick={() => togglePanel('widgets')} 
+            className="btn-icon-only"
+            style={{ 
+              background: activePanel === 'widgets' ? 'var(--primary)' : 'transparent', 
+              color: activePanel === 'widgets' ? '#fff' : 'inherit'
+            }}
+            title="Widget"
+          >
+            <LayoutGrid size={24} />
+          </button>
+        </div>
+
+        <h1 style={{ margin: 0, fontSize: 'clamp(1rem, 4vw, 2rem)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', flexGrow: 1 }}>
+          {getGreeting()}!
+        </h1>
+
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
           <Link 
             to="/new" 
             className="btn-icon-only"

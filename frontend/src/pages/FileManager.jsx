@@ -3,11 +3,11 @@ import axios from 'axios';
 import { 
   Folder, File, FileText, Image as ImageIcon, Archive, 
   MoreVertical, Download, Edit, Trash2, Copy, ArrowRight,
-  Plus, Upload, RefreshCw, X, Save, Lock, FolderPlus, FilePlus, ChevronRight
+  Plus, Upload, RefreshCw, X, Save, Lock, FolderPlus, FilePlus, ChevronRight, Menu
 } from 'lucide-react';
 import { useDialog } from '../contexts/DialogContext';
 
-export default function FileManager() {
+export default function FileManager({ togglePanel }) {
   const { showAlert, showConfirm } = useDialog();
   const [currentPath, setCurrentPath] = useState('');
   const [parentPath, setParentPath] = useState(null);
@@ -201,6 +201,14 @@ export default function FileManager() {
       {/* Header & Toolbar */}
       <div className="glass widget" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1 }}>
+          <button 
+            onClick={() => togglePanel('menu')} 
+            className="btn-icon-only" 
+            title="Menu"
+            style={{ marginRight: '5px' }}
+          >
+            <Menu size={24} />
+          </button>
           <button 
             className="btn-icon" 
             onClick={() => fetchFiles(parentPath)} 

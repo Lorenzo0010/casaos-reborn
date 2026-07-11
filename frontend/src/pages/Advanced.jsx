@@ -4,7 +4,7 @@ import { Wrench, Palette, Save, RefreshCcw, Moon, Sun, Terminal, RefreshCw, Tras
 import { useDialog } from '../contexts/DialogContext';
 import { io } from 'socket.io-client';
 
-export default function Advanced({ theme, actualTheme, setTheme, preferences, onSave, logout }) {
+export default function Advanced({ togglePanel, theme, actualTheme, setTheme, preferences, onSave, logout }) {
   // ─── UI Settings state ───
   const [accentColor, setAccentColor] = useState(preferences?.accentColor || '#3b82f6');
   const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
@@ -68,6 +68,32 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
     setBgTheme('gray');
     setBackgroundImage('');
     setIsSaving(false);
+  };
+
+  const handleBgUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('background', file);
+
+    try {
+      setIsSaving(true);
+      const token = localStorage.getItem('token');
+      const res = await axios.post('/api/system/upload-bg', formData, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      const newBg = res.data.backgroundImage;
+      setBackgroundImage(newBg);
+      onSave({ ...preferences, accentColor, bgTheme, backgroundImage: newBg });
+    } catch (err) {
+      showAlert('Errore', 'Caricamento fallito: ' + err.message, true);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // ═══════════════════════════════════════
@@ -213,9 +239,18 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
       
-      <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 4px 0' }}>
-        <Wrench /> Avanzate
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', margin: '0 0 10px 0' }}>
+        <button 
+          onClick={() => togglePanel('menu')} 
+          className="btn-icon-only" 
+          title="Menu"
+        >
+          <Menu size={24} />
+        </button>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+          <Wrench /> Avanzate
+        </h1>
+      </div>
 
       {/* ─── Section 1: UI Settings ─── */}
       <div className="widget glass">
@@ -292,8 +327,8 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
           </div>
 
           <div className="input-group" style={{ marginTop: '10px' }}>
-            <label>Sfondo Personalizzato (URL Immagine)</label>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+            <label>Sfondo Personalizzato (Carica Immagine Locale o inserisci URL)</label>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '5px', alignItems: 'center' }}>
               <input
                 type="text"
                 placeholder="https://esempio.com/sfondo.jpg"
@@ -306,22 +341,34 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
                 className="btn btn-primary"
                 onClick={() => onSave({ ...preferences, accentColor, bgTheme, backgroundImage })}
               >
-                Applica
+                Applica URL
               </button>
             </div>
-            {backgroundImage && (
-              <button 
-                type="button" 
-                className="btn btn-danger" 
-                style={{ marginTop: '10px', alignSelf: 'flex-start' }}
-                onClick={() => {
-                  setBackgroundImage('');
-                  onSave({ ...preferences, accentColor, bgTheme, backgroundImage: '' });
-                }}
-              >
-                Rimuovi Sfondo
-              </button>
-            )}
+            
+            <div style={{ marginTop: '15px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <label className="btn btn-primary" style={{ cursor: 'pointer', margin: 0 }}>
+                Carica File Locale
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleBgUpload} 
+                  style={{ display: 'none' }} 
+                />
+              </label>
+              
+              {backgroundImage && (
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={() => {
+                    setBackgroundImage('');
+                    onSave({ ...preferences, accentColor, bgTheme, backgroundImage: '' });
+                  }}
+                >
+                  Rimuovi Sfondo
+                </button>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>

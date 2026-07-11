@@ -63,6 +63,9 @@ app.use((req, res, next) => {
 // Serve static frontend in production
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
+
 // Basic Auth Route
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;

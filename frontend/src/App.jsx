@@ -15,6 +15,24 @@ function App() {
   const [preferences, setPreferences] = useState(null);
   const [actualTheme, setActualTheme] = useState('light');
 
+  const isMobileInitial = window.innerWidth < 768;
+  const [activePanel, setActivePanel] = useState(isMobileInitial ? null : 'widgets');
+  const [isMobile, setIsMobile] = useState(isMobileInitial);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const togglePanel = (panel) => {
+    if (activePanel === panel) {
+      setActivePanel(null); // Close if already open
+    } else {
+      setActivePanel(panel);
+    }
+  };
+
   useEffect(() => {
     const updateActualTheme = () => {
       let current = theme;
@@ -88,6 +106,13 @@ function App() {
     const primary = prefs.accentColor || '#3b82f6';
     root.style.setProperty('--primary', primary);
     root.style.setProperty('--primary-text', getContrastColor(primary));
+
+    // Background Image
+    if (prefs.backgroundImage) {
+      root.style.setProperty('--bg-image', `url(${prefs.backgroundImage})`);
+    } else {
+      root.style.removeProperty('--bg-image');
+    }
 
     // Background Themes
     const bgTheme = prefs.bgTheme || 'gray';
@@ -295,16 +320,16 @@ function App() {
     <DialogProvider>
       <Router>
         <div className="layout">
-          <Sidebar />
+          <Sidebar activePanel={activePanel} togglePanel={togglePanel} isMobile={isMobile} />
 
           <div className="main-content">
             <div className="main-scrollable">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/new" element={<NewContainer />} />
-                <Route path="/files" element={<FileManager />} />
-                <Route path="/terminal" element={<TerminalPage />} />
-                <Route path="/advanced" element={<Advanced theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
+                <Route path="/" element={<Dashboard togglePanel={togglePanel} activePanel={activePanel} />} />
+                <Route path="/new" element={<NewContainer togglePanel={togglePanel} />} />
+                <Route path="/files" element={<FileManager togglePanel={togglePanel} />} />
+                <Route path="/terminal" element={<TerminalPage togglePanel={togglePanel} />} />
+                <Route path="/advanced" element={<Advanced togglePanel={togglePanel} theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
                 <Route path="/settings" element={<Navigate to="/advanced" />} />
                 <Route path="/logs" element={<Navigate to="/advanced" />} />
                 <Route path="*" element={<Navigate to="/" />} />

@@ -37,8 +37,13 @@
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-color);
+  background-image: var(--bg-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text-color);
-  transition: background-color 0.3s, color 0.3s;
+  transition: background-color 0.3s, color 0.3s, background-image 0.3s;
 }
 
 /* Custom Global Scrollbar */
@@ -96,11 +101,6 @@ body {
   overflow-y: auto;
 }
 
-.sidebar.closed {
-  width: 70px; /* solo lo spazio per i pulsanti */
-  padding: 20px 10px;
-}
-
 .sidebar-link {
   text-decoration: none;
   color: var(--text-color);
@@ -114,9 +114,7 @@ body {
   overflow: hidden;
 }
 
-.sidebar.closed .sidebar-link {
-  display: none;
-}
+
 
 .sidebar-link:hover, .sidebar-link.active {
   background-color: var(--primary);
@@ -140,7 +138,7 @@ body {
   }
   .sidebar.mobile {
     position: absolute;
-    top: 60px; /* height of mobile header */
+    top: 0; /* no mobile header anymore */
     bottom: 0;
     left: 0;
     transform: translateX(-100%);
@@ -168,20 +166,7 @@ body {
   overflow-y: auto;
 }
 
-.mobile-header {
-  display: none;
-  padding: 10px 20px;
-  background: var(--sidebar-bg);
-  border-bottom: 1px solid var(--card-border);
-  align-items: center;
-  gap: 15px;
-}
 
-@media (max-width: 768px) {
-  .mobile-header {
-    display: flex;
-  }
-}
 
 /* Typography & Layouts */
 h1, h2, h3 {

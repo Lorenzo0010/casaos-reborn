@@ -4,19 +4,9 @@ import { Monitor, Server, Terminal as TermIcon, Menu, Wrench, Folder, LayoutGrid
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-export default function Sidebar() {
-  const isMobileInitial = window.innerWidth < 768;
-  const [activePanel, setActivePanel] = useState(isMobileInitial ? null : 'widgets');
-  const [isMobile, setIsMobile] = useState(isMobileInitial);
-  
+export default function Sidebar({ activePanel, togglePanel, isMobile }) {
   const [stats, setStats] = useState(null);
   const [containers, setContainers] = useState([]);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -57,79 +47,31 @@ export default function Sidebar() {
     return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const togglePanel = (panel) => {
-    if (activePanel === panel) {
-      setActivePanel(null); // Close if already open
-    } else {
-      setActivePanel(panel);
-    }
+  const closeMobile = () => {
+    if (isMobile) togglePanel(activePanel); // This will close it
   };
 
-  const closeMobile = () => {
-    if (isMobile) setActivePanel(null);
-  };
+  if (!activePanel) return null; // Non renderizzare affatto la sidebar se chiusa
 
   return (
     <>
-      {/* Top Header for Mobile ONLY */}
-      <div className="mobile-header" style={{ display: isMobile ? 'flex' : 'none', justifyContent: 'space-between', alignItems: 'center', height: '60px' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => togglePanel('menu')} className="btn-icon" style={{ background: activePanel === 'menu' ? 'var(--primary)' : 'transparent', color: activePanel === 'menu' ? '#fff' : 'var(--text-color)' }}>
-            <Menu size={24} />
-          </button>
-          <button onClick={() => togglePanel('widgets')} className="btn-icon" style={{ background: activePanel === 'widgets' ? 'var(--primary)' : 'transparent', color: activePanel === 'widgets' ? '#fff' : 'var(--text-color)' }}>
-            <LayoutGrid size={24} />
-          </button>
-        </div>
-        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Server size={20} /> CasaOS
-        </div>
-      </div>
-
       {/* Mobile Overlay */}
       {isMobile && activePanel && (
         <div 
-          style={{ position: 'fixed', top: '60px', left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }}
           onClick={closeMobile}
         />
       )}
 
       {/* Sidebar Container */}
-      <aside className={`sidebar ${activePanel ? 'open' : 'closed'} ${isMobile ? 'mobile' : 'desktop'}`} style={{ 
-        width: activePanel ? (isMobile ? '280px' : '300px') : '70px', 
-        padding: activePanel ? '20px' : '20px 10px',
-        overflowY: 'auto'
+      <aside className={`sidebar glass open ${isMobile ? 'mobile' : 'desktop'}`} style={{ 
+        width: isMobile ? '280px' : '300px', 
+        padding: '20px',
+        overflowY: 'auto',
+        position: isMobile ? 'fixed' : 'relative',
+        height: '100vh',
+        zIndex: 100
       }}>
-        
-        {/* Desktop Buttons */}
-        {!isMobile && (
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', justifyContent: activePanel ? 'flex-start' : 'center' }}>
-            <button 
-              onClick={() => togglePanel('menu')} 
-              className="btn-icon" 
-              style={{ 
-                background: activePanel === 'menu' ? 'var(--primary)' : 'transparent', 
-                color: activePanel === 'menu' ? '#fff' : 'var(--text-color)',
-                width: '40px', height: '40px', borderRadius: '12px'
-              }}
-              title="Menu"
-            >
-              <Menu size={24} />
-            </button>
-            <button 
-              onClick={() => togglePanel('widgets')} 
-              className="btn-icon"
-              style={{ 
-                background: activePanel === 'widgets' ? 'var(--primary)' : 'transparent', 
-                color: activePanel === 'widgets' ? '#fff' : 'var(--text-color)',
-                width: '40px', height: '40px', borderRadius: '12px'
-              }}
-              title="Widget"
-            >
-              <LayoutGrid size={24} />
-            </button>
-          </div>
-        )}
 
         {/* Panel Content */}
         {activePanel === 'menu' && (

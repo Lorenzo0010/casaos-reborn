@@ -54,9 +54,50 @@ router.get('/stats', async (req, res) => {
 
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+
 const PREFS_DIR = path.join(__dirname, '..', 'data');
 const PREFS_FILE = path.join(PREFS_DIR, 'preferences.json');
 const LOGS_FILE = path.join(PREFS_DIR, 'casaos.log');
+const UPLOADS_DIR = path.join(PREFS_DIR, 'uploads');
+
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, UPLOADS_DIR);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, 'bg-' + Date.now() + ext);
+  }
+});
+const upload = multer({ storage: storage });
+
+router.post('/upload-bg', upload.single('background'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nessun file caricato' });
+    }
+    const bgUrl = `/uploads/${req.file.filename}`;
+    
+    // Auto-save to preferences
+    let existingPrefs = {};
+    if (fs.existsSync(PREFS_FILE)) {
+      try { existingPrefs = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8')); } catch (e) {}
+    }
+    existingPrefs.backgroundImage = bgUrl;
+    fs.writeFileSync(PREFS_FILE, JSON.stringify(existingPrefs, null, 2));
+
+    res.json({ success: true, backgroundImage: bgUrl });
+  } catch (error) {
+    console.error('Error uploading background:', error);
+    res.status(500).json({ error: 'Failed to upload background' });
+  }
+});
+
 
 router.get('/preferences', (req, res) => {
   try {
