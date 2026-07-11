@@ -238,6 +238,28 @@ function App() {
         root.style.setProperty('--sidebar-bg', '#7c2d12');
       }
     }
+    
+    // Background Image
+    const backgroundImage = prefs.backgroundImage || '';
+    if (backgroundImage) {
+      document.body.style.backgroundImage = `url(${backgroundImage})`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundAttachment = 'fixed';
+      document.body.style.backgroundRepeat = 'no-repeat';
+      
+      // Quando c'è uno sfondo personalizzato, forziamo una maggiore trasparenza per l'effetto vetro
+      if (currentTheme === 'light') {
+        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.3)');
+        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.3)');
+      } else {
+        root.style.setProperty('--card-bg', 'rgba(31, 41, 55, 0.4)');
+        root.style.setProperty('--sidebar-bg', 'rgba(31, 41, 55, 0.4)');
+      }
+    } else {
+      document.body.style.backgroundImage = 'none';
+      // I colori tornano normali perché bgTheme li ha già reimpostati sopra
+    }
   };
 
   const savePreferences = async (newPrefs) => {

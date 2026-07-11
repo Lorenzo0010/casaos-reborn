@@ -8,6 +8,7 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
   // ─── UI Settings state ───
   const [accentColor, setAccentColor] = useState(preferences?.accentColor || '#3b82f6');
   const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
+  const [backgroundImage, setBackgroundImage] = useState(preferences?.backgroundImage || '');
   const [isSaving, setIsSaving] = useState(false);
 
   // ─── System Logs state ───
@@ -26,6 +27,7 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
   useEffect(() => {
     if (preferences?.accentColor) setAccentColor(preferences.accentColor);
     if (preferences?.bgTheme) setBgTheme(preferences.bgTheme);
+    if (preferences?.backgroundImage !== undefined) setBackgroundImage(preferences.backgroundImage);
   }, [preferences]);
 
   // ═══════════════════════════════════════
@@ -59,10 +61,12 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
     await onSave({
       ...preferences,
       accentColor: '#3b82f6',
-      bgTheme: 'gray'
+      bgTheme: 'gray',
+      backgroundImage: ''
     });
     setAccentColor('#3b82f6');
     setBgTheme('gray');
+    setBackgroundImage('');
     setIsSaving(false);
   };
 
@@ -285,6 +289,39 @@ export default function Advanced({ theme, actualTheme, setTheme, preferences, on
                 );
               })}
             </div>
+          </div>
+
+          <div className="input-group" style={{ marginTop: '10px' }}>
+            <label>Sfondo Personalizzato (URL Immagine)</label>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+              <input
+                type="text"
+                placeholder="https://esempio.com/sfondo.jpg"
+                value={backgroundImage}
+                onChange={(e) => setBackgroundImage(e.target.value)}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--bg-color)', color: 'var(--text-color)' }}
+              />
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={() => onSave({ ...preferences, accentColor, bgTheme, backgroundImage })}
+              >
+                Applica
+              </button>
+            </div>
+            {backgroundImage && (
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                style={{ marginTop: '10px', alignSelf: 'flex-start' }}
+                onClick={() => {
+                  setBackgroundImage('');
+                  onSave({ ...preferences, accentColor, bgTheme, backgroundImage: '' });
+                }}
+              >
+                Rimuovi Sfondo
+              </button>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>

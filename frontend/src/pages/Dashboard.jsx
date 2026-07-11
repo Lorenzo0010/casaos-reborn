@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Cpu, HardDrive, MemoryStick, Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, Globe, ArrowDown, ArrowUp, PlusCircle } from 'lucide-react';
+import { Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
@@ -9,7 +9,6 @@ import { useDialog } from '../contexts/DialogContext';
 
 export default function Dashboard() {
   const { showAlert, showConfirm } = useDialog();
-  const [stats, setStats] = useState(null);
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingContainerId, setEditingContainerId] = useState(null);
@@ -25,9 +24,6 @@ export default function Dashboard() {
   const [containerOverrides, setContainerOverrides] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [widgetsOrder, setWidgetsOrder] = useState(['cpu', 'ram', 'disk', 'containers', 'network']);
-  const [draggedWidget, setDraggedWidget] = useState(null);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   // Load preferences from server on mount
@@ -45,7 +41,6 @@ export default function Dashboard() {
         if (res.data.sortMode) setSortMode(res.data.sortMode);
         if (Array.isArray(res.data.pinnedContainers)) setPinnedContainers(res.data.pinnedContainers);
         if (Array.isArray(res.data.customOrder)) setCustomOrder(res.data.customOrder);
-        if (Array.isArray(res.data.widgetsOrder) && res.data.widgetsOrder.length > 0) setWidgetsOrder(res.data.widgetsOrder);
         if (res.data.containerOverrides) setContainerOverrides(res.data.containerOverrides);
       } catch (e) {
         console.error('Error loading preferences from server', e);
@@ -69,7 +64,6 @@ export default function Dashboard() {
           sortMode,
           pinnedContainers,
           customOrder,
-          widgetsOrder,
           containerOverrides
         }, {
           headers: { Authorization: `Bearer ${token}` }
@@ -82,19 +76,7 @@ export default function Dashboard() {
     // Basic debounce to avoid too many requests while dragging
     const timeout = setTimeout(savePrefs, 500);
     return () => clearTimeout(timeout);
-  }, [sortMode, pinnedContainers, customOrder, widgetsOrder, containerOverrides, prefsLoaded]);
-
-  const fetchStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/system/stats', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStats(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  }, [sortMode, pinnedContainers, customOrder, containerOverrides, prefsLoaded]);
 
   const fetchContainers = async () => {
     try {
@@ -111,8 +93,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchStats();
-    // Il polling è stato sostituito dai WebSocket (system.stats)
+    fetchContainers();
   }, []);
 
   useEffect(() => {
@@ -140,11 +121,6 @@ export default function Dashboard() {
       if (data.taskId) {
         setRecreating(prev => ({ ...prev, [data.taskId]: data }));
       }
-    });
-
-    // Ascolto statistiche di sistema via WebSocket
-    socket.on('system.stats', (data) => {
-      setStats(data);
     });
 
     // Ascolto lista container via WebSocket
@@ -415,49 +391,6 @@ export default function Dashboard() {
     setDraggedItem(null);
   };
 
-  const handleWidgetDragStart = (e, id) => {
-    if (!editMode) return;
-    setDraggedWidget(id);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleWidgetDrop = (e, targetId) => {
-    e.preventDefault();
-    if (!editMode || !draggedWidget || draggedWidget === targetId) return;
-
-    let newOrder = [...widgetsOrder];
-    // Ensure all known widgets are in the list
-    ['cpu', 'ram', 'disk', 'containers', 'network'].forEach(w => {
-      if (!newOrder.includes(w)) newOrder.push(w);
-    });
-
-    const draggedIndex = newOrder.indexOf(draggedWidget);
-    const targetIndex = newOrder.indexOf(targetId);
-
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-      newOrder.splice(draggedIndex, 1);
-      newOrder.splice(targetIndex, 0, draggedWidget);
-      setWidgetsOrder(newOrder);
-    }
-    setDraggedWidget(null);
-  };
-
-  const moveWidget = (id, direction) => {
-    const newOrder = [...widgetsOrder];
-    const index = newOrder.indexOf(id);
-    if (index === -1) return;
-
-    if (direction === -1 && index > 0) {
-      const temp = newOrder[index - 1];
-      newOrder[index - 1] = newOrder[index];
-      newOrder[index] = temp;
-    } else if (direction === 1 && index < newOrder.length - 1) {
-      const temp = newOrder[index + 1];
-      newOrder[index + 1] = newOrder[index];
-      newOrder[index] = temp;
-    }
-    setWidgetsOrder(newOrder);
-  };
 
   return (
     <div>
@@ -497,139 +430,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Widgets (Horizontally scrollable) */}
-      {!stats ? (
-        <p>Loading system statistics...</p>
-      ) : (
-        <div className="widgets-row">
-          {widgetsOrder.map(widgetId => {
-            const commonProps = {
-              key: widgetId,
-              className: `glass widget ${editMode ? 'edit-mode' : ''}`,
-              style: { 
-                minWidth: '250px', 
-                position: 'relative',
-                cursor: editMode && !isMobile ? 'grab' : 'default',
-                opacity: draggedWidget === widgetId ? 0.5 : 1,
-                border: '1px solid var(--card-border)'
-              },
-              draggable: editMode && !isMobile,
-              onDragStart: (e) => handleWidgetDragStart(e, widgetId),
-              onDragOver: handleDragOver,
-              onDrop: (e) => handleWidgetDrop(e, widgetId)
-            };
-
-            const renderEditControls = () => {
-              if (!editMode) return null;
-              if (isMobile) return null; // Only show drag handle on desktop
-              return (
-                <div style={{ position: 'absolute', top: '10px', right: '10px', opacity: 0.5 }}>
-                  <GripHorizontal size={20} />
-                </div>
-              );
-            };
-
-            const renderMobileControls = () => {
-              if (!editMode) return null; // Show on both mobile and desktop
-              return (
-                <div style={{ display: 'flex', width: '100%', gap: '10px', marginTop: '15px' }}>
-                  <button onClick={() => moveWidget(widgetId, -1)} className="btn" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronLeft size={30} /></button>
-                  <button onClick={() => moveWidget(widgetId, 1)} className="btn" style={{ flex: 1, padding: '15px', display: 'flex', justifyContent: 'center', background: 'var(--card-bg)' }}><ChevronRight size={30} /></button>
-                </div>
-              );
-            };
-
-            if (widgetId === 'cpu') {
-              return (
-                <div {...commonProps}>
-                  {renderEditControls()}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
-                    <Cpu /> <span>CPU Usage ({stats.cpu.cores} Cores)</span>
-                  </div>
-                  <div className="value">{stats.cpu.load}%</div>
-                  <progress value={stats.cpu.load} max="100" style={{ width: '100%' }}></progress>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-                    {stats.cpu.temperature != null ? `${Math.round(stats.cpu.temperature)}°C` : 'Temperatura N/A'}
-                  </div>
-                  {renderMobileControls()}
-                </div>
-              );
-            }
-
-            if (widgetId === 'ram') {
-              return (
-                <div {...commonProps}>
-                  {renderEditControls()}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
-                    <MemoryStick /> <span>RAM Usage</span>
-                  </div>
-                  <div className="value">{stats.memory.percent}%</div>
-                  <progress value={stats.memory.percent} max="100" style={{ width: '100%' }}></progress>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-                    {(stats.memory.used / 1024 / 1024 / 1024).toFixed(1)} GB / {(stats.memory.total / 1024 / 1024 / 1024).toFixed(1)} GB
-                  </div>
-                  {renderMobileControls()}
-                </div>
-              );
-            }
-
-            if (widgetId === 'disk') {
-              return (
-                <div {...commonProps}>
-                  {renderEditControls()}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
-                    <HardDrive /> <span>Primary Disk Usage</span>
-                  </div>
-                  <div className="value">{stats.disk.percent}%</div>
-                  <progress value={stats.disk.percent} max="100" style={{ width: '100%' }}></progress>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-                    {(stats.disk.used / 1024 / 1024 / 1024).toFixed(1)} GB / {(stats.disk.total / 1024 / 1024 / 1024).toFixed(1)} GB
-                  </div>
-                  {renderMobileControls()}
-                </div>
-              );
-            }
-
-            if (widgetId === 'containers') {
-              return (
-                <div {...commonProps}>
-                  {renderEditControls()}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
-                    <Activity /> <span>Active Containers</span>
-                  </div>
-                  <div className="value">{runningContainers} <span style={{fontSize: '1rem', color: 'var(--text-color)', fontWeight: 'normal'}}>out of {containers.length}</span></div>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>OS: {stats.os.distro} {stats.os.release}</div>
-                  {renderMobileControls()}
-                </div>
-              );
-            }
-
-            if (widgetId === 'network') {
-              return (
-                <div {...commonProps}>
-                  {renderEditControls()}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
-                    <Globe /> <span>Network</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowDown size={14} color="#10b981" /> Download</span>
-                      <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{stats.network ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUp size={14} color="#3b82f6" /> Upload</span>
-                      <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{stats.network ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
-                    </div>
-                  </div>
-                  {renderMobileControls()}
-                </div>
-              );
-            }
-
-            return null;
-          })}
-        </div>
-      )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px', marginBottom: '20px' }}>
         <h2 style={{ margin: 0 }}>I tuoi Container</h2>
