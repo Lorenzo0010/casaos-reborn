@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HardDrive, Globe, ArrowDown, ArrowUp, ChevronRight } from 'lucide-react';
+import { HardDrive, ArrowDown, ArrowUp, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 

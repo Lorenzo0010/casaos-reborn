@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Edit, GripVertical, Check, FileText, PlusCircle, Menu, LayoutGrid } from 'lucide-react';
+import { Play, Square, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu, LayoutGrid } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
@@ -9,7 +9,7 @@ import { io } from 'socket.io-client';
 import { useDialog } from '../contexts/DialogContext';
 
 export default function Dashboard({ togglePanel, activePanel }) {
-  const { showAlert, showConfirm } = useDialog();
+  const { showAlert } = useDialog();
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingContainerId, setEditingContainerId] = useState(null);
