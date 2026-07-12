@@ -267,20 +267,22 @@ function App() {
     // Background Image
     const backgroundImage = prefs.backgroundImage || '';
     if (backgroundImage) {
-      document.body.style.backgroundImage = `url(${backgroundImage})`;
+      // Per garantire la leggibilità del testo (scuro in light mode, chiaro in dark mode)
+      // applichiamo un overlay semi-trasparente sull'immagine
+      if (currentTheme === 'light') {
+        document.body.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)), url(${backgroundImage})`;
+        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.3)');
+        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.3)');
+      } else {
+        document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(${backgroundImage})`;
+        root.style.setProperty('--card-bg', 'rgba(31, 41, 55, 0.4)');
+        root.style.setProperty('--sidebar-bg', 'rgba(31, 41, 55, 0.4)');
+      }
+      
       document.body.style.backgroundSize = 'cover';
       document.body.style.backgroundPosition = 'center';
       document.body.style.backgroundAttachment = 'fixed';
       document.body.style.backgroundRepeat = 'no-repeat';
-      
-      // Quando c'è uno sfondo personalizzato, forziamo una maggiore trasparenza per l'effetto vetro
-      if (currentTheme === 'light') {
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.3)');
-        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.3)');
-      } else {
-        root.style.setProperty('--card-bg', 'rgba(31, 41, 55, 0.4)');
-        root.style.setProperty('--sidebar-bg', 'rgba(31, 41, 55, 0.4)');
-      }
     } else {
       document.body.style.backgroundImage = 'none';
       // I colori tornano normali perché bgTheme li ha già reimpostati sopra
