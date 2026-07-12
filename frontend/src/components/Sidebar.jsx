@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Server, Terminal as TermIcon, Menu, Wrench, Folder, LayoutGrid, Cpu, HardDrive, MemoryStick, Activity, Globe, ArrowDown, ArrowUp } from 'lucide-react';
+import { Monitor, Server, Terminal as TermIcon, Menu, Wrench, Folder, LayoutGrid, Cpu, HardDrive, MemoryStick, Activity, Globe, ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-export default function Sidebar({ activePanel, togglePanel, isMobile }) {
+export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapsed, setIsCollapsed }) {
   const [stats, setStats] = useState(null);
   const [containers, setContainers] = useState([]);
 
@@ -58,20 +58,35 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
       {/* Mobile Overlay */}
       {isMobile && activePanel && (
         <div 
+          className="animate-fade-in"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }}
           onClick={closeMobile}
         />
       )}
 
       {/* Sidebar Container */}
-      <aside className={`sidebar glass open ${isMobile ? 'mobile' : 'desktop'}`} style={{ 
-        width: isMobile ? '280px' : '300px', 
-        padding: '20px',
+      <aside className={`sidebar glass open ${isMobile ? 'mobile animate-slide-in-left' : 'desktop'} ${!isMobile && isCollapsed ? 'collapsed' : ''}`} style={{ 
+        width: isMobile ? '280px' : (isCollapsed ? '80px' : '300px'), 
+        padding: isCollapsed && !isMobile ? '20px 10px' : '20px',
         overflowY: 'auto',
+        overflowX: 'hidden',
         position: isMobile ? 'fixed' : 'relative',
         height: '100vh',
         zIndex: 100
       }}>
+        
+        {/* Collapse Button (Desktop Only) */}
+        {!isMobile && (
+          <div className="flex justify-end mb-2">
+            <button 
+              className="btn-icon" 
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              title={isCollapsed ? "Espandi Sidebar" : "Riduci Sidebar"}
+            >
+              {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </button>
+          </div>
+        )}
 
         {/* Panel Content */}
         {activePanel === 'menu' && (

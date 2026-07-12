@@ -18,6 +18,7 @@ function App() {
   const isMobileInitial = window.innerWidth < 768;
   const [activePanel, setActivePanel] = useState(isMobileInitial ? null : 'widgets');
   const [isMobile, setIsMobile] = useState(isMobileInitial);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -267,16 +268,18 @@ function App() {
     // Background Image
     const backgroundImage = prefs.backgroundImage || '';
     if (backgroundImage) {
-      // Per garantire la leggibilità del testo (scuro in light mode, chiaro in dark mode)
-      // applichiamo un overlay semi-trasparente sull'immagine
       if (currentTheme === 'light') {
-        document.body.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)), url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.3)');
-        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.3)');
+        document.body.style.backgroundImage = `url(${backgroundImage})`;
+        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.8)');
+        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.85)');
+        root.style.setProperty('--bg-text-shadow', '0 2px 15px rgba(255, 255, 255, 0.9), 0 0 5px rgba(255, 255, 255, 0.5)');
+        root.style.setProperty('--bg-icon-shadow', 'drop-shadow(0 2px 10px rgba(255, 255, 255, 0.9))');
       } else {
-        document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(31, 41, 55, 0.4)');
-        root.style.setProperty('--sidebar-bg', 'rgba(31, 41, 55, 0.4)');
+        document.body.style.backgroundImage = `url(${backgroundImage})`;
+        root.style.setProperty('--card-bg', 'rgba(15, 23, 42, 0.8)');
+        root.style.setProperty('--sidebar-bg', 'rgba(15, 23, 42, 0.85)');
+        root.style.setProperty('--bg-text-shadow', '0 2px 15px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.5)');
+        root.style.setProperty('--bg-icon-shadow', 'drop-shadow(0 2px 10px rgba(0, 0, 0, 0.9))');
       }
       
       document.body.style.backgroundSize = 'cover';
@@ -285,7 +288,8 @@ function App() {
       document.body.style.backgroundRepeat = 'no-repeat';
     } else {
       document.body.style.backgroundImage = 'none';
-      // I colori tornano normali perché bgTheme li ha già reimpostati sopra
+      root.style.removeProperty('--bg-text-shadow');
+      root.style.removeProperty('--bg-icon-shadow');
     }
   };
 
@@ -322,10 +326,16 @@ function App() {
     <DialogProvider>
       <Router>
         <div className="layout">
-          <Sidebar activePanel={activePanel} togglePanel={togglePanel} isMobile={isMobile} />
+          <Sidebar 
+            activePanel={activePanel} 
+            togglePanel={togglePanel} 
+            isMobile={isMobile} 
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
+          />
 
           <div className="main-content">
-            <div className="main-scrollable">
+            <div className="main-scrollable animate-fade-in">
               <Routes>
                 <Route path="/" element={<Dashboard togglePanel={togglePanel} activePanel={activePanel} />} />
                 <Route path="/new" element={<NewContainer togglePanel={togglePanel} />} />

@@ -9,6 +9,7 @@ export function useDialog() {
 
 export function DialogProvider({ children }) {
   const [dialog, setDialog] = useState(null);
+  const [toasts, setToasts] = useState([]);
 
   const showAlert = useCallback((title, message, isError = false) => {
     return new Promise((resolve) => {
@@ -43,8 +44,20 @@ export function DialogProvider({ children }) {
     });
   }, []);
 
+  const showToast = useCallback((title, message, type = 'success') => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, title, message, type, hiding: false }]);
+    
+    setTimeout(() => {
+      setToasts(prev => prev.map(t => t.id === id ? { ...t, hiding: true } : t));
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      }, 300);
+    }, 3000);
+  }, []);
+
   return (
-    <DialogContext.Provider value={{ showAlert, showConfirm }}>
+    <DialogContext.Provider value={{ showAlert, showConfirm, showToast }}>
       {children}
       {dialog && (
         <div className="modal-overlay" style={{ zIndex: 9999 }}>
@@ -84,6 +97,23 @@ export function DialogProvider({ children }) {
           </div>
         </div>
       )}
+
+      {/* Toasts */}
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <div key={toast.id} className={`toast toast-${toast.type} ${toast.hiding ? 'hiding' : ''}`}>
+            <div className="toast-icon">
+              {toast.type === 'success' && <Check size={20} />}
+              {toast.type === 'error' && <AlertTriangle size={20} />}
+              {toast.type === 'info' && <Info size={20} />}
+            </div>
+            <div className="toast-content">
+              {toast.title && <div className="toast-title">{toast.title}</div>}
+              {toast.message && <div className="toast-message">{toast.message}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
     </DialogContext.Provider>
   );
 }
