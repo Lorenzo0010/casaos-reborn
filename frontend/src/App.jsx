@@ -270,12 +270,12 @@ function App() {
     if (backgroundImage) {
       if (currentTheme === 'light') {
         document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.3)');
-        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.3)');
+        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.2)');
+        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.2)');
       } else {
         document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(15, 23, 42, 0.4)');
-        root.style.setProperty('--sidebar-bg', 'rgba(15, 23, 42, 0.4)');
+        root.style.setProperty('--card-bg', 'rgba(0, 0, 0, 0.4)');
+        root.style.setProperty('--sidebar-bg', 'rgba(0, 0, 0, 0.4)');
       }
       
       document.body.style.backgroundSize = 'cover';

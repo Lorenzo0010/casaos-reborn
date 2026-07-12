@@ -4,6 +4,7 @@ import { Play, Square, RotateCw, Settings, Loader, Pin, GripHorizontal, ChevronU
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
+import WidgetsPanel from '../components/WidgetsPanel';
 import { io } from 'socket.io-client';
 import { useDialog } from '../contexts/DialogContext';
 
@@ -388,8 +389,17 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-5 gap-2" style={{ flexWrap: 'nowrap' }}>
+    <div className="flex gap-6 h-full w-full">
+      {/* Left Column for Widgets (Desktop only) */}
+      {!isMobile && (
+        <div style={{ width: '320px', flexShrink: 0 }}>
+          <WidgetsPanel />
+        </div>
+      )}
+
+      {/* Right Column for Apps */}
+      <div className="flex-grow flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', paddingBottom: '40px' }}>
+        <div className="flex justify-between items-center mb-5 gap-2" style={{ flexWrap: 'nowrap' }}>
         
         <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
           <button 
@@ -403,17 +413,20 @@ export default function Dashboard({ togglePanel, activePanel }) {
           >
             <Menu size={24} />
           </button>
-          <button 
-            onClick={() => togglePanel('widgets')} 
-            className="btn-icon-only"
-            style={{ 
-              background: activePanel === 'widgets' ? 'var(--primary)' : 'transparent', 
-              color: activePanel === 'widgets' ? '#fff' : 'inherit'
-            }}
-            title="Widget"
-          >
-            <LayoutGrid size={24} />
           </button>
+          {isMobile && (
+            <button 
+              onClick={() => togglePanel('widgets')} 
+              className="btn-icon-only"
+              style={{ 
+                background: activePanel === 'widgets' ? 'var(--primary)' : 'transparent', 
+                color: activePanel === 'widgets' ? '#fff' : 'inherit'
+              }}
+              title="Widget"
+            >
+              <LayoutGrid size={24} />
+            </button>
+          )}
         </div>
 
         <h1 className="m-0 text-center font-bold" style={{ fontSize: 'clamp(1rem, 4vw, 2rem)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexGrow: 1 }}>
@@ -699,5 +712,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
         />
       )}
     </div>
-  );
+  </div>
+);
 }

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Monitor, Server, Terminal as TermIcon, Menu, Wrench, Folder, LayoutGrid, Cpu, HardDrive, MemoryStick, Activity, Globe, ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import WidgetsPanel from './WidgetsPanel';
 
 export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapsed, setIsCollapsed }) {
   const [stats, setStats] = useState(null);
@@ -106,67 +107,8 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
           </div>
         )}
 
-        {activePanel === 'widgets' && stats && (
-          <div className="sidebar-widgets-content flex-col gap-4" style={{ paddingBottom: '20px' }}>
-            {/* Widget items rendered vertically */}
-            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
-              <div className="flex items-center gap-2 mb-1 text-muted">
-                <Cpu size={18} /> <span>CPU ({stats.cpu?.cores || 0} Core)</span>
-              </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.cpu?.load || 0}%</div>
-              <progress value={stats.cpu?.load || 0} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
-              <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>
-                {stats.cpu?.temperature != null ? `${Math.round(stats.cpu.temperature)}°C` : 'Temp N/A'}
-              </div>
-            </div>
-
-            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
-              <div className="flex items-center gap-2 mb-1 text-muted">
-                <MemoryStick size={18} /> <span>RAM</span>
-              </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.memory?.percent || 0}%</div>
-              <progress value={stats.memory?.percent || 0} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
-              <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>
-                {((stats.memory?.used || 0) / 1024 / 1024 / 1024).toFixed(1)} GB / {((stats.memory?.total || 0) / 1024 / 1024 / 1024).toFixed(1)} GB
-              </div>
-            </div>
-
-            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
-              <div className="flex items-center gap-2 mb-1 text-muted">
-                <HardDrive size={18} /> <span>Disco Primario</span>
-              </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{stats.disk?.percent || 0}%</div>
-              <progress value={stats.disk?.percent || 0} max="100" style={{ width: '100%', height: '6px', marginTop: '5px' }}></progress>
-              <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>
-                {((stats.disk?.used || 0) / 1024 / 1024 / 1024).toFixed(1)} GB / {((stats.disk?.total || 0) / 1024 / 1024 / 1024).toFixed(1)} GB
-              </div>
-            </div>
-
-            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
-              <div className="flex items-center gap-2 mb-1 text-muted">
-                <Activity size={18} /> <span>Container Attivi</span>
-              </div>
-              <div className="value" style={{ fontSize: '1.5rem' }}>{containers ? containers.filter(c => c.State === 'running').length : 0} <span style={{fontSize: '0.9rem', color: 'var(--text-color)', fontWeight: 'normal'}}>su {containers ? containers.length : 0}</span></div>
-              <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>OS: {stats.os?.distro || 'Sconosciuto'}</div>
-            </div>
-
-            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
-              <div className="flex items-center gap-2 mb-2 text-muted">
-                <Globe size={18} /> <span>Rete</span>
-              </div>
-              <div className="flex justify-between">
-                <div className="flex-col" style={{ alignItems: 'flex-start' }}>
-                  <span className="flex items-center gap-1 text-sm text-muted"><ArrowDown size={14} color="#10b981" /> Down</span>
-                  <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network?.rx_sec != null ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
-                </div>
-                <div className="flex-col" style={{ alignItems: 'flex-end' }}>
-                  <span className="flex items-center gap-1 text-sm text-muted"><ArrowUp size={14} color="#3b82f6" /> Up</span>
-                  <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network?.tx_sec != null ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
+        {activePanel === 'widgets' && (
+          <WidgetsPanel />
         )}
 
       </aside>
