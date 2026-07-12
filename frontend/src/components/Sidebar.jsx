@@ -75,7 +75,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
 
         {/* Panel Content */}
         {activePanel === 'menu' && (
-          <div className="sidebar-menu-content" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="sidebar-menu-content flex-col gap-2">
             <NavLink to="/" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
               <Monitor /> <span className="sidebar-link-text">Dashboard</span>
             </NavLink>
@@ -92,10 +92,10 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
         )}
 
         {activePanel === 'widgets' && stats && (
-          <div className="sidebar-widgets-content" style={{ display: 'flex', flexDirection: 'column', gap: '15px', paddingBottom: '20px' }}>
+          <div className="sidebar-widgets-content flex-col gap-4" style={{ paddingBottom: '20px' }}>
             {/* Widget items rendered vertically */}
-            <div className="glass widget" style={{ padding: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
+            <div className="glass widget p-4">
+              <div className="flex items-center gap-2 mb-1 text-muted">
                 <Cpu size={18} /> <span>CPU ({stats.cpu?.cores || 0} Core)</span>
               </div>
               <div className="value" style={{ fontSize: '1.5rem' }}>{stats.cpu?.load || 0}%</div>
@@ -105,8 +105,8 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
               </div>
             </div>
 
-            <div className="glass widget" style={{ padding: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
+            <div className="glass widget p-4">
+              <div className="flex items-center gap-2 mb-1 text-muted">
                 <MemoryStick size={18} /> <span>RAM</span>
               </div>
               <div className="value" style={{ fontSize: '1.5rem' }}>{stats.memory?.percent || 0}%</div>
@@ -116,8 +116,8 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
               </div>
             </div>
 
-            <div className="glass widget" style={{ padding: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
+            <div className="glass widget p-4">
+              <div className="flex items-center gap-2 mb-1 text-muted">
                 <HardDrive size={18} /> <span>Disco Primario</span>
               </div>
               <div className="value" style={{ fontSize: '1.5rem' }}>{stats.disk?.percent || 0}%</div>
@@ -127,25 +127,25 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
               </div>
             </div>
 
-            <div className="glass widget" style={{ padding: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '5px' }}>
+            <div className="glass widget p-4">
+              <div className="flex items-center gap-2 mb-1 text-muted">
                 <Activity size={18} /> <span>Container Attivi</span>
               </div>
               <div className="value" style={{ fontSize: '1.5rem' }}>{containers ? containers.filter(c => c.State === 'running').length : 0} <span style={{fontSize: '0.9rem', color: 'var(--text-color)', fontWeight: 'normal'}}>su {containers ? containers.length : 0}</span></div>
               <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>OS: {stats.os?.distro || 'Sconosciuto'}</div>
             </div>
 
-            <div className="glass widget" style={{ padding: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8, marginBottom: '10px' }}>
+            <div className="glass widget p-4">
+              <div className="flex items-center gap-2 mb-2 text-muted">
                 <Globe size={18} /> <span>Rete</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowDown size={14} color="#10b981" /> Down</span>
+              <div className="flex justify-between">
+                <div className="flex-col" style={{ alignItems: 'flex-start' }}>
+                  <span className="flex items-center gap-1 text-sm text-muted"><ArrowDown size={14} color="#10b981" /> Down</span>
                   <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network?.rx_sec != null ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUp size={14} color="#3b82f6" /> Up</span>
+                <div className="flex-col" style={{ alignItems: 'flex-end' }}>
+                  <span className="flex items-center gap-1 text-sm text-muted"><ArrowUp size={14} color="#3b82f6" /> Up</span>
                   <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>{stats.network?.tx_sec != null ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
                 </div>
               </div>

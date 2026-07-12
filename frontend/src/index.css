@@ -9,6 +9,23 @@
   --danger: #ef4444;
   --success: #10b981;
   --sidebar-bg: #ffffff;
+
+  /* Spacing Variables */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Radius Variables (iOS Style) */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
 }
 
 [data-theme='dark'] {
@@ -75,7 +92,80 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--card-border);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
+}
+
+.glass-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-xl);
+}
+
+/* Layout Utilities */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+.gap-5 { gap: var(--space-5); }
+.gap-6 { gap: var(--space-6); }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.m-0 { margin: 0; }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-6 { margin-bottom: var(--space-6); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-4 { margin-top: var(--space-4); }
+
+.p-4 { padding: var(--space-4); }
+.p-5 { padding: var(--space-5); }
+.p-6 { padding: var(--space-6); }
+
+/* Typography Utilities */
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.text-muted { opacity: 0.7; }
+.text-center { text-align: center; }
+
+/* Page Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}
+.page-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--card-border);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
 }
 
 .layout {
@@ -104,8 +194,8 @@ body {
 .sidebar-link {
   text-decoration: none;
   color: var(--text-color);
-  padding: 10px 15px;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -201,7 +291,7 @@ h1, h2, h3 {
 .container-card .card-icon {
   width: 72px;
   height: 72px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
@@ -239,7 +329,7 @@ h1, h2, h3 {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
   background-color: var(--card-border);
@@ -259,7 +349,7 @@ h1, h2, h3 {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background-color: transparent;
   color: var(--text-color);
   border: none;
@@ -400,8 +490,8 @@ progress::-moz-progress-bar {
 
 /* Buttons */
 .btn {
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
   font-weight: 600;
@@ -506,8 +596,8 @@ progress::-moz-progress-bar {
 
 .casaos-form input[type="text"], .casaos-form select {
   width: 100%;
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--card-border);
   background: var(--bg-color);
   color: var(--text-color);

@@ -237,9 +237,9 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   // ═══════════════════════════════════════
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
+    <div className="flex-col gap-6" style={{ maxWidth: '900px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', margin: '0 0 10px 0' }}>
+      <div className="page-header">
         <button 
           onClick={() => togglePanel('menu')} 
           className="btn-icon-only" 
@@ -247,24 +247,24 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         >
           <Menu size={24} />
         </button>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+        <h1>
           <Wrench /> Avanzate
         </h1>
       </div>
 
       {/* ─── Section 1: UI Settings ─── */}
       <div className="widget glass">
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+        <h2 className="flex items-center gap-2 mb-5 m-0">
           <Palette /> Impostazioni UI
         </h2>
         
-        <div className="casaos-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="casaos-form flex-col gap-5">
           
           <div className="input-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label className="flex items-center gap-2">
               Tema Dark Mode {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+            <div className="flex items-center gap-2 mt-2">
               <select value={theme} onChange={(e) => {
                 setTheme(e.target.value);
                 onSave({ ...preferences, theme: e.target.value });
@@ -278,7 +278,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
           <div className="input-group" style={{ marginTop: '10px' }}>
             <label>Colore Accento</label>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '5px' }}>
+            <div className="flex flex-wrap gap-2 mt-2">
               {predefinedAccents.map(color => (
                 <button
                   key={color.hex}
@@ -301,7 +301,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
           <div className="input-group" style={{ marginTop: '10px' }}>
             <label>Sfondo Adattivo (Light/Dark)</label>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '5px' }}>
+            <div className="flex flex-wrap gap-2 mt-2">
               {predefinedBackgrounds.map(bg => {
                 const currentHex = actualTheme === 'dark' ? bg.darkHex : bg.lightHex;
                 return (
@@ -328,7 +328,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
           <div className="input-group" style={{ marginTop: '10px' }}>
             <label>Sfondo Personalizzato (Carica Immagine Locale o inserisci URL)</label>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '5px', alignItems: 'center' }}>
+            <div className="flex items-center gap-2 mt-2">
               <input
                 type="text"
                 placeholder="https://esempio.com/sfondo.jpg"
@@ -345,8 +345,8 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
               </button>
             </div>
             
-            <div style={{ marginTop: '15px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <label className="btn btn-primary" style={{ cursor: 'pointer', margin: 0 }}>
+            <div className="flex items-center gap-2 mt-4">
+              <label className="btn btn-primary m-0" style={{ cursor: 'pointer' }}>
                 Carica File Locale
                 <input 
                   type="file" 
@@ -371,7 +371,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
+          <div className="flex mt-5" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
             <button type="button" className="btn btn-action danger" onClick={handleReset} disabled={isSaving}>
               <RefreshCcw size={16} /> Ripristina Default
             </button>
@@ -380,12 +380,12 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       </div>
 
       {/* ─── Section 2: System Logs ─── */}
-      <div className="widget glass" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+      <div className="widget glass flex-col">
+        <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
+          <h2 className="flex items-center gap-2 m-0">
             <Terminal size={24} /> Log di Sistema
           </h2>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="flex gap-2">
             <button className="btn" onClick={fetchLogs} title="Aggiorna Logs" style={{ background: 'var(--card-bg)' }}>
               <RefreshCw size={18} className={logsLoading ? 'spin' : ''} style={{ marginRight: '5px' }} /> Aggiorna
             </button>
@@ -405,24 +405,23 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       </div>
 
       {/* ─── Section 3: Docker Maintenance & Updates ─── */}
-      <div className="widget glass" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 5px 0', borderBottom: '1px solid var(--card-border)', paddingBottom: '10px' }}>
+      <div className="widget glass flex-col gap-5">
+        <h2 className="flex items-center gap-2 m-0 mb-2" style={{ borderBottom: '1px solid var(--card-border)', paddingBottom: '10px' }}>
           <ArrowUpCircle size={20} /> Gestione Docker & Aggiornamenti
         </h2>
         
         {/* Updates Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-          <div style={{ flex: 1, minWidth: '250px' }}>
-            <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>Aggiornamenti Immagini</h3>
-            <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex-1" style={{ minWidth: '250px' }}>
+            <h3 className="m-0 mb-2 text-lg">Aggiornamenti Immagini</h3>
+            <p className="m-0 text-sm text-muted">
               Cerca nuove versioni delle immagini per i container in esecuzione.
             </p>
           </div>
           <button 
-            className="btn btn-primary" 
+            className="btn btn-primary flex items-center gap-2 font-bold" 
             onClick={triggerUpdateCheck} 
             disabled={isCheckingUpdates}
-            style={{ padding: '8px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
           >
             <RefreshCw size={16} className={isCheckingUpdates ? 'spin' : ''} />
             {isCheckingUpdates ? 'Ricerca in corso...' : 'Controlla Ora'}
@@ -430,10 +429,10 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         </div>
 
         {isCheckingUpdates && checkStatus && checkStatus.container && (
-          <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '10px', border: '1px solid var(--card-border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
+          <div className="p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--card-border)' }}>
+            <div className="flex justify-between mb-2 text-sm">
               <span>Scansione: <strong>{checkStatus.container}</strong></span>
-              <span style={{ opacity: 0.8 }}>{checkStatus.action}</span>
+              <span className="text-muted">{checkStatus.action}</span>
             </div>
             <div style={{ height: '4px', background: 'var(--card-bg)', borderRadius: '2px', overflow: 'hidden' }}>
               <div className="progress-bar-inner" style={{ width: '100%', height: '100%', background: 'var(--primary)', animation: 'pulse 1s infinite' }}></div>
@@ -442,8 +441,8 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         )}
 
         {updates.length > 0 && !isCheckingUpdates && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '15px', borderRadius: '10px', border: '1px solid var(--danger)' }}>
-            <h4 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--danger)' }}>
+          <div className="p-4" style={{ background: 'rgba(239, 68, 68, 0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--danger)' }}>
+            <h4 className="flex items-center gap-2 m-0 mb-2" style={{ color: 'var(--danger)' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)' }}></div>
               Container da aggiornare ({updates.length})
             </h4>
@@ -458,33 +457,32 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </div>
         )}
 
-        <div style={{ width: '100%', height: '1px', background: 'var(--card-border)', margin: '5px 0' }}></div>
+        <div style={{ width: '100%', height: '1px', background: 'var(--card-border)', margin: 'var(--space-2) 0' }}></div>
 
         {/* Prune Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+        <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>Pulizia Sistema</h3>
-            <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Rimuovi le immagini docker orfane per liberare spazio su disco.</p>
+            <h3 className="m-0 mb-2 text-lg">Pulizia Sistema</h3>
+            <p className="m-0 text-sm text-muted">Rimuovi le immagini docker orfane per liberare spazio su disco.</p>
           </div>
-          <button className="btn btn-danger" onClick={handlePruneImages} style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', borderRadius: '8px' }}>
-            <Trash2 size={16} style={{ marginRight: '8px' }} />
+          <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneImages}>
+            <Trash2 size={16} />
             Pulisci Immagini
           </button>
         </div>
       </div>
 
       {/* ─── Section 4: Logout ─── */}
-      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '8px' }}>
+      <div className="flex justify-center mt-2">
         <button 
           onClick={logout} 
-          className="btn" 
+          className="btn flex items-center gap-2" 
           style={{ 
-            display: 'flex', alignItems: 'center', gap: '8px', 
             padding: '10px 28px', 
             background: 'transparent', 
             border: '1px solid var(--card-border)', 
             color: 'var(--text-color)', 
-            borderRadius: '10px',
+            borderRadius: 'var(--radius-md)',
             opacity: 0.7,
             transition: 'all 0.2s'
           }}

@@ -326,7 +326,7 @@ export default function NewContainer({ togglePanel }) {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '40px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+      <div className="page-header">
         <button 
           onClick={() => togglePanel('menu')} 
           className="btn-icon-only" 
@@ -334,7 +334,7 @@ export default function NewContainer({ togglePanel }) {
         >
           <Menu size={24} />
         </button>
-        <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <h2 className="flex items-center gap-2 m-0">
           <PlusSquare size={24} /> Create New Container
         </h2>
       </div>
@@ -342,7 +342,7 @@ export default function NewContainer({ togglePanel }) {
       <div className="glass" style={{ overflow: 'hidden' }}>
         
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--card-border)' }}>
+        <div className="flex" style={{ borderBottom: '1px solid var(--card-border)' }}>
           <button 
             className="btn" 
             style={{ flex: 1, borderRadius: 0, padding: '15px', background: activeTab === 'manual' ? 'var(--primary)' : 'transparent', color: activeTab === 'manual' ? 'white' : 'var(--text-color)' }}
@@ -361,7 +361,7 @@ export default function NewContainer({ togglePanel }) {
 
         <div style={{ padding: '20px' }} className="casaos-form">
           {activeTab === 'yaml' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div className="flex-col gap-4">
               <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>
                 Paste a <code>docker-compose.yml</code> file here. We will parse it and pre-fill the manual configuration form.
               </p>
@@ -372,7 +372,7 @@ export default function NewContainer({ togglePanel }) {
                 placeholder={"version: '3'\nservices:\n  nginx:\n    image: nginx:latest\n    ports:\n      - '8080:80'"}
               />
               {yamlError && (
-                <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="flex items-center gap-2 p-4" style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', borderRadius: 'var(--radius-sm)' }}>
                   <AlertTriangle size={18} /> {yamlError}
                 </div>
               )}
@@ -383,7 +383,7 @@ export default function NewContainer({ togglePanel }) {
           )}
 
           {activeTab === 'manual' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex-col gap-5">
               
               <div className="form-grid-image-tag">
                 <div>
@@ -477,7 +477,7 @@ export default function NewContainer({ togglePanel }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="flex items-center gap-2">
                 <label className="switch">
                   <input type="checkbox" checked={formData.privileged} onChange={e => setFormData({...formData, privileged: e.target.checked})} />
                   <span className="slider round"></span>
@@ -486,7 +486,7 @@ export default function NewContainer({ togglePanel }) {
               </div>
 
               {/* Ports */}
-              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Port Mappings</span>
                   <button className="btn-pill" onClick={() => addList('ports', { host: '', container: '', protocol: 'tcp' })}><Plus size={14}/> Add</button>
@@ -509,7 +509,7 @@ export default function NewContainer({ togglePanel }) {
               </div>
 
               {/* Volumes */}
-              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Volumes</span>
                   <button className="btn-pill" onClick={() => addList('volumes', { host: '', container: '' })}><Plus size={14}/> Add</button>
@@ -528,7 +528,7 @@ export default function NewContainer({ togglePanel }) {
               </div>
 
               {/* Devices */}
-              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Devices</span>
                   <button className="btn-pill" onClick={() => addList('devices', { host: '', container: '' })}><Plus size={14}/> Add</button>
@@ -547,7 +547,7 @@ export default function NewContainer({ togglePanel }) {
               </div>
 
               {/* Environment Variables */}
-              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Environment Variables</span>
                   <button className="btn-pill" onClick={() => addList('env', { key: '', value: '' })}><Plus size={14}/> Add</button>
@@ -566,7 +566,7 @@ export default function NewContainer({ togglePanel }) {
               </div>
 
               {/* Commands */}
-              <div className="casaos-form-section" style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="casaos-form-section p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Container Command</span>
                   <button className="btn-pill" onClick={() => addList('commands', { value: '' })}><Plus size={14}/> Add</button>
@@ -584,11 +584,11 @@ export default function NewContainer({ togglePanel }) {
               </div>
 
               {/* Capabilities */}
-              <div style={{ padding: '15px', background: 'var(--bg-color)', borderRadius: '8px' }}>
+              <div className="p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)' }}>
                 <div className="section-header">
                   <span style={{ fontWeight: 'bold' }}>Capabilities (cap-add)</span>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                <div className="flex flex-wrap gap-2 mt-2">
                     {CAPABILITIES.map(cap => (
                         <div 
                             key={cap} 
@@ -609,7 +609,7 @@ export default function NewContainer({ togglePanel }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <div className="flex gap-2 mt-2">
                 <button className="btn btn-primary" onClick={handleCreate} style={{ flex: 1, padding: '15px', fontSize: '1.1rem' }}>
                   <Save size={20} /> Deploy Container
                 </button>

@@ -196,11 +196,11 @@ export default function FileManager({ togglePanel }) {
   const breadcrumbs = currentPath.split(/[/\\]/).filter(Boolean);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '15px' }}>
+    <div className="flex-col h-full gap-4">
       
       {/* Header & Toolbar */}
-      <div className="glass widget" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1 }}>
+      <div className="glass widget flex justify-between items-center p-5">
+        <div className="flex items-center flex-wrap flex-1 gap-2">
           <button 
             onClick={() => togglePanel('menu')} 
             className="btn-icon-only" 
@@ -218,7 +218,7 @@ export default function FileManager({ togglePanel }) {
             <ChevronRight style={{ transform: 'rotate(180deg)' }} />
           </button>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '1.1rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div className="flex items-center gap-1 font-semibold" style={{ fontSize: '1.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             <Folder size={20} color="var(--primary)" />
             {breadcrumbs.length === 0 ? '/' : breadcrumbs.map((crumb, idx) => (
               <React.Fragment key={idx}>
@@ -229,7 +229,7 @@ export default function FileManager({ togglePanel }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="flex gap-2">
           <button className="btn" onClick={fetchFiles} title="Aggiorna">
             <RefreshCw size={18} className={loading ? 'spin' : ''} />
           </button>
@@ -247,7 +247,7 @@ export default function FileManager({ togglePanel }) {
       </div>
 
       {/* Main File Area */}
-      <div className="glass widget" style={{ flex: 1, overflowY: 'auto', padding: '0' }} onClick={() => setActiveMenu(null)}>
+      <div className="glass widget flex-1" style={{ overflowY: 'auto', padding: '0' }} onClick={() => setActiveMenu(null)}>
         {loading && files.length === 0 ? (
           <div style={{ padding: '20px', textAlign: 'center', opacity: 0.7 }}>Caricamento...</div>
         ) : (
@@ -291,9 +291,9 @@ export default function FileManager({ togglePanel }) {
                       
                       {/* Context Menu Dropdown */}
                       {activeMenu === file.path && (
-                        <div className="glass" style={{ 
+                        <div className="glass flex-col" style={{ 
                           position: 'absolute', right: '40px', top: '20px', zIndex: 10, 
-                          display: 'flex', flexDirection: 'column', padding: '5px', borderRadius: '8px',
+                          padding: 'var(--space-1)', borderRadius: 'var(--radius-sm)',
                           boxShadow: '0 10px 25px rgba(0,0,0,0.2)', minWidth: '150px'
                         }}>
                           {!file.isDir && (

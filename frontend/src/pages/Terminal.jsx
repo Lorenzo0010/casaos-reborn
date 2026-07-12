@@ -73,9 +73,9 @@ export default function TerminalPage({ togglePanel }) {
 
   if (!connected) {
     return (
-      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: 'var(--card-bg)', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', border: '1px solid var(--card-border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+      <div className="flex justify-center items-center h-full">
+        <div className="glass" style={{ padding: '30px', width: '100%', maxWidth: '400px' }}>
+          <div className="flex items-center gap-2 mb-5">
             <button 
               onClick={() => togglePanel('menu')} 
               className="btn-icon-only" 
@@ -83,9 +83,9 @@ export default function TerminalPage({ togglePanel }) {
             >
               <Menu size={24} />
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="flex items-center gap-2">
               <TermIcon size={24} color="var(--primary)" />
-              <h2 style={{ margin: 0 }}>Connessione SSH Host</h2>
+              <h2 className="m-0">Connessione SSH Host</h2>
             </div>
           </div>
           
@@ -93,14 +93,14 @@ export default function TerminalPage({ togglePanel }) {
             Inserisci le credenziali per accedere all'intera macchina. La password verrà richiesta in modo sicuro nel terminale.
           </p>
 
-          <form onSubmit={connectSSH}>
-            <div className="form-group" style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Server size={16}/> Indirizzo IP / Host</label>
+          <form onSubmit={connectSSH} className="casaos-form">
+            <div className="form-group mb-4">
+              <label className="flex items-center gap-2"><Server size={16}/> Indirizzo IP / Host</label>
               <input type="text" className="form-control" value={sshHost} onChange={(e) => setSshHost(e.target.value)} required />
             </div>
             
-            <div className="form-group" style={{ marginBottom: '25px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={16}/> Nome Utente</label>
+            <div className="form-group mb-6">
+              <label className="flex items-center gap-2"><User size={16}/> Nome Utente</label>
               <input type="text" className="form-control" value={sshUser} onChange={(e) => setSshUser(e.target.value)} required />
             </div>
 
@@ -112,9 +112,9 @@ export default function TerminalPage({ togglePanel }) {
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+    <div className="flex-col h-full">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
           <button 
             onClick={() => togglePanel('menu')} 
             className="btn-icon-only" 
@@ -122,16 +122,16 @@ export default function TerminalPage({ togglePanel }) {
           >
             <Menu size={24} />
           </button>
-          <h1 style={{ margin: 0 }}>Terminale SSH</h1>
+          <h1 className="m-0">Terminale SSH</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span style={{ opacity: 0.7, fontSize: '0.9rem' }}>{sshUser}@{sshHost}</span>
-          <button className="btn btn-sm" onClick={() => setConnected(false)} style={{ padding: '4px 8px', fontSize: '0.8rem' }}>Disconnetti</button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted">{sshUser}@{sshHost}</span>
+          <button className="btn" onClick={() => setConnected(false)} style={{ padding: '6px 12px', fontSize: '0.875rem' }}>Disconnetti</button>
         </div>
       </div>
       <div 
         ref={terminalRef} 
-        style={{ flex: 1, backgroundColor: '#1e1e1e', padding: '10px', borderRadius: '8px', overflow: 'hidden' }} 
+        style={{ flex: 1, backgroundColor: '#1e1e1e', padding: '10px', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} 
       />
     </div>
   );

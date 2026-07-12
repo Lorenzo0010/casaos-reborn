@@ -389,9 +389,9 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'nowrap', gap: '10px' }}>
+      <div className="flex justify-between items-center mb-5 gap-2" style={{ flexWrap: 'nowrap' }}>
         
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
+        <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
           <button 
             onClick={() => togglePanel('menu')} 
             className="btn-icon-only" 
@@ -416,11 +416,11 @@ export default function Dashboard({ togglePanel, activePanel }) {
           </button>
         </div>
 
-        <h1 style={{ margin: 0, fontSize: 'clamp(1rem, 4vw, 2rem)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', flexGrow: 1 }}>
+        <h1 className="m-0 text-center font-bold" style={{ fontSize: 'clamp(1rem, 4vw, 2rem)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexGrow: 1 }}>
           {getGreeting()}!
         </h1>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
+        <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
           <Link 
             to="/new" 
             className="btn-icon-only"
@@ -455,11 +455,11 @@ export default function Dashboard({ togglePanel, activePanel }) {
       )}
 
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0 }}>I tuoi Container</h2>
+      <div className="flex justify-between items-center mt-6 mb-5">
+        <h2 className="m-0">I tuoi Container</h2>
         
         {editMode && (
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div className="flex items-center gap-2">
             <select value={sortMode} onChange={e => { setSortMode(e.target.value); if (e.target.value !== 'custom') setEditMode(false); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--card-bg)', color: 'var(--text-color)', outline: 'none' }}>
               <option value="date">Data di Creazione</option>
               <option value="alphabetical">Alfabetico</option>
@@ -545,8 +545,8 @@ export default function Dashboard({ togglePanel, activePanel }) {
                   zIndex: 10, padding: '16px', color: 'white', borderRadius: 'inherit'
                 }}>
                   <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
-                  <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: '0.85rem' }}>{progressData.status}</h4>
-                  <div style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9, fontWeight: 'bold' }}>{Math.round(progressPercent)}%</div>
+                  <h4 className="m-0 text-center" style={{ fontSize: '0.85rem' }}>{progressData.status}</h4>
+                  <div className="font-bold" style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9 }}>{Math.round(progressPercent)}%</div>
                 </div>
               )}
 
@@ -637,10 +637,10 @@ export default function Dashboard({ togglePanel, activePanel }) {
                     zIndex: 10, padding: '10px', color: 'white', borderRadius: 'inherit', textAlign: 'center'
                   }}>
                     <Loader className="spin" size={24} style={{ marginBottom: '8px', flexShrink: 0 }} />
-                    <h4 style={{ margin: '0 0 5px 0', fontSize: '0.8rem', whiteSpace: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    <h4 className="m-0" style={{ fontSize: '0.8rem', whiteSpace: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                       {progressData.status}
                     </h4>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 'bold' }}>{Math.round(progressPercent)}%</div>
+                    <div className="font-bold" style={{ fontSize: '0.8rem', opacity: 0.9 }}>{Math.round(progressPercent)}%</div>
                   </div>
                   
                   {/* LED */}
