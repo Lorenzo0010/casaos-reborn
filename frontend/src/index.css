@@ -292,16 +292,6 @@ h1, h2, h3 {
   margin-bottom: 1rem;
 }
 
-/* Applica l'ombra del testo solo agli elementi che fluttuano direttamente sullo sfondo */
-h1:not(.glass h1):not(.widget h1):not(.sidebar h1), 
-h2:not(.glass h2):not(.widget h2):not(.sidebar h2), 
-h3:not(.glass h3):not(.widget h3):not(.sidebar h3),
-.btn-icon-only {
-  text-shadow: var(--bg-text-shadow, none);
-  /* Per le icone nei pulsanti SVG */
-  filter: var(--bg-icon-shadow, none);
-}
-
 .grid {
   display: grid;
   gap: 20px;

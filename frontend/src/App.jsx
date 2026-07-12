@@ -270,16 +270,12 @@ function App() {
     if (backgroundImage) {
       if (currentTheme === 'light') {
         document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.8)');
-        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.85)');
-        root.style.setProperty('--bg-text-shadow', '0 2px 15px rgba(255, 255, 255, 0.9), 0 0 5px rgba(255, 255, 255, 0.5)');
-        root.style.setProperty('--bg-icon-shadow', 'drop-shadow(0 2px 10px rgba(255, 255, 255, 0.9))');
+        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.3)');
+        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.3)');
       } else {
         document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(15, 23, 42, 0.8)');
-        root.style.setProperty('--sidebar-bg', 'rgba(15, 23, 42, 0.85)');
-        root.style.setProperty('--bg-text-shadow', '0 2px 15px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.5)');
-        root.style.setProperty('--bg-icon-shadow', 'drop-shadow(0 2px 10px rgba(0, 0, 0, 0.9))');
+        root.style.setProperty('--card-bg', 'rgba(15, 23, 42, 0.4)');
+        root.style.setProperty('--sidebar-bg', 'rgba(15, 23, 42, 0.4)');
       }
       
       document.body.style.backgroundSize = 'cover';
@@ -288,8 +284,6 @@ function App() {
       document.body.style.backgroundRepeat = 'no-repeat';
     } else {
       document.body.style.backgroundImage = 'none';
-      root.style.removeProperty('--bg-text-shadow');
-      root.style.removeProperty('--bg-icon-shadow');
     }
   };
 

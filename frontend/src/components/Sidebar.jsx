@@ -109,7 +109,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
         {activePanel === 'widgets' && stats && (
           <div className="sidebar-widgets-content flex-col gap-4" style={{ paddingBottom: '20px' }}>
             {/* Widget items rendered vertically */}
-            <div className="glass widget p-4">
+            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
               <div className="flex items-center gap-2 mb-1 text-muted">
                 <Cpu size={18} /> <span>CPU ({stats.cpu?.cores || 0} Core)</span>
               </div>
@@ -120,7 +120,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
               </div>
             </div>
 
-            <div className="glass widget p-4">
+            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
               <div className="flex items-center gap-2 mb-1 text-muted">
                 <MemoryStick size={18} /> <span>RAM</span>
               </div>
@@ -131,7 +131,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
               </div>
             </div>
 
-            <div className="glass widget p-4">
+            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
               <div className="flex items-center gap-2 mb-1 text-muted">
                 <HardDrive size={18} /> <span>Disco Primario</span>
               </div>
@@ -142,7 +142,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
               </div>
             </div>
 
-            <div className="glass widget p-4">
+            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
               <div className="flex items-center gap-2 mb-1 text-muted">
                 <Activity size={18} /> <span>Container Attivi</span>
               </div>
@@ -150,7 +150,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
               <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>OS: {stats.os?.distro || 'Sconosciuto'}</div>
             </div>
 
-            <div className="glass widget p-4">
+            <div className="widget p-4" style={{ background: 'var(--card-border)', borderRadius: 'var(--radius-md)' }}>
               <div className="flex items-center gap-2 mb-2 text-muted">
                 <Globe size={18} /> <span>Rete</span>
               </div>
