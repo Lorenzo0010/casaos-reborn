@@ -1,53 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Server, Terminal as TermIcon, Menu, Wrench, Folder, LayoutGrid, Cpu, HardDrive, MemoryStick, Activity, Globe, ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import axios from 'axios';
-import { io } from 'socket.io-client';
+import { Monitor, Terminal as TermIcon, Wrench, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
 import WidgetsPanel from './WidgetsPanel';
 
 export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapsed, setIsCollapsed }) {
-  const [stats, setStats] = useState(null);
-  const [containers, setContainers] = useState([]);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    const fetchStats = async () => {
-      try {
-        const res = await axios.get('/api/system/stats', { headers: { Authorization: `Bearer ${token}` } });
-        setStats(res.data);
-      } catch (err) {}
-    };
-
-    const fetchContainers = async () => {
-      try {
-        const res = await axios.get('/api/docker/containers', { headers: { Authorization: `Bearer ${token}` } });
-        setContainers(res.data);
-      } catch (err) {}
-    };
-
-    fetchStats();
-    fetchContainers();
-
-    const socket = io(window.location.origin, {
-      auth: { token, type: 'web' }
-    });
-
-    socket.on('system.stats', (data) => setStats(data));
-    socket.on('docker.containers', (data) => setContainers(data));
-
-    return () => socket.disconnect();
-  }, []);
-
-  const formatSpeed = (bytesPerSec) => {
-    if (!bytesPerSec || bytesPerSec === 0) return '0 B/s';
-    const k = 1024;
-    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-    const i = Math.floor(Math.log(bytesPerSec) / Math.log(k));
-    return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
   const closeMobile = () => {
     if (isMobile) togglePanel(activePanel); // This will close it
   };

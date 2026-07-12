@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, HardDrive, MemoryStick, Activity, Globe, ArrowDown, ArrowUp, ChevronRight } from 'lucide-react';
+import { HardDrive, Globe, ArrowDown, ArrowUp, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
 export default function WidgetsPanel({ className = '', style = {} }) {
   const [stats, setStats] = useState(null);
-  const [containers, setContainers] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -18,22 +17,13 @@ export default function WidgetsPanel({ className = '', style = {} }) {
       } catch (err) {}
     };
 
-    const fetchContainers = async () => {
-      try {
-        const res = await axios.get('/api/docker/containers', { headers: { Authorization: `Bearer ${token}` } });
-        setContainers(res.data);
-      } catch (err) {}
-    };
-
     fetchStats();
-    fetchContainers();
 
     const socket = io(window.location.origin, {
       auth: { token, type: 'web' }
     });
 
     socket.on('system.stats', (data) => setStats(data));
-    socket.on('docker.containers', (data) => setContainers(data));
 
     return () => socket.disconnect();
   }, []);
