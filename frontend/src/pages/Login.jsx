@@ -21,7 +21,7 @@ export default function Login({ setToken }) {
 
   return (
     <div className="login-container">
-      <form onSubmit={handleLogin} className="glass login-card">
+      <form onSubmit={handleLogin} className="login-card casaos-form">
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <h2>Welcome to CasaOS Reborn</h2>
           <p style={{ opacity: 0.7 }}>Login to manage your server</p>
@@ -29,11 +29,11 @@ export default function Login({ setToken }) {
         
         {error && <div style={{ color: 'var(--danger)', textAlign: 'center' }}>{error}</div>}
 
-        <div className="input-group">
+        <div className="form-group">
           <label>Username</label>
           <input type="text" value={username} onChange={e => setUsername(e.target.value)} required />
         </div>
-        <div className="input-group">
+        <div className="form-group">
           <label>Password</label>
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </div>

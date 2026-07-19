@@ -339,7 +339,7 @@ export default function NewContainer({ togglePanel }) {
         </h2>
       </div>
 
-      <div className="glass" style={{ overflow: 'hidden' }}>
+      <div className="widget" style={{ overflow: 'hidden', padding: 0 }}>
         
         {/* Tabs */}
         <div className="flex" style={{ borderBottom: '1px solid var(--card-border)' }}>

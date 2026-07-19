@@ -70,7 +70,7 @@ export default function LogsModal({ containerId, containerName, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
-      <div className="modal-content glass" onClick={e => e.stopPropagation()} style={{ maxWidth: '900px', width: '95%', height: '85vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '900px', width: '95%', height: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
           <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Logs: {containerName}</h2>
           <div style={{ display: 'flex', gap: '10px' }}>

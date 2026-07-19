@@ -61,7 +61,7 @@ export function DialogProvider({ children }) {
       {children}
       {dialog && (
         <div className="modal-overlay" style={{ zIndex: 9999 }}>
-          <div className="modal-content glass" style={{ width: '400px', padding: '20px' }}>
+          <div className="modal-content" style={{ width: '400px', padding: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
               {dialog.type === 'confirm' ? (
                 <AlertTriangle size={24} color="var(--warning, #f59e0b)" />

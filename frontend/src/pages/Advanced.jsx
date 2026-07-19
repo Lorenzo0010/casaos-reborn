@@ -253,7 +253,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       </div>
 
       {/* ─── Section 1: UI Settings ─── */}
-      <div className="widget glass">
+      <div className="widget">
         <h2 className="flex items-center gap-2 mb-5 m-0">
           <Palette /> Impostazioni UI
         </h2>
@@ -380,7 +380,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       </div>
 
       {/* ─── Section 2: System Logs ─── */}
-      <div className="widget glass flex-col">
+      <div className="widget flex-col">
         <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
           <h2 className="flex items-center gap-2 m-0">
             <Terminal size={24} /> Log di Sistema
@@ -398,14 +398,14 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </div>
         </div>
 
-        <div className="glass" style={{ height: '350px', backgroundColor: '#1e1e1e', color: '#d4d4d4', padding: '15px', borderRadius: '8px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '13px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+        <div style={{ height: '350px', backgroundColor: '#1e1e1e', color: '#d4d4d4', padding: '15px', borderRadius: '8px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '13px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
           {logsLoading && !logs ? 'Caricamento logs in corso...' : renderLogLines()}
           <div ref={logsEndRef} />
         </div>
       </div>
 
       {/* ─── Section 3: Docker Maintenance & Updates ─── */}
-      <div className="widget glass flex-col gap-5">
+      <div className="widget flex-col gap-5">
         <h2 className="flex items-center gap-2 m-0 mb-2" style={{ borderBottom: '1px solid var(--card-border)', paddingBottom: '10px' }}>
           <ArrowUpCircle size={20} /> Gestione Docker & Aggiornamenti
         </h2>

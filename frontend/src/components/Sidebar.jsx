@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Terminal as TermIcon, Wrench, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Monitor, Terminal as TermIcon, Wrench, Folder } from 'lucide-react';
 import WidgetsPanel from './WidgetsPanel';
 
-export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapsed, setIsCollapsed }) {
+export default function Sidebar({ activePanel, togglePanel, isMobile }) {
   const closeMobile = () => {
     if (isMobile) togglePanel(activePanel); // This will close it
   };
@@ -22,9 +22,9 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
       )}
 
       {/* Sidebar Container */}
-      <aside className={`sidebar glass open ${isMobile ? 'mobile animate-slide-in-left' : 'desktop'} ${!isMobile && isCollapsed ? 'collapsed' : ''}`} style={{ 
-        width: isMobile ? '280px' : (isCollapsed ? '80px' : '300px'), 
-        padding: isCollapsed && !isMobile ? '20px 10px' : '20px',
+      <aside className={`sidebar open ${isMobile ? 'mobile animate-slide-in-left' : 'desktop'}`} style={{ 
+        width: isMobile ? '280px' : '300px', 
+        padding: '20px',
         overflowY: 'auto',
         overflowX: 'hidden',
         position: isMobile ? 'fixed' : 'relative',
@@ -32,19 +32,6 @@ export default function Sidebar({ activePanel, togglePanel, isMobile, isCollapse
         zIndex: 100
       }}>
         
-        {/* Collapse Button (Desktop Only) */}
-        {!isMobile && (
-          <div className="flex justify-end mb-2">
-            <button 
-              className="btn-icon" 
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              title={isCollapsed ? "Espandi Sidebar" : "Riduci Sidebar"}
-            >
-              {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-            </button>
-          </div>
-        )}
-
         {/* Panel Content */}
         {activePanel === 'menu' && (
           <div className="sidebar-menu-content flex-col gap-2">

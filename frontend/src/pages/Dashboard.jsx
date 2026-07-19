@@ -413,7 +413,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
           >
             <Menu size={24} />
           </button>
-          </button>
           {isMobile && (
             <button 
               onClick={() => togglePanel('widgets')} 
@@ -505,16 +504,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
             return (
             <div 
               key={c.Id}
-              style={{
-                padding: progressData ? '3px' : '0',
-                borderRadius: '16px',
-                background: progressData ? `conic-gradient(from 0deg, var(--primary) ${progressPercent}%, transparent ${progressPercent}%)` : 'transparent',
-                transition: 'background 0.3s ease',
-                height: '100%'
-              }}
-            >
-            <div 
-              className={`glass container-card ${editMode ? 'edit-mode' : ''}`} 
+              className={`container-card ${editMode ? 'edit-mode' : ''}`} 
               draggable={editMode && !isMobile}
               onDragStart={(e) => handleDragStart(e, stableId)}
               onDragOver={handleDragOver}
@@ -522,9 +512,9 @@ export default function Dashboard({ togglePanel, activePanel }) {
               style={{ 
                 cursor: editMode && !isMobile ? 'grab' : 'default',
                 opacity: draggedItem === stableId ? 0.5 : 1,
-                margin: 0,
-                border: progressData ? 'none' : '',
-                background: progressData ? 'var(--bg-color)' : ''
+                borderStyle: editMode ? 'dashed' : 'solid',
+                borderColor: editMode ? 'var(--primary-alpha)' : 'var(--border-subtle)',
+                borderWidth: editMode ? '2px' : '1px'
               }}
             >
               
@@ -552,14 +542,14 @@ export default function Dashboard({ togglePanel, activePanel }) {
               {progressData && (
                 <div style={{
                   position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                  backdropFilter: 'blur(3px)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
                   display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                   zIndex: 10, padding: '16px', color: 'white', borderRadius: 'inherit'
                 }}>
                   <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
                   <h4 className="m-0 text-center" style={{ fontSize: '0.85rem' }}>{progressData.status}</h4>
                   <div className="font-bold" style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9 }}>{Math.round(progressPercent)}%</div>
+                  <progress value={progressPercent} max="100" style={{ width: '80%', height: '4px', borderRadius: '2px', marginTop: '10px' }}></progress>
                 </div>
               )}
 
@@ -634,18 +624,10 @@ export default function Dashboard({ togglePanel, activePanel }) {
                 progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
               }
               return (
-                <div key={recreId} style={{
-                  padding: '3px',
-                  borderRadius: '16px',
-                  background: `conic-gradient(from 0deg, var(--primary) ${progressPercent}%, transparent ${progressPercent}%)`,
-                  transition: 'background 0.3s ease',
-                  height: '100%'
-                }}>
-                <div className="glass container-card" style={{ margin: 0, border: 'none', background: 'var(--bg-color)' }}>
+                <div key={recreId} className="container-card">
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                    backdropFilter: 'blur(4px)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                     zIndex: 10, padding: '10px', color: 'white', borderRadius: 'inherit', textAlign: 'center'
                   }}>
@@ -675,7 +657,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
                       <Loader size={18} className="spin" />
                     </button>
                   </div>
-                </div>
                 </div>
               );
             })}

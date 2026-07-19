@@ -18,7 +18,6 @@ function App() {
   const isMobileInitial = window.innerWidth < 768;
   const [activePanel, setActivePanel] = useState(isMobileInitial ? null : 'widgets');
   const [isMobile, setIsMobile] = useState(isMobileInitial);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -120,24 +119,24 @@ function App() {
     
     if (currentTheme === 'light') {
       if (bgTheme === 'gray') {
-        root.style.setProperty('--bg-color', '#f3f4f6');
+        root.style.setProperty('--bg-color', '#f8f9fb');
         root.style.setProperty('--text-color', '#1f2937');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
+        root.style.setProperty('--card-bg', '#ffffff');
         root.style.setProperty('--sidebar-bg', '#ffffff');
       } else if (bgTheme === 'lightgray') {
         root.style.setProperty('--bg-color', '#e5e7eb');
         root.style.setProperty('--text-color', '#111827');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#f3f4f6');
+        root.style.setProperty('--card-bg', '#f9fafb');
+        root.style.setProperty('--sidebar-bg', '#f9fafb');
       } else if (bgTheme === 'mediumgray') {
-        root.style.setProperty('--bg-color', '#e5e7eb');
+        root.style.setProperty('--bg-color', '#d1d5db');
         root.style.setProperty('--text-color', '#111827');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
+        root.style.setProperty('--card-bg', '#f3f4f6');
         root.style.setProperty('--sidebar-bg', '#f3f4f6');
       } else if (bgTheme === 'darkgray') {
-        root.style.setProperty('--bg-color', '#d1d5db');
+        root.style.setProperty('--bg-color', '#9ca3af');
         root.style.setProperty('--text-color', '#030712');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.6)');
+        root.style.setProperty('--card-bg', '#e5e7eb');
         root.style.setProperty('--sidebar-bg', '#e5e7eb');
       } else if (bgTheme === 'black') {
         root.style.setProperty('--bg-color', '#e5e7eb');
@@ -193,24 +192,24 @@ function App() {
     } else {
       // Dark Mode
       if (bgTheme === 'gray') {
-        root.style.setProperty('--bg-color', '#111827');
+        root.style.setProperty('--bg-color', '#0f1117');
         root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', 'rgba(31, 41, 55, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#1f2937');
+        root.style.setProperty('--card-bg', '#1a1d27');
+        root.style.setProperty('--sidebar-bg', '#1a1d27');
       } else if (bgTheme === 'lightgray') {
         root.style.setProperty('--bg-color', '#4b5563');
         root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', 'rgba(107, 114, 128, 0.7)');
+        root.style.setProperty('--card-bg', '#6b7280');
         root.style.setProperty('--sidebar-bg', '#6b7280');
       } else if (bgTheme === 'mediumgray') {
         root.style.setProperty('--bg-color', '#374151');
         root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', 'rgba(75, 85, 99, 0.7)');
+        root.style.setProperty('--card-bg', '#4b5563');
         root.style.setProperty('--sidebar-bg', '#4b5563');
       } else if (bgTheme === 'darkgray') {
         root.style.setProperty('--bg-color', '#1f2937');
         root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', 'rgba(55, 65, 81, 0.7)');
+        root.style.setProperty('--card-bg', '#374151');
         root.style.setProperty('--sidebar-bg', '#374151');
       } else if (bgTheme === 'black') {
         root.style.setProperty('--bg-color', '#000000');
@@ -270,12 +269,12 @@ function App() {
     if (backgroundImage) {
       if (currentTheme === 'light') {
         document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.2)');
-        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.2)');
+        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.85)');
+        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.85)');
       } else {
         document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(0, 0, 0, 0.4)');
-        root.style.setProperty('--sidebar-bg', 'rgba(0, 0, 0, 0.4)');
+        root.style.setProperty('--card-bg', 'rgba(0, 0, 0, 0.6)');
+        root.style.setProperty('--sidebar-bg', 'rgba(0, 0, 0, 0.6)');
       }
       
       document.body.style.backgroundSize = 'cover';
@@ -324,8 +323,6 @@ function App() {
             activePanel={activePanel} 
             togglePanel={togglePanel} 
             isMobile={isMobile} 
-            isCollapsed={isSidebarCollapsed}
-            setIsCollapsed={setIsSidebarCollapsed}
           />
 
           <div className="main-content">

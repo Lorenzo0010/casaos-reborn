@@ -226,7 +226,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
   if (loading) {
     return (
       <div className="modal-overlay">
-        <div className="modal-content glass" style={{ width: '400px', textAlign: 'center' }}>
+        <div className="modal-content" style={{ width: '400px', textAlign: 'center' }}>
           Loading container details...
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content glass casaos-form" style={{ maxWidth: '800px', width: '95vw' }}>
+      <div className="modal-content casaos-form" style={{ maxWidth: '800px', width: '95vw' }}>
         {showYamlExport ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>

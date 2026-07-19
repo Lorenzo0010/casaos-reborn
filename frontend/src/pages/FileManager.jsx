@@ -199,7 +199,7 @@ export default function FileManager({ togglePanel }) {
     <div className="flex-col h-full gap-4">
       
       {/* Header & Toolbar */}
-      <div className="glass widget flex justify-between items-center p-5">
+      <div className="widget flex justify-between items-center p-5">
         <div className="flex items-center flex-wrap flex-1 gap-2">
           <button 
             onClick={() => togglePanel('menu')} 
@@ -247,7 +247,7 @@ export default function FileManager({ togglePanel }) {
       </div>
 
       {/* Main File Area */}
-      <div className="glass widget flex-1" style={{ overflowY: 'auto', padding: '0' }} onClick={() => setActiveMenu(null)}>
+      <div className="widget flex-1" style={{ overflowY: 'auto', padding: '0' }} onClick={() => setActiveMenu(null)}>
         {loading && files.length === 0 ? (
           <div style={{ padding: '20px', textAlign: 'center', opacity: 0.7 }}>Caricamento...</div>
         ) : (
@@ -291,10 +291,11 @@ export default function FileManager({ togglePanel }) {
                       
                       {/* Context Menu Dropdown */}
                       {activeMenu === file.path && (
-                        <div className="glass flex-col" style={{ 
+                        <div className="flex-col" style={{ 
                           position: 'absolute', right: '40px', top: '20px', zIndex: 10, 
                           padding: 'var(--space-1)', borderRadius: 'var(--radius-sm)',
-                          boxShadow: '0 10px 25px rgba(0,0,0,0.2)', minWidth: '150px'
+                          boxShadow: 'var(--shadow-lg)', minWidth: '150px',
+                          background: 'var(--card-bg)', border: '1px solid var(--border)'
                         }}>
                           {!file.isDir && (
                             <button className="btn" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }} onClick={(e) => { e.stopPropagation(); downloadFile(file); setActiveMenu(null); }}>
@@ -320,7 +321,7 @@ export default function FileManager({ togglePanel }) {
       {/* Text Editor Modal */}
       {editorFile && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-          <div className="glass widget" style={{ width: '100%', maxWidth: '1000px', height: '100%', maxHeight: '800px', display: 'flex', flexDirection: 'column', padding: 0 }}>
+          <div className="widget" style={{ width: '100%', maxWidth: '1000px', height: '100%', maxHeight: '800px', display: 'flex', flexDirection: 'column', padding: 0 }}>
             <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
               <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}><Edit size={20} /> Modifica: {editorFile.name}</h3>
               <button className="btn-icon" onClick={() => setEditorFile(null)}><X size={24} /></button>

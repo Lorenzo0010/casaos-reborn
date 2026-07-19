@@ -74,7 +74,7 @@ export default function TerminalPage({ togglePanel }) {
   if (!connected) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="glass" style={{ padding: '30px', width: '100%', maxWidth: '400px' }}>
+        <div className="widget" style={{ padding: '30px', width: '100%', maxWidth: '400px' }}>
           <div className="flex items-center gap-2 mb-5">
             <button 
               onClick={() => togglePanel('menu')} 
