@@ -507,6 +507,7 @@ progress::-moz-progress-bar {
   overflow-x: auto;
   padding-bottom: 15px;
   margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 /* Scrollbar styling for desktop (visible on hover) */

@@ -389,7 +389,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
 
   return (
-    <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', paddingBottom: '40px' }}>
+    <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', padding: '40px' }}>
       <div className="page-header">
         
         <div className="flex items-center gap-2">
