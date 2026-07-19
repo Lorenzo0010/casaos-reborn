@@ -40,7 +40,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
     return (
       <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
         {[1, 2, 3].map(i => (
-          <div key={i} className="widget p-4 flex items-center justify-center" style={{ margin: 0, padding: '16px', minWidth: '260px', height: '140px', flex: '0 0 auto', opacity: 0.5 }}>
+          <div key={i} className="widget p-4 flex items-center justify-center" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', opacity: 0.5 }}>
             <div className="spin" style={{ width: '24px', height: '24px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></div>
           </div>
         ))}
@@ -51,7 +51,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
   return (
     <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
       
-      <div className="widget p-4" style={{ margin: 0, padding: '16px', minWidth: '260px', flex: '0 0 auto' }}>
+      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
         <div className="flex items-center gap-2 mb-1" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stato del sistema</span>
         </div>
@@ -73,7 +73,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
         </div>
       </div>
 
-      <div className="widget p-4" style={{ margin: 0, padding: '16px', minWidth: '260px', flex: '0 0 auto' }}>
+      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Archiviazione</span>
           <HardDrive size={16} opacity={0.7} />
@@ -90,7 +90,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
         <progress value={stats.disk?.percent || 0} max="100" style={{ width: '100%', height: '4px', borderRadius: '2px' }}></progress>
       </div>
 
-      <div className="widget p-4" style={{ margin: 0, padding: '16px', minWidth: '260px', flex: '0 0 auto' }}>
+      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stato della rete</span>
           <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>wlan0 <ChevronRight size={14} /></span>
@@ -107,7 +107,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
         </div>
       </div>
 
-      <div className="widget p-4 flex items-center justify-between" style={{ margin: 0, padding: '16px', cursor: 'pointer', minWidth: '260px', flex: '0 0 auto' }}>
+      <div className="widget p-4 flex items-center justify-between" style={{ margin: 0, padding: '24px', cursor: 'pointer', minWidth: '260px', minHeight: '180px', flex: '0 0 auto' }}>
         <span style={{ fontWeight: 600 }}>Impostazioni widget</span>
         <ChevronRight size={18} opacity={0.6} />
       </div>
