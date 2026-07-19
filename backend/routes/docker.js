@@ -290,6 +290,27 @@ router.post('/containers/:id/update', async (req, res) => {
           });
         });
 
+        const ownId = getOwnContainerId();
+        let isSelfUpdate = false;
+        if (ownId && (id.startsWith(ownId) || ownId.startsWith(id))) {
+          isSelfUpdate = true;
+        } else if (containerName === 'casaos-reborn') {
+          isSelfUpdate = true;
+        }
+
+        if (isSelfUpdate) {
+          console.log('Initiating detached self-update via compose for container', id);
+          if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Rebooting system...', taskId });
+          const { spawn } = require('child_process');
+          const child = spawn('docker', ['compose', 'up', '-d'], {
+            detached: true,
+            stdio: 'ignore',
+            cwd: appDir
+          });
+          child.unref();
+          return;
+        }
+
         if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Recreating container via Compose...', taskId });
         
         await new Promise((resolve, reject) => {
