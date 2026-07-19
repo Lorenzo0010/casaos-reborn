@@ -413,15 +413,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
           >
             <Menu size={24} />
           </button>
-
-          <button
-            className="btn-icon-only"
-            style={{ color: 'var(--danger-color, #ef4444)' }}
-            onClick={() => window.open(window.location.origin.replace(':1111', ':1112'), '_blank')}
-            title="Forza Aggiornamento (Updater Esterno)"
-          >
-            <Rocket size={24} />
-          </button>
         </div>
 
         <h1 className="m-0 text-center font-bold" style={{ fontSize: 'clamp(1rem, 4vw, 2rem)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexGrow: 1 }}>
@@ -429,6 +420,14 @@ export default function Dashboard({ togglePanel, activePanel }) {
         </h1>
 
         <div className="flex items-center gap-2">
+          <button
+            className="btn-icon-only"
+            style={{ color: '#ffffff' }}
+            onClick={() => window.open(window.location.origin.replace(':1111', ':1112'), '_blank')}
+            title="Forza Aggiornamento (Updater Esterno)"
+          >
+            <Rocket size={24} />
+          </button>
           <Link
             to="/new"
             className="btn-icon-only"

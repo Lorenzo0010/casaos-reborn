@@ -344,7 +344,7 @@ body {
 
 .sidebar-link.active {
   background-color: var(--primary-alpha);
-  color: var(--primary);
+  color: #ffffff;
   border-left-color: var(--primary);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
