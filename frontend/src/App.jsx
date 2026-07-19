@@ -7,7 +7,6 @@ import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Advanced from './pages/Advanced';
 import FileManager from './pages/FileManager';
-import { DialogProvider } from './contexts/DialogContext';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
@@ -260,26 +259,6 @@ function App() {
       }
     }
     
-    // Background Image
-    const backgroundImage = prefs.backgroundImage || '';
-    if (backgroundImage) {
-      if (currentTheme === 'light') {
-        document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.85)');
-        root.style.setProperty('--sidebar-bg', 'rgba(255, 255, 255, 0.85)');
-      } else {
-        document.body.style.backgroundImage = `url(${backgroundImage})`;
-        root.style.setProperty('--card-bg', 'rgba(0, 0, 0, 0.6)');
-        root.style.setProperty('--sidebar-bg', 'rgba(0, 0, 0, 0.6)');
-      }
-      
-      document.body.style.backgroundSize = 'cover';
-      document.body.style.backgroundPosition = 'center';
-      document.body.style.backgroundAttachment = 'fixed';
-      document.body.style.backgroundRepeat = 'no-repeat';
-    } else {
-      document.body.style.backgroundImage = 'none';
-    }
   };
 
   const savePreferences = async (newPrefs) => {
@@ -312,32 +291,30 @@ function App() {
   }
 
   return (
-    <DialogProvider>
-      <Router>
-        <div className="layout">
-          <Sidebar 
-            activePanel={activePanel} 
-            togglePanel={togglePanel} 
-            isMobile={isMobile} 
-          />
+    <Router>
+      <div className="layout">
+        <Sidebar 
+          activePanel={activePanel} 
+          togglePanel={togglePanel} 
+          isMobile={isMobile} 
+        />
 
-          <div className="main-content">
-            <div className="main-scrollable animate-fade-in">
-              <Routes>
-                <Route path="/" element={<Dashboard togglePanel={togglePanel} activePanel={activePanel} />} />
-                <Route path="/new" element={<NewContainer togglePanel={togglePanel} />} />
-                <Route path="/files" element={<FileManager togglePanel={togglePanel} />} />
-                <Route path="/terminal" element={<TerminalPage togglePanel={togglePanel} />} />
-                <Route path="/advanced" element={<Advanced togglePanel={togglePanel} theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
-                <Route path="/settings" element={<Navigate to="/advanced" />} />
-                <Route path="/logs" element={<Navigate to="/advanced" />} />
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </div>
+        <div className="main-content">
+          <div className="main-scrollable animate-fade-in">
+            <Routes>
+              <Route path="/" element={<Dashboard togglePanel={togglePanel} activePanel={activePanel} />} />
+              <Route path="/new" element={<NewContainer togglePanel={togglePanel} />} />
+              <Route path="/files" element={<FileManager togglePanel={togglePanel} />} />
+              <Route path="/terminal" element={<TerminalPage togglePanel={togglePanel} />} />
+              <Route path="/advanced" element={<Advanced togglePanel={togglePanel} theme={theme} actualTheme={actualTheme} setTheme={setTheme} preferences={preferences || {}} onSave={savePreferences} logout={logout} />} />
+              <Route path="/settings" element={<Navigate to="/advanced" />} />
+              <Route path="/logs" element={<Navigate to="/advanced" />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
           </div>
         </div>
-      </Router>
-    </DialogProvider>
+      </div>
+    </Router>
   );
 }
 

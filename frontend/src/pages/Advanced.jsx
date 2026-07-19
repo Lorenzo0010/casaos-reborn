@@ -8,7 +8,6 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   // ─── UI Settings state ───
   const [accentColor, setAccentColor] = useState(preferences?.accentColor || '#3b82f6');
   const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
-  const [backgroundImage, setBackgroundImage] = useState(preferences?.backgroundImage || '');
   const [isSaving, setIsSaving] = useState(false);
 
   // ─── System Logs state ───
@@ -27,7 +26,6 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   useEffect(() => {
     if (preferences?.accentColor) setAccentColor(preferences.accentColor);
     if (preferences?.bgTheme) setBgTheme(preferences.bgTheme);
-    if (preferences?.backgroundImage !== undefined) setBackgroundImage(preferences.backgroundImage);
   }, [preferences]);
 
   // ═══════════════════════════════════════
@@ -61,40 +59,14 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
     await onSave({
       ...preferences,
       accentColor: '#3b82f6',
-      bgTheme: 'gray',
-      backgroundImage: ''
+      bgTheme: 'gray'
     });
     setAccentColor('#3b82f6');
     setBgTheme('gray');
-    setBackgroundImage('');
     setIsSaving(false);
   };
 
-  const handleBgUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
 
-    const formData = new FormData();
-    formData.append('background', file);
-
-    try {
-      setIsSaving(true);
-      const token = localStorage.getItem('token');
-      const res = await axios.post('/api/system/upload-bg', formData, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      const newBg = res.data.backgroundImage;
-      setBackgroundImage(newBg);
-      onSave({ ...preferences, accentColor, bgTheme, backgroundImage: newBg });
-    } catch (err) {
-      showAlert('Errore', 'Caricamento fallito: ' + err.message, true);
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // ═══════════════════════════════════════
   // System Logs logic

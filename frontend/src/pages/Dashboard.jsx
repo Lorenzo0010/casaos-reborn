@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu, LayoutGrid } from 'lucide-react';
+import { Play, Square, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
@@ -389,10 +389,8 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
 
   return (
-    <div className="flex gap-6 h-full w-full">
-      {/* Main Column for Dashboard */}
-      <div className="flex-grow flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', paddingBottom: '40px' }}>
-        <div className="flex justify-between items-center mb-5 gap-2" style={{ flexWrap: 'nowrap' }}>
+    <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', paddingBottom: '40px' }}>
+      <div className="flex justify-between items-center mb-5 gap-2" style={{ flexWrap: 'nowrap' }}>
         
         <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
           <button 
@@ -675,6 +673,5 @@ export default function Dashboard({ togglePanel, activePanel }) {
         />
       )}
     </div>
-  </div>
-);
+  );
 }
