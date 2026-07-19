@@ -178,14 +178,28 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   const triggerUpdateCheck = async () => {
     try {
       setIsCheckingUpdates(true);
-      const token = localStorage.getItem('token');
+      setCheckStatus({ container: 'Inizializzazione...', action: '' });
       await axios.post('/api/docker/check-updates', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error('Error starting update check:', error);
       setIsCheckingUpdates(false);
+      setCheckStatus(null);
       showAlert('Errore', 'Impossibile avviare la ricerca aggiornamenti.', true);
+    }
+  };
+
+  const triggerFastSelfUpdate = async () => {
+    if (confirm('Questo forzerà il download dell\'ultima immagine e riavvierà il sistema immediatamente. Procedere?')) {
+      try {
+        await axios.post('/api/docker/containers/casaos-reborn/update', { image: 'ghcr.io/lorenzo0010/casaos-reborn:latest' }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      } catch (error) {
+        console.error('Fast update error:', error);
+        showAlert('Errore', 'Comando di aggiornamento rapido fallito.', true);
+      }
     }
   };
 
@@ -345,14 +359,25 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
               Cerca nuove versioni delle immagini per i container in esecuzione.
             </p>
           </div>
-          <button 
-            className="btn btn-primary flex items-center gap-2 font-bold" 
-            onClick={triggerUpdateCheck} 
-            disabled={isCheckingUpdates}
-          >
-            <RefreshCw size={16} className={isCheckingUpdates ? 'spin' : ''} />
-            {isCheckingUpdates ? 'Ricerca in corso...' : 'Controlla Ora'}
-          </button>
+          <div className="flex gap-2">
+            <button 
+              className="btn flex items-center gap-2 font-bold" 
+              style={{ background: 'var(--danger-color)', color: 'white' }}
+              onClick={triggerFastSelfUpdate} 
+              disabled={isCheckingUpdates}
+              title="Per lo sviluppo: forza pull e update immediato di CasaOS Reborn"
+            >
+              <Terminal size={16} /> Update Rapido
+            </button>
+            <button 
+              className="btn btn-primary flex items-center gap-2 font-bold" 
+              onClick={triggerUpdateCheck} 
+              disabled={isCheckingUpdates}
+            >
+              <RefreshCw size={16} className={isCheckingUpdates ? 'spin' : ''} />
+              {isCheckingUpdates ? 'Ricerca in corso...' : 'Controlla Ora'}
+            </button>
+          </div>
         </div>
 
         {isCheckingUpdates && checkStatus && checkStatus.container && (
