@@ -389,7 +389,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
 
   return (
-    <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', padding: '0 40px 40px 40px' }}>
+    <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto' }}>
       <div className="page-header" style={{
         position: 'sticky',
         top: 0,
