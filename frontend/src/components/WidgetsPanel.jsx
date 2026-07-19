@@ -36,10 +36,20 @@ export default function WidgetsPanel({ className = '', style = {} }) {
     return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <div className={`flex gap-4 ${className} hide-scrollbar`} style={{ paddingBottom: '10px', overflowX: 'auto', ...style }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} className="widget p-4 flex items-center justify-center" style={{ margin: 0, padding: '16px', minWidth: '260px', height: '140px', flex: '0 0 auto', opacity: 0.5 }}>
+            <div className="spin" style={{ width: '24px', height: '24px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex gap-4 ${className}`} style={{ paddingBottom: '10px', overflowX: 'auto', ...style }}>
+    <div className={`flex gap-4 ${className} hide-scrollbar`} style={{ paddingBottom: '10px', overflowX: 'auto', ...style }}>
       
       <div className="widget p-4" style={{ margin: 0, padding: '16px', minWidth: '260px', flex: '0 0 auto' }}>
         <div className="flex items-center gap-2 mb-1" style={{ opacity: 0.9, color: 'var(--text-color)' }}>

@@ -16,7 +16,7 @@ function App() {
   const [actualTheme, setActualTheme] = useState('light');
 
   const isMobileInitial = window.innerWidth < 768;
-  const [activePanel, setActivePanel] = useState(isMobileInitial ? null : 'widgets');
+  const [activePanel, setActivePanel] = useState(null);
   const [isMobile, setIsMobile] = useState(isMobileInitial);
 
   useEffect(() => {
