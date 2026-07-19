@@ -534,26 +534,37 @@ export default function Dashboard({ togglePanel, activePanel }) {
                 </div>
               )}
 
-              {/* Icon */}
+              {/* Clickable Area (Icon + Title) */}
               {isClickable ? (
-                <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'flex' }} title="Apri Web UI">
+                <a 
+                  href={webUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ 
+                    textDecoration: 'none', 
+                    color: 'inherit', 
+                    width: '100%', 
+                    flex: 1, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    gap: '8px' 
+                  }} 
+                  title="Apri Web UI"
+                  className="card-clickable-area"
+                >
                   <img src={getContainerIcon(c)} alt="" className="card-icon" style={{ cursor: 'pointer' }} onError={e => { e.target.style.display = 'none'; }} />
-                </a>
-              ) : (
-                <img src={getContainerIcon(c)} alt="" className="card-icon" onError={e => { e.target.style.display = 'none'; }} />
-              )}
-
-              {/* Title */}
-              {isClickable ? (
-                <a href={webUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', width: '100%' }} title="Apri Web UI">
                   <h3 className="card-title" style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
                     {getContainerName(c)}
                   </h3>
                 </a>
               ) : (
-                <h3 className="card-title">
-                  {getContainerName(c)}
-                </h3>
+                <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <img src={getContainerIcon(c)} alt="" className="card-icon" onError={e => { e.target.style.display = 'none'; }} />
+                  <h3 className="card-title">
+                    {getContainerName(c)}
+                  </h3>
+                </div>
               )}
 
               {/* Action Buttons */}
