@@ -548,6 +548,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
                     display: 'flex', 
                     flexDirection: 'column', 
                     alignItems: 'center', 
+                    justifyContent: 'center',
                     gap: '8px' 
                   }} 
                   title="Apri Web UI"
@@ -559,7 +560,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
                   </h3>
                 </a>
               ) : (
-                <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                   <img src={getContainerIcon(c)} alt="" className="card-icon" onError={e => { e.target.style.display = 'none'; }} />
                   <h3 className="card-title">
                     {getContainerName(c)}
@@ -571,29 +572,28 @@ export default function Dashboard({ togglePanel, activePanel }) {
               <div className="card-actions">
                 {c.State !== 'running' ? (
                   <button onClick={() => handleAction(c.Id, 'start')} className="btn-action-square success" title="Avvia">
-                    <Play size={18} />
+                    <Play size={22} />
                   </button>
                 ) : (
                   <button onClick={() => handleAction(c.Id, 'stop')} className="btn-action-square danger" title="Arresta">
-                    <Square size={18} />
+                    <Square size={22} />
                   </button>
                 )}
                 <button onClick={() => setLogsContainer({ id: c.Id, name: getContainerName(c) })} className="btn-action-square neutral" title="Log">
-                  <FileText size={18} />
+                  <FileText size={22} />
                 </button>
                 <button onClick={() => setEditingContainerId(c.Id)} className="btn-action-square neutral" title="Impostazioni">
-                  <Settings size={18} />
+                  <Settings size={22} />
                 </button>
               </div>
 
-              {/* Edit Mode Controls */}
               {editMode && (
                 <div className="card-edit-controls">
                   <button onClick={() => moveCustom(stableId, -1)} className="btn-action-square neutral" title="Sposta Su">
-                    <ChevronUp size={16} />
+                    <ChevronUp size={20} />
                   </button>
                   <button onClick={() => moveCustom(stableId, 1)} className="btn-action-square neutral" title="Sposta Giù">
-                    <ChevronDown size={16} />
+                    <ChevronDown size={20} />
                   </button>
                   {!isMobile && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', padding: '0 4px' }} title="Trascina per riordinare">
