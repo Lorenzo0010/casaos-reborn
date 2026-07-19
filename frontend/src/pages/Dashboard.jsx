@@ -611,7 +611,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
                 </div>
               )}
             </div>
-            </div>
           )})}
 
           {Object.entries(recreating)
