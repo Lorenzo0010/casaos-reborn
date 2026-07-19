@@ -395,7 +395,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
         top: 0,
         zIndex: 100,
         backgroundColor: 'var(--bg-color)',
-        padding: '20px 0 15px 0',
+        padding: '10px 0 15px 0',
         margin: '0 0 20px 0',
         borderBottom: '1px solid transparent',
         boxShadow: '0 4px 20px -10px var(--bg-color)'
