@@ -6,8 +6,8 @@ function dumpYAML(obj, indent = 0) {
 
   if (typeof obj === 'string') {
     // Escape strings that might cause issues
-    if (obj === '' || obj.includes(':') || obj.includes('\n') || obj.includes('#') || obj.trim() !== obj || !isNaN(Number(obj)) || obj === 'true' || obj === 'false') {
-      return `"${obj.replace(/"/g, '\\"')}"`;
+    if (obj === '' || obj.includes(':') || obj.includes('\n') || obj.includes('#') || obj.trim() !== obj || !isNaN(Number(obj)) || obj === 'true' || obj === 'false' || obj.includes('\\')) {
+      return `"${obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
     }
     return obj;
   }
@@ -32,7 +32,7 @@ function dumpYAML(obj, indent = 0) {
     for (const [key, value] of Object.entries(obj)) {
       if (value === undefined || value === null) continue;
       
-      const safeKey = /^[a-zA-Z0-9_-]+$/.test(key) ? key : `"${key.replace(/"/g, '\\"')}"`;
+      const safeKey = /^[a-zA-Z0-9_-]+$/.test(key) ? key : `"${key.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
       
       if (typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 0) {
         yaml += `${spaces}${safeKey}: {}\n`;
