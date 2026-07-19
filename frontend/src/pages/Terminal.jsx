@@ -75,17 +75,14 @@ export default function TerminalPage({ togglePanel }) {
     return (
       <div className="flex justify-center items-center h-full">
         <div className="widget" style={{ padding: '30px', width: '100%', maxWidth: '400px' }}>
-          <div className="flex items-center gap-2 mb-5">
-            <button 
-              onClick={() => togglePanel('menu')} 
-              className="btn-icon-only" 
-              title="Menu"
-            >
-              <Menu size={24} />
-            </button>
+          <div className="page-header" style={{ marginBottom: '20px' }}>
             <div className="flex items-center gap-2">
-              <TermIcon size={24} color="var(--primary)" />
-              <h2 className="m-0">Connessione SSH Host</h2>
+              <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
+                <Menu size={24} />
+              </button>
+              <h2 className="m-0 flex items-center gap-2" style={{ fontSize: '1.25rem' }}>
+                <TermIcon size={24} color="var(--primary)" /> Connessione SSH Host
+              </h2>
             </div>
           </div>
           
@@ -113,16 +110,12 @@ export default function TerminalPage({ togglePanel }) {
 
   return (
     <div className="flex-col h-full">
-      <div className="flex justify-between items-center mb-4">
+      <div className="page-header">
         <div className="flex items-center gap-2">
-          <button 
-            onClick={() => togglePanel('menu')} 
-            className="btn-icon-only" 
-            title="Menu"
-          >
+          <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
             <Menu size={24} />
           </button>
-          <h1 className="m-0">Terminale SSH</h1>
+          <h1>Terminale SSH</h1>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted">{sshUser}@{sshHost}</span>

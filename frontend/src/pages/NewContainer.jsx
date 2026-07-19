@@ -327,16 +327,14 @@ export default function NewContainer({ togglePanel }) {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '40px' }}>
       <div className="page-header">
-        <button 
-          onClick={() => togglePanel('menu')} 
-          className="btn-icon-only" 
-          title="Menu"
-        >
-          <Menu size={24} />
-        </button>
-        <h2 className="flex items-center gap-2 m-0">
-          <PlusSquare size={24} /> Create New Container
-        </h2>
+        <div className="flex items-center gap-2">
+          <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
+            <Menu size={24} />
+          </button>
+          <h2 className="flex items-center gap-2 m-0">
+            <PlusSquare size={24} /> Create New Container
+          </h2>
+        </div>
       </div>
 
       <div className="widget" style={{ overflow: 'hidden', padding: 0 }}>

@@ -212,16 +212,14 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
     <div className="flex-col gap-6" style={{ maxWidth: '900px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
       
       <div className="page-header">
-        <button 
-          onClick={() => togglePanel('menu')} 
-          className="btn-icon-only" 
-          title="Menu"
-        >
-          <Menu size={24} />
-        </button>
-        <h1>
-          <Wrench /> Avanzate
-        </h1>
+        <div className="flex items-center gap-2">
+          <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
+            <Menu size={24} />
+          </button>
+          <h1 className="flex items-center gap-2 m-0">
+            <Wrench /> Avanzate
+          </h1>
+        </div>
       </div>
 
       {/* ─── Section 1: UI Settings ─── */}

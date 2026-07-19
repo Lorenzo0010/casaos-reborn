@@ -390,9 +390,9 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
   return (
     <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', paddingBottom: '40px' }}>
-      <div className="flex justify-between items-center mb-5 gap-2" style={{ flexWrap: 'nowrap' }}>
+      <div className="page-header">
         
-        <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+        <div className="flex items-center gap-2">
           <button 
             onClick={() => togglePanel('menu')} 
             className="btn-icon-only" 
@@ -410,7 +410,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
           {getGreeting()}!
         </h1>
 
-        <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+        <div className="flex items-center gap-2">
           <Link 
             to="/new" 
             className="btn-icon-only"

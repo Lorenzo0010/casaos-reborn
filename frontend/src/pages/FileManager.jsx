@@ -230,13 +230,13 @@ export default function FileManager({ togglePanel }) {
         </div>
 
         <div className="flex gap-2">
-          <button className="btn" onClick={fetchFiles} title="Aggiorna">
+          <button className="btn-icon-only" onClick={fetchFiles} title="Aggiorna">
             <RefreshCw size={18} className={loading ? 'spin' : ''} />
           </button>
-          <button className="btn" onClick={() => createItem(true)} title="Nuova Cartella">
+          <button className="btn-icon-only" onClick={() => createItem(true)} title="Nuova Cartella">
             <FolderPlus size={18} />
           </button>
-          <button className="btn" onClick={() => createItem(false)} title="Nuovo File">
+          <button className="btn-icon-only" onClick={() => createItem(false)} title="Nuovo File">
             <FilePlus size={18} />
           </button>
           <button className="btn btn-primary" onClick={handleUploadClick}>
@@ -298,12 +298,17 @@ export default function FileManager({ togglePanel }) {
                           background: 'var(--card-bg)', border: '1px solid var(--border)'
                         }}>
                           {!file.isDir && (
-                            <button className="btn" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }} onClick={(e) => { e.stopPropagation(); downloadFile(file); setActiveMenu(null); }}>
-                              <Download size={16} style={{ marginRight: '8px' }} /> Download
+                            <button className="menu-item" onClick={(e) => { e.stopPropagation(); downloadFile(file); setActiveMenu(null); }}>
+                              <Download size={14} /> Scarica
                             </button>
                           )}
-                          <button className="btn btn-danger" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none' }} onClick={(e) => { e.stopPropagation(); deleteFile(file); setActiveMenu(null); }}>
-                            <Trash2 size={16} style={{ marginRight: '8px' }} /> Elimina
+                          {!file.isDir && (
+                            <button className="menu-item" onClick={(e) => { e.stopPropagation(); openEditor(file); setActiveMenu(null); }}>
+                              <Edit size={14} /> Modifica
+                            </button>
+                          )}
+                          <button className="menu-item danger" onClick={(e) => { e.stopPropagation(); deleteFile(file); setActiveMenu(null); }}>
+                            <Trash2 size={14} /> Elimina
                           </button>
                         </div>
                       )}
