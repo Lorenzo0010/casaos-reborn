@@ -22,7 +22,6 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
 
       {/* Sidebar Container */}
       <aside className={`sidebar open ${isMobile ? 'mobile animate-slide-in-left' : 'desktop'}`} style={{ 
-        width: isMobile ? '280px' : '300px', 
         padding: '20px',
         overflowY: 'auto',
         overflowX: 'hidden',
