@@ -201,7 +201,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Rebooting system...', taskId });
       // Spawn docker compose detached so it kills us and restarts us
       const { spawn } = require('child_process');
-      const child = spawn('docker', ['compose', 'up', '-d'], {
+      const child = spawn('docker', ['compose', 'up', '-d', '--force-recreate'], {
         detached: true,
         stdio: 'ignore',
         cwd: appDir
@@ -302,7 +302,7 @@ router.post('/containers/:id/update', async (req, res) => {
           console.log('Initiating detached self-update via compose for container', id);
           if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Rebooting system...', taskId });
           const { spawn } = require('child_process');
-          const child = spawn('docker', ['compose', 'up', '-d'], {
+          const child = spawn('docker', ['compose', 'up', '-d', '--force-recreate'], {
             detached: true,
             stdio: 'ignore',
             cwd: appDir
