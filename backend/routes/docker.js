@@ -197,17 +197,71 @@ router.post('/containers/:id/recreate', async (req, res) => {
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Recreating container via Compose...', taskId });
 
     if (isSelfUpdate) {
-      console.log('Initiating detached self-update via compose for container', id);
+      console.log('Initiating detached updater container for self-update', id);
       if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Rebooting system...', taskId });
-      // Spawn docker compose detached so it kills us and restarts us
-      const { spawn } = require('child_process');
-      const child = spawn('docker', ['compose', 'up', '-d', '--force-recreate'], {
-        detached: true,
-        stdio: 'ignore',
-        cwd: appDir
-      });
-      child.unref();
-      return; // We will be killed shortly
+      
+      const createOptions = {
+        name: containerName,
+        Image: fullImage,
+        Env: oldInspect.Config.Env,
+        Labels: oldInspect.Config.Labels,
+        ExposedPorts: oldInspect.Config.ExposedPorts,
+        HostConfig: oldInspect.HostConfig,
+        NetworkingConfig: {
+          EndpointsConfig: oldInspect.NetworkSettings.Networks
+        }
+      };
+      if (createOptions.NetworkingConfig?.EndpointsConfig) {
+        for (const net of Object.values(createOptions.NetworkingConfig.EndpointsConfig)) {
+          delete net.MacAddress;
+        }
+      }
+
+      const updaterScript = `
+        const Docker = require('dockerode');
+        const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+        const fs = require('fs');
+        const path = require('path');
+        const { execSync } = require('child_process');
+        
+        async function run() {
+          await new Promise(r => setTimeout(r, 3000));
+          try {
+            const targetDir = ${JSON.stringify(appDir)};
+            if (fs.existsSync(path.join(targetDir, 'docker-compose.yml'))) {
+              console.log('Running docker compose up...');
+              execSync('docker compose up -d --force-recreate', { cwd: targetDir, stdio: 'inherit' });
+            } else {
+              console.log('Running fallback dockerode recreate...');
+              const old = docker.getContainer('${id}');
+              await old.stop({t:10}).catch(()=>{});
+              await old.remove({force:true}).catch(()=>{});
+              
+              const options = ${JSON.stringify(createOptions)};
+              const newContainer = await docker.createContainer(options);
+              await newContainer.start();
+            }
+          } catch(e) {
+            console.error(e);
+          }
+        }
+        run();
+      `;
+      
+      try {
+        const updaterContainer = await docker.createContainer({
+          Image: 'ghcr.io/lorenzo0010/casaos-reborn:latest',
+          Cmd: ['node', '-e', updaterScript],
+          HostConfig: {
+            AutoRemove: true,
+            Binds: oldInspect.HostConfig.Binds
+          }
+        });
+        await updaterContainer.start();
+      } catch(e) {
+        console.error('Failed to start updater container:', e);
+      }
+      return;
     }
 
     // Rimuoviamo il container forzatamente prima per evitare errori di 'name conflict' con docker compose up.
@@ -299,15 +353,70 @@ router.post('/containers/:id/update', async (req, res) => {
         }
 
         if (isSelfUpdate) {
-          console.log('Initiating detached self-update via compose for container', id);
+          console.log('Initiating detached updater container for self-update', id);
           if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Rebooting system...', taskId });
-          const { spawn } = require('child_process');
-          const child = spawn('docker', ['compose', 'up', '-d', '--force-recreate'], {
-            detached: true,
-            stdio: 'ignore',
-            cwd: appDir
-          });
-          child.unref();
+          
+          const createOptions = {
+            name: containerName,
+            Image: image,
+            Env: oldInspect.Config.Env,
+            Labels: oldInspect.Config.Labels,
+            ExposedPorts: oldInspect.Config.ExposedPorts,
+            HostConfig: oldInspect.HostConfig,
+            NetworkingConfig: {
+              EndpointsConfig: oldInspect.NetworkSettings.Networks
+            }
+          };
+          if (createOptions.NetworkingConfig?.EndpointsConfig) {
+            for (const net of Object.values(createOptions.NetworkingConfig.EndpointsConfig)) {
+              delete net.MacAddress;
+            }
+          }
+
+          const updaterScript = `
+            const Docker = require('dockerode');
+            const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+            const fs = require('fs');
+            const path = require('path');
+            const { execSync } = require('child_process');
+            
+            async function run() {
+              await new Promise(r => setTimeout(r, 3000));
+              try {
+                const targetDir = ${JSON.stringify(appDir)};
+                if (fs.existsSync(path.join(targetDir, 'docker-compose.yml'))) {
+                  console.log('Running docker compose up...');
+                  execSync('docker compose up -d --force-recreate', { cwd: targetDir, stdio: 'inherit' });
+                } else {
+                  console.log('Running fallback dockerode recreate...');
+                  const old = docker.getContainer('${id}');
+                  await old.stop({t:10}).catch(()=>{});
+                  await old.remove({force:true}).catch(()=>{});
+                  
+                  const options = ${JSON.stringify(createOptions)};
+                  const newContainer = await docker.createContainer(options);
+                  await newContainer.start();
+                }
+              } catch(e) {
+                console.error(e);
+              }
+            }
+            run();
+          `;
+          
+          try {
+            const updaterContainer = await docker.createContainer({
+              Image: 'ghcr.io/lorenzo0010/casaos-reborn:latest',
+              Cmd: ['node', '-e', updaterScript],
+              HostConfig: {
+                AutoRemove: true,
+                Binds: oldInspect.HostConfig.Binds
+              }
+            });
+            await updaterContainer.start();
+          } catch(e) {
+            console.error('Failed to start updater container:', e);
+          }
           return;
         }
 
