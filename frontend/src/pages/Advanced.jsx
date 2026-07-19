@@ -326,50 +326,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
             </div>
           </div>
 
-          <div className="input-group" style={{ marginTop: '10px' }}>
-            <label>Sfondo Personalizzato (Carica Immagine Locale o inserisci URL)</label>
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="text"
-                placeholder="https://esempio.com/sfondo.jpg"
-                value={backgroundImage}
-                onChange={(e) => setBackgroundImage(e.target.value)}
-                style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--bg-color)', color: 'var(--text-color)' }}
-              />
-              <button 
-                type="button" 
-                className="btn btn-primary"
-                onClick={() => onSave({ ...preferences, accentColor, bgTheme, backgroundImage })}
-              >
-                Applica URL
-              </button>
-            </div>
-            
-            <div className="flex items-center gap-2 mt-4">
-              <label className="btn btn-primary m-0" style={{ cursor: 'pointer' }}>
-                Carica File Locale
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleBgUpload} 
-                  style={{ display: 'none' }} 
-                />
-              </label>
-              
-              {backgroundImage && (
-                <button 
-                  type="button" 
-                  className="btn btn-danger" 
-                  onClick={() => {
-                    setBackgroundImage('');
-                    onSave({ ...preferences, accentColor, bgTheme, backgroundImage: '' });
-                  }}
-                >
-                  Rimuovi Sfondo
-                </button>
-              )}
-            </div>
-          </div>
+
 
           <div className="flex mt-5" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
             <button type="button" className="btn btn-action danger" onClick={handleReset} disabled={isSaving}>

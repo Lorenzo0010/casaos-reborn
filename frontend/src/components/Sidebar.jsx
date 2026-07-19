@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Monitor, Terminal as TermIcon, Wrench, Folder } from 'lucide-react';
-import WidgetsPanel from './WidgetsPanel';
 
 export default function Sidebar({ activePanel, togglePanel, isMobile }) {
   const closeMobile = () => {
@@ -48,10 +47,6 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
               <Wrench /> <span className="sidebar-link-text">Avanzate</span>
             </NavLink>
           </div>
-        )}
-
-        {activePanel === 'widgets' && (
-          <WidgetsPanel />
         )}
 
       </aside>

@@ -390,14 +390,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
   return (
     <div className="flex gap-6 h-full w-full">
-      {/* Left Column for Widgets (Desktop only) */}
-      {!isMobile && (
-        <div style={{ width: '320px', flexShrink: 0 }}>
-          <WidgetsPanel />
-        </div>
-      )}
-
-      {/* Right Column for Apps */}
+      {/* Main Column for Dashboard */}
       <div className="flex-grow flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', paddingBottom: '40px' }}>
         <div className="flex justify-between items-center mb-5 gap-2" style={{ flexWrap: 'nowrap' }}>
         
@@ -413,19 +406,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
           >
             <Menu size={24} />
           </button>
-          {isMobile && (
-            <button 
-              onClick={() => togglePanel('widgets')} 
-              className="btn-icon-only"
-              style={{ 
-                background: activePanel === 'widgets' ? 'var(--primary)' : 'transparent', 
-                color: activePanel === 'widgets' ? '#fff' : 'inherit'
-              }}
-              title="Widget"
-            >
-              <LayoutGrid size={24} />
-            </button>
-          )}
         </div>
 
         <h1 className="m-0 text-center font-bold" style={{ fontSize: 'clamp(1rem, 4vw, 2rem)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexGrow: 1 }}>
@@ -466,8 +446,11 @@ export default function Dashboard({ togglePanel, activePanel }) {
         </div>
       )}
 
+      {/* Widgets Row */}
+      <WidgetsPanel className="mb-6" />
 
-      <div className="flex justify-between items-center mt-6 mb-5">
+      {/* Containers Section */}
+      <div className="flex justify-between items-center mt-2 mb-5">
         <h2 className="m-0">I tuoi Container</h2>
         
         {editMode && (

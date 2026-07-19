@@ -107,12 +107,8 @@ function App() {
     root.style.setProperty('--primary', primary);
     root.style.setProperty('--primary-text', getContrastColor(primary));
 
-    // Background Image
-    if (prefs.backgroundImage) {
-      root.style.setProperty('--bg-image', `url(${prefs.backgroundImage})`);
-    } else {
-      root.style.removeProperty('--bg-image');
-    }
+    // Background Image support removed
+    root.style.removeProperty('--bg-image');
 
     // Background Themes
     const bgTheme = prefs.bgTheme || 'gray';
