@@ -7,7 +7,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
     if (isMobile) togglePanel(activePanel); // This will close it
   };
 
-  if (!activePanel) return null; // Non renderizzare affatto la sidebar se chiusa
+
 
   return (
     <>
@@ -21,7 +21,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
       )}
 
       {/* Sidebar Container */}
-      <aside className={`sidebar open ${isMobile ? 'mobile animate-slide-in-left' : 'desktop'}`} style={{ 
+      <aside className={`sidebar ${activePanel ? 'open' : 'closed'} ${isMobile ? 'mobile animate-slide-in-left' : 'desktop'}`} style={{ 
         padding: '20px',
         overflowY: 'auto',
         overflowX: 'hidden',
@@ -31,7 +31,6 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
       }}>
         
         {/* Panel Content */}
-        {activePanel === 'menu' && (
           <div className="sidebar-menu-content flex-col gap-2">
             <NavLink to="/" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
               <Monitor /> <span className="sidebar-link-text">Dashboard</span>
@@ -46,7 +45,6 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
               <Wrench /> <span className="sidebar-link-text">Avanzate</span>
             </NavLink>
           </div>
-        )}
 
       </aside>
     </>

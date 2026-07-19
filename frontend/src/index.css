@@ -305,10 +305,22 @@ body {
   flex-direction: column;
   gap: 15px;
   border-right: 1px solid var(--border-subtle);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.sidebar.desktop.closed {
+  margin-left: -220px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sidebar.desktop.open {
+  margin-left: 0;
+  opacity: 1;
 }
 
 .sidebar-link {
@@ -369,6 +381,9 @@ body {
 
   .sidebar.mobile.closed {
     transform: translateX(-100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 }
 
@@ -678,14 +693,15 @@ progress::-moz-progress-bar {
 @media (hover: hover) and (pointer: fine) {
   .widgets-row {
     scrollbar-color: transparent transparent;
+    scrollbar-width: thin;
   }
 
   .widgets-row:hover {
-    scrollbar-color: var(--primary) var(--card-border);
+    scrollbar-color: rgba(128, 128, 128, 0.4) transparent;
   }
 
   .widgets-row::-webkit-scrollbar {
-    height: 8px;
+    height: 4px;
   }
 
   .widgets-row::-webkit-scrollbar-track {
@@ -699,11 +715,11 @@ progress::-moz-progress-bar {
   }
 
   .widgets-row:hover::-webkit-scrollbar-track {
-    background: var(--card-border);
+    background: transparent;
   }
 
   .widgets-row:hover::-webkit-scrollbar-thumb {
-    background: var(--primary);
+    background: rgba(128, 128, 128, 0.4);
   }
 }
 
