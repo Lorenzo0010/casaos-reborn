@@ -16,6 +16,15 @@ services:
       - JWT_SECRET=supersecretcasaoskey
       - ADMIN_USER=admin
       - ADMIN_PASS=casaos
+      
+  casaos-updater:
+    image: ghcr.io/lorenzo0010/casaos-updater:latest
+    container_name: casaos-updater
+    restart: always
+    ports:
+      - "1112:1112"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     x-casaos:
       envs:
         - container: PORT

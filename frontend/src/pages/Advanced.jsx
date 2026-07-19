@@ -190,18 +190,6 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
     }
   };
 
-  const triggerFastSelfUpdate = async () => {
-    if (confirm('Questo forzerà il download dell\'ultima immagine e riavvierà il sistema immediatamente. Procedere?')) {
-      try {
-        await axios.post('/api/docker/containers/casaos-reborn/update', { image: 'ghcr.io/lorenzo0010/casaos-reborn:latest' }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-      } catch (error) {
-        console.error('Fast update error:', error);
-        showAlert('Errore', 'Comando di aggiornamento rapido fallito.', true);
-      }
-    }
-  };
 
   const handlePruneImages = async () => {
     const confirmed = await showConfirm('Pulizia Immagini', 'Sei sicuro di voler eliminare tutte le immagini Docker non utilizzate da alcun container?');
@@ -360,15 +348,6 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
             </p>
           </div>
           <div className="flex gap-2">
-            <button 
-              className="btn flex items-center gap-2 font-bold" 
-              style={{ background: 'var(--danger-color)', color: 'white' }}
-              onClick={triggerFastSelfUpdate} 
-              disabled={isCheckingUpdates}
-              title="Per lo sviluppo: forza pull e update immediato di CasaOS Reborn"
-            >
-              <Terminal size={16} /> Update Rapido
-            </button>
             <button 
               className="btn btn-primary flex items-center gap-2 font-bold" 
               onClick={triggerUpdateCheck} 

@@ -1,0 +1,107 @@
+const express = require('express');
+const Docker = require('dockerode');
+const path = require('path');
+
+const app = express();
+const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+
+app.post('/api/update', async (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive'
+  });
+
+  const send = (msg) => {
+    res.write(`data: ${JSON.stringify(msg)}\n\n`);
+  };
+
+  try {
+    send({ status: 'info', message: 'Iniziando la procedura di aggiornamento per casaos-reborn...' });
+    
+    let containerInfo = null;
+    try {
+      const oldContainer = docker.getContainer('casaos-reborn');
+      containerInfo = await oldContainer.inspect();
+    } catch (e) {
+      send({ status: 'error', message: 'Container casaos-reborn non trovato!' });
+      return res.end();
+    }
+
+    const image = 'ghcr.io/lorenzo0010/casaos-reborn:latest';
+    
+    send({ status: 'info', message: `Pulling dell'immagine ${image}...` });
+    
+    await new Promise((resolve, reject) => {
+      docker.pull(image, (err, stream) => {
+        if (err) return reject(err);
+        docker.modem.followProgress(stream, (err, output) => {
+          if (err) return reject(err);
+          resolve(output);
+        }, (event) => {
+          if (event.status) {
+            send({ status: 'progress', message: event.status });
+          }
+        });
+      });
+    });
+
+    send({ status: 'info', message: 'Fermando il container casaos-reborn...' });
+    try {
+      const oldContainer = docker.getContainer('casaos-reborn');
+      await oldContainer.stop({ t: 10 });
+    } catch (e) {}
+
+    send({ status: 'info', message: 'Rimuovendo il vecchio container...' });
+    try {
+      const oldContainer = docker.getContainer('casaos-reborn');
+      await oldContainer.remove({ force: true });
+    } catch (e) {}
+
+    send({ status: 'info', message: 'Creando il nuovo container...' });
+    
+    const createOptions = {
+      name: 'casaos-reborn',
+      Image: image,
+      Env: containerInfo.Config.Env,
+      Labels: containerInfo.Config.Labels,
+      ExposedPorts: containerInfo.Config.ExposedPorts,
+      HostConfig: containerInfo.HostConfig,
+      NetworkingConfig: {
+        EndpointsConfig: containerInfo.NetworkSettings.Networks
+      }
+    };
+
+    if (createOptions.NetworkingConfig?.EndpointsConfig) {
+      for (const net of Object.values(createOptions.NetworkingConfig.EndpointsConfig)) {
+        delete net.MacAddress;
+      }
+    }
+
+    const newContainer = await docker.createContainer(createOptions);
+    
+    send({ status: 'info', message: 'Avviando il nuovo container...' });
+    await newContainer.start();
+
+    // Pulizia immagini orfane opzionale
+    try {
+      await docker.pruneImages({ filters: { dangling: ["true"] } });
+    } catch(e) {}
+
+    send({ status: 'success', message: 'Aggiornamento completato con successo! CasaOS Reborn è tornato online.' });
+    res.end();
+
+  } catch (error) {
+    console.error(error);
+    send({ status: 'error', message: `Errore durante l'aggiornamento: ${error.message}` });
+    res.end();
+  }
+});
+
+const PORT = 1112;
+app.listen(PORT, () => {
+  console.log(`Updater service running on port ${PORT}`);
+});
