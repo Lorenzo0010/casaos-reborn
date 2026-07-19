@@ -32,14 +32,14 @@ export default function Dashboard({ togglePanel, activePanel }) {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
-    
+
     const loadPrefs = async () => {
       try {
         const token = localStorage.getItem('token');
         const res = await axios.get('/api/system/preferences', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (res.data.sortMode) setSortMode(res.data.sortMode);
         if (Array.isArray(res.data.pinnedContainers)) setPinnedContainers(res.data.pinnedContainers);
         if (Array.isArray(res.data.customOrder)) setCustomOrder(res.data.customOrder);
@@ -58,7 +58,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
   // Save preferences when they change
   useEffect(() => {
     if (!prefsLoaded) return;
-    
+
     const savePrefs = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -74,7 +74,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
         console.error('Error saving preferences to server', e);
       }
     };
-    
+
     // Basic debounce to avoid too many requests while dragging
     const timeout = setTimeout(savePrefs, 500);
     return () => clearTimeout(timeout);
@@ -103,7 +103,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
     const socket = io({
       auth: { type: 'ui', token }
     });
-    
+
     // Recreate progress: key by container ID
     socket.on('container.recreate.progress', (data) => {
       setRecreating(prev => ({ ...prev, [data.id]: data }));
@@ -261,16 +261,16 @@ export default function Dashboard({ togglePanel, activePanel }) {
     const labels = container.Labels || {};
     const iconUrl = labels['casaos.reborn.icon'];
     if (iconUrl) return iconUrl;
-    
+
     const name = stableId;
     const initial = name.charAt(0).toUpperCase();
-    
+
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const color = `hsl(${Math.abs(hash) % 360}, 60%, 50%)`;
-    
+
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${color}"/><text x="50%" y="50%" font-family="sans-serif" font-size="40" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">${initial}</text></svg>`;
     return `data:image/svg+xml;base64,${btoa(svg)}`;
   };
@@ -287,7 +287,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
   const sortedContainers = React.useMemo(() => {
     let sorted = [...containers];
-    
+
     if (sortMode === 'alphabetical') {
       sorted.sort((a, b) => {
         const nameA = getContainerName(a);
@@ -332,7 +332,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
   const moveCustom = (id, direction) => {
     const newOrder = [...customOrder];
-    
+
     // Ensure all containers are in customOrder
     containers.forEach(c => {
       const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
@@ -395,26 +395,26 @@ export default function Dashboard({ togglePanel, activePanel }) {
         top: 0,
         zIndex: 100,
         backgroundColor: 'var(--bg-color)',
-        padding: '10px 0 15px 0',
+        padding: '0 0 0 0',
         margin: '0 0 20px 0',
         borderBottom: '1px solid transparent',
         boxShadow: '0 4px 20px -10px var(--bg-color)'
       }}>
-        
+
         <div className="flex items-center gap-2">
-          <button 
-            onClick={() => togglePanel('menu')} 
-            className="btn-icon-only" 
-            style={{ 
-              background: activePanel === 'menu' ? 'var(--primary)' : 'transparent', 
+          <button
+            onClick={() => togglePanel('menu')}
+            className="btn-icon-only"
+            style={{
+              background: activePanel === 'menu' ? 'var(--primary)' : 'transparent',
               color: activePanel === 'menu' ? '#fff' : 'inherit'
             }}
             title="Menu"
           >
             <Menu size={24} />
           </button>
-          
-          <button 
+
+          <button
             className="btn-icon-only"
             style={{ color: 'var(--danger-color, #ef4444)' }}
             onClick={() => window.open(window.location.origin.replace(':1111', ':1112'), '_blank')}
@@ -429,17 +429,17 @@ export default function Dashboard({ togglePanel, activePanel }) {
         </h1>
 
         <div className="flex items-center gap-2">
-          <Link 
-            to="/new" 
+          <Link
+            to="/new"
             className="btn-icon-only"
             title="Nuovo Container"
             style={{ textDecoration: 'none' }}
           >
             <PlusCircle size={24} />
           </Link>
-          <button 
+          <button
             className="btn-icon-only"
-            onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }} 
+            onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }}
             title={editMode ? "Fine Modifica" : "Modifica Layout"}
             style={{ color: editMode ? 'var(--success)' : 'inherit' }}
           >
@@ -468,7 +468,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
       {/* Containers Section */}
       <div className="flex justify-between items-center mt-2 mb-5">
         <h2 className="m-0">I tuoi Container</h2>
-        
+
         {editMode && (
           <div className="flex items-center gap-2">
             <select value={sortMode} onChange={e => { setSortMode(e.target.value); if (e.target.value !== 'custom') setEditMode(false); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--card-bg)', color: 'var(--text-color)', outline: 'none' }}>
@@ -489,7 +489,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
             const webUrl = getWebUrl(c);
             const isClickable = webUrl && c.State === 'running';
             const progressData = recreating[c.Id];
-            
+
             let progressPercent = 0;
             if (progressData?.percentage) {
               progressPercent = progressData.percentage;
@@ -501,127 +501,128 @@ export default function Dashboard({ togglePanel, activePanel }) {
             const isPinned = pinnedContainers.includes(stableId);
 
             return (
-            <div 
-              key={c.Id}
-              className={`container-card ${editMode ? 'edit-mode' : ''}`} 
-              draggable={editMode && !isMobile}
-              onDragStart={(e) => handleDragStart(e, stableId)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, stableId)}
-              style={{ 
-                cursor: editMode && !isMobile ? 'grab' : 'default',
-                opacity: draggedItem === stableId ? 0.5 : 1,
-                borderStyle: editMode ? 'dashed' : 'solid',
-                borderColor: editMode ? 'var(--primary-alpha)' : 'var(--border-subtle)',
-                borderWidth: editMode ? '2px' : '1px'
-              }}
-            >
-              
-              {/* Pin Icon */}
-              {(editMode || isPinned) && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); togglePin(stableId); }}
-                  style={{
-                    position: 'absolute', top: '12px', left: '12px', background: 'transparent', border: 'none',
-                    color: isPinned ? 'var(--primary)' : 'var(--text-color)', opacity: isPinned || editMode ? 1 : 0.2,
-                    cursor: editMode ? 'pointer' : 'default', zIndex: 5, padding: '4px',
-                    pointerEvents: editMode ? 'auto' : 'none'
-                  }}
-                  title={isPinned ? 'Pinned' : 'Pin to top'}
-                >
-                  <Pin size={16} fill={isPinned ? 'currentColor' : 'none'} />
-                </button>
-              )}
+              <div
+                key={c.Id}
+                className={`container-card ${editMode ? 'edit-mode' : ''}`}
+                draggable={editMode && !isMobile}
+                onDragStart={(e) => handleDragStart(e, stableId)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, stableId)}
+                style={{
+                  cursor: editMode && !isMobile ? 'grab' : 'default',
+                  opacity: draggedItem === stableId ? 0.5 : 1,
+                  borderStyle: editMode ? 'dashed' : 'solid',
+                  borderColor: editMode ? 'var(--primary-alpha)' : 'var(--border-subtle)',
+                  borderWidth: editMode ? '2px' : '1px'
+                }}
+              >
 
-              {/* LED Status */}
-              <div className="card-led">
-                <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ width: '12px', height: '12px' }}></span>
-              </div>
-
-              {progressData && (
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                  display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                  zIndex: 10, padding: '16px', color: 'white', borderRadius: 'inherit'
-                }}>
-                  <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
-                  <h4 className="m-0 text-center" style={{ fontSize: '0.85rem' }}>{progressData.status}</h4>
-                  <div className="font-bold" style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9 }}>{Math.round(progressPercent)}%</div>
-                  <progress value={progressPercent} max="100" style={{ width: '80%', height: '4px', borderRadius: '2px', marginTop: '10px' }}></progress>
-                </div>
-              )}
-
-              {/* Clickable Area (Icon + Title) */}
-              {isClickable ? (
-                <a 
-                  href={webUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  style={{ 
-                    textDecoration: 'none', 
-                    color: 'inherit', 
-                    width: '100%', 
-                    flex: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    gap: '8px' 
-                  }} 
-                  title="Apri Web UI"
-                  className="card-clickable-area"
-                >
-                  <img src={getContainerIcon(c)} alt="" className="card-icon" style={{ cursor: 'pointer' }} onError={e => { e.target.style.display = 'none'; }} />
-                  <h3 className="card-title" style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
-                    {getContainerName(c)}
-                  </h3>
-                </a>
-              ) : (
-                <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <img src={getContainerIcon(c)} alt="" className="card-icon" onError={e => { e.target.style.display = 'none'; }} />
-                  <h3 className="card-title">
-                    {getContainerName(c)}
-                  </h3>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="card-actions">
-                {c.State !== 'running' ? (
-                  <button onClick={() => handleAction(c.Id, 'start')} className="btn-action-square success" title="Avvia">
-                    <Play size={22} />
-                  </button>
-                ) : (
-                  <button onClick={() => handleAction(c.Id, 'stop')} className="btn-action-square danger" title="Arresta">
-                    <Square size={22} />
+                {/* Pin Icon */}
+                {(editMode || isPinned) && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); togglePin(stableId); }}
+                    style={{
+                      position: 'absolute', top: '12px', left: '12px', background: 'transparent', border: 'none',
+                      color: isPinned ? 'var(--primary)' : 'var(--text-color)', opacity: isPinned || editMode ? 1 : 0.2,
+                      cursor: editMode ? 'pointer' : 'default', zIndex: 5, padding: '4px',
+                      pointerEvents: editMode ? 'auto' : 'none'
+                    }}
+                    title={isPinned ? 'Pinned' : 'Pin to top'}
+                  >
+                    <Pin size={16} fill={isPinned ? 'currentColor' : 'none'} />
                   </button>
                 )}
-                <button onClick={() => setLogsContainer({ id: c.Id, name: getContainerName(c) })} className="btn-action-square neutral" title="Log">
-                  <FileText size={22} />
-                </button>
-                <button onClick={() => setEditingContainerId(c.Id)} className="btn-action-square neutral" title="Impostazioni">
-                  <Settings size={22} />
-                </button>
-              </div>
 
-              {editMode && (
-                <div className="card-edit-controls">
-                  <button onClick={() => moveCustom(stableId, -1)} className="btn-action-square neutral" title="Sposta Su">
-                    <ChevronUp size={20} />
-                  </button>
-                  <button onClick={() => moveCustom(stableId, 1)} className="btn-action-square neutral" title="Sposta Giù">
-                    <ChevronDown size={20} />
-                  </button>
-                  {!isMobile && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', padding: '0 4px' }} title="Trascina per riordinare">
-                      <GripHorizontal size={16} />
-                    </div>
-                  )}
+                {/* LED Status */}
+                <div className="card-led">
+                  <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ width: '12px', height: '12px' }}></span>
                 </div>
-              )}
-            </div>
-          )})}
+
+                {progressData && (
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 10, padding: '16px', color: 'white', borderRadius: 'inherit'
+                  }}>
+                    <Loader className="spin" size={28} style={{ marginBottom: '10px' }} />
+                    <h4 className="m-0 text-center" style={{ fontSize: '0.85rem' }}>{progressData.status}</h4>
+                    <div className="font-bold" style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.9 }}>{Math.round(progressPercent)}%</div>
+                    <progress value={progressPercent} max="100" style={{ width: '80%', height: '4px', borderRadius: '2px', marginTop: '10px' }}></progress>
+                  </div>
+                )}
+
+                {/* Clickable Area (Icon + Title) */}
+                {isClickable ? (
+                  <a
+                    href={webUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      width: '100%',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                    title="Apri Web UI"
+                    className="card-clickable-area"
+                  >
+                    <img src={getContainerIcon(c)} alt="" className="card-icon" style={{ cursor: 'pointer' }} onError={e => { e.target.style.display = 'none'; }} />
+                    <h3 className="card-title" style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = 'var(--primary)'} onMouseOut={e => e.target.style.color = 'inherit'}>
+                      {getContainerName(c)}
+                    </h3>
+                  </a>
+                ) : (
+                  <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <img src={getContainerIcon(c)} alt="" className="card-icon" onError={e => { e.target.style.display = 'none'; }} />
+                    <h3 className="card-title">
+                      {getContainerName(c)}
+                    </h3>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="card-actions">
+                  {c.State !== 'running' ? (
+                    <button onClick={() => handleAction(c.Id, 'start')} className="btn-action-square success" title="Avvia">
+                      <Play size={22} />
+                    </button>
+                  ) : (
+                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn-action-square danger" title="Arresta">
+                      <Square size={22} />
+                    </button>
+                  )}
+                  <button onClick={() => setLogsContainer({ id: c.Id, name: getContainerName(c) })} className="btn-action-square neutral" title="Log">
+                    <FileText size={22} />
+                  </button>
+                  <button onClick={() => setEditingContainerId(c.Id)} className="btn-action-square neutral" title="Impostazioni">
+                    <Settings size={22} />
+                  </button>
+                </div>
+
+                {editMode && (
+                  <div className="card-edit-controls">
+                    <button onClick={() => moveCustom(stableId, -1)} className="btn-action-square neutral" title="Sposta Su">
+                      <ChevronUp size={20} />
+                    </button>
+                    <button onClick={() => moveCustom(stableId, 1)} className="btn-action-square neutral" title="Sposta Giù">
+                      <ChevronDown size={20} />
+                    </button>
+                    {!isMobile && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', padding: '0 4px' }} title="Trascina per riordinare">
+                        <GripHorizontal size={16} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
 
           {Object.entries(recreating)
             .filter(([recreId]) => !containers.some(c => c.Id === recreId))
@@ -646,7 +647,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
                     </h4>
                     <div className="font-bold" style={{ fontSize: '0.8rem', opacity: 0.9 }}>{Math.round(progressPercent)}%</div>
                   </div>
-                  
+
                   {/* LED */}
                   <div className="card-led">
                     <span className="status-dot recreating" style={{ width: '12px', height: '12px' }}></span>
@@ -677,8 +678,8 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
 
       {editingContainerId && (
-        <ContainerSettingsModal 
-          containerId={editingContainerId} 
+        <ContainerSettingsModal
+          containerId={editingContainerId}
           containerOverrides={containerOverrides}
           onUpdateOverride={(stableId, overrides) => {
             setContainerOverrides(prev => ({
@@ -695,10 +696,10 @@ export default function Dashboard({ togglePanel, activePanel }) {
       )}
 
       {logsContainer && (
-        <LogsModal 
+        <LogsModal
           containerId={logsContainer.id}
           containerName={logsContainer.name}
-          onClose={() => setLogsContainer(null)} 
+          onClose={() => setLogsContainer(null)}
         />
       )}
     </div>
