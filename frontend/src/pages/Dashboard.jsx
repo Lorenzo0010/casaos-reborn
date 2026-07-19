@@ -389,8 +389,17 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
 
   return (
-    <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', padding: '40px' }}>
-      <div className="page-header">
+    <div className="flex-col h-full" style={{ minWidth: 0, overflowY: 'auto', padding: '0 40px 40px 40px' }}>
+      <div className="page-header" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        backgroundColor: 'var(--bg-color)',
+        padding: '40px 0 20px 0',
+        margin: '0 0 20px 0',
+        borderBottom: '1px solid transparent',
+        boxShadow: '0 4px 20px -10px var(--bg-color)'
+      }}>
         
         <div className="flex items-center gap-2">
           <button 
