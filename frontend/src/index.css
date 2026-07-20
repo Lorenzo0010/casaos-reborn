@@ -596,13 +596,13 @@ h3 {
   }
 
   .container-card {
-    padding: 14px 10px;
-    gap: 10px;
+    padding: 10px 8px;
+    gap: 8px;
   }
 
   .container-card .card-icon {
-    width: 56px;
-    height: 56px;
+    width: 68px;
+    height: 68px;
     border-radius: var(--radius-sm);
   }
 
