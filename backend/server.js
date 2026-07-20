@@ -12,6 +12,15 @@ if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
 const logFile = path.join(logDir, 'casaos.log');
+const prevLogFile = path.join(logDir, 'casaos.prev.log');
+
+if (fs.existsSync(logFile)) {
+  try {
+    fs.renameSync(logFile, prevLogFile);
+  } catch (e) {
+    console.error('Error rotating logs:', e);
+  }
+}
 
 const originalLog = console.log;
 const originalError = console.error;

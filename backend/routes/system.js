@@ -133,8 +133,23 @@ router.post('/preferences', (req, res) => {
 
 router.get('/logs', (req, res) => {
   try {
+    let prevData = '';
+    const PREV_LOGS_FILE = path.join(PREFS_DIR, 'casaos.prev.log');
+    if (fs.existsSync(PREV_LOGS_FILE)) {
+      prevData = fs.readFileSync(PREV_LOGS_FILE, 'utf8');
+      if (prevData.trim()) {
+        prevData = `--- LOG SESSIONE PRECEDENTE ---\n${prevData}\n--- LOG SESSIONE ATTUALE ---\n`;
+      }
+    }
+
+    let currentData = '';
     if (fs.existsSync(LOGS_FILE)) {
-      const data = fs.readFileSync(LOGS_FILE, 'utf8');
+      currentData = fs.readFileSync(LOGS_FILE, 'utf8');
+    }
+
+    let data = prevData + currentData;
+
+    if (data) {
       // Limit to last 500000 characters to avoid payload too large if log gets huge
       const content = data.length > 500000 ? data.substring(data.length - 500000) : data;
       res.send(content);
@@ -151,6 +166,10 @@ router.delete('/logs', (req, res) => {
   try {
     if (fs.existsSync(LOGS_FILE)) {
       fs.writeFileSync(LOGS_FILE, '');
+    }
+    const PREV_LOGS_FILE = path.join(PREFS_DIR, 'casaos.prev.log');
+    if (fs.existsSync(PREV_LOGS_FILE)) {
+      fs.writeFileSync(PREV_LOGS_FILE, '');
     }
     res.json({ success: true });
   } catch (error) {
