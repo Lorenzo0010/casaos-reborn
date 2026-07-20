@@ -405,10 +405,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
           <button
             onClick={() => togglePanel('menu')}
             className="btn-icon-only"
-            style={{
-              background: activePanel === 'menu' ? 'var(--primary)' : 'transparent',
-              color: activePanel === 'menu' ? '#fff' : 'inherit'
-            }}
             title="Menu"
           >
             <Menu size={24} />
