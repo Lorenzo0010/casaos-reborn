@@ -14,7 +14,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
       try {
         const res = await axios.get('/api/system/stats', { headers: { Authorization: `Bearer ${token}` } });
         setStats(res.data);
-      } catch (err) {}
+      } catch (err) { }
     };
 
     fetchStats();
@@ -38,10 +38,10 @@ export default function WidgetsPanel({ className = '', style = {} }) {
 
   const formatUptime = (seconds) => {
     if (!seconds) return 'N/A';
-    const d = Math.floor(seconds / (3600*24));
-    const h = Math.floor(seconds % (3600*24) / 3600);
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor(seconds % (3600 * 24) / 3600);
     const m = Math.floor(seconds % 3600 / 60);
-    
+
     if (d > 0) return `${d}g ${h}h`;
     if (h > 0) return `${h}h ${m}m`;
     return `${m}m`;
@@ -61,7 +61,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
 
   return (
     <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
-      
+
       {/* 1. CPU Widget */}
       <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
@@ -134,14 +134,14 @@ export default function WidgetsPanel({ className = '', style = {} }) {
               <ArrowDown size={20} color="var(--success)" />
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Download</span>
             </div>
-            <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-color)' }}>{stats.network?.rx_sec != null ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-color)' }}>{stats.network?.rx_sec != null && stats.network.rx_sec > 10240 ? formatSpeed(stats.network.rx_sec) : '0 B/s'}</span>
           </div>
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <ArrowUp size={20} color="var(--primary)" />
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Upload</span>
             </div>
-            <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-color)' }}>{stats.network?.tx_sec != null ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-color)' }}>{stats.network?.tx_sec != null && stats.network.tx_sec > 10240 ? formatSpeed(stats.network.tx_sec) : '0 B/s'}</span>
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Info di Sistema</span>
           <Monitor size={16} opacity={0.7} />
         </div>
-        
+
         <div className="flex-col my-auto" style={{ display: 'flex', gap: '12px' }}>
           <div className="flex items-center gap-3">
             <div style={{ background: 'var(--card-border)', padding: '8px', borderRadius: '12px' }}>
@@ -165,7 +165,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
               </span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div style={{ background: 'var(--card-border)', padding: '8px', borderRadius: '12px' }}>
               <Clock size={20} color="var(--primary)" />
