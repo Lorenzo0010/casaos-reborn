@@ -881,6 +881,8 @@ progress::-moz-progress-bar {
 }
 
 .casaos-form input[type="text"],
+.casaos-form input[type="password"],
+.casaos-form input[type="number"],
 .casaos-form select {
   width: 100%;
   padding: 10px 12px;
@@ -893,6 +895,8 @@ progress::-moz-progress-bar {
 }
 
 .casaos-form input[type="text"]:focus,
+.casaos-form input[type="password"]:focus,
+.casaos-form input[type="number"]:focus,
 .casaos-form select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px var(--primary-alpha);
