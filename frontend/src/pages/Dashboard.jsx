@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu, Rocket } from 'lucide-react';
+import { Play, Square, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
@@ -420,14 +420,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
         </h1>
 
         <div className="flex items-center gap-2">
-          <button
-            className="btn-icon-only"
-            style={{ color: '#ffffff' }}
-            onClick={() => window.open(window.location.origin.replace(':1111', ':1112'), '_blank')}
-            title="Forza Aggiornamento (Updater Esterno)"
-          >
-            <Rocket size={24} />
-          </button>
           <Link
             to="/new"
             className="btn-icon-only"

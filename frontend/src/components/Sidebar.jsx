@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Monitor, Terminal as TermIcon, Wrench, Folder } from 'lucide-react';
+import { Monitor, Terminal as TermIcon, Wrench, Folder, Rocket } from 'lucide-react';
 
 export default function Sidebar({ activePanel, togglePanel, isMobile }) {
   const closeMobile = () => {
@@ -44,6 +44,9 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
             <NavLink to="/advanced" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
               <Wrench /> <span className="sidebar-link-text">Avanzate</span>
             </NavLink>
+            <a href="#" onClick={(e) => { e.preventDefault(); window.open(window.location.origin.replace(':1111', ':1112'), '_blank'); closeMobile(); }} className="sidebar-link">
+              <Rocket /> <span className="sidebar-link-text">Updater Rapido</span>
+            </a>
           </div>
 
       </aside>
