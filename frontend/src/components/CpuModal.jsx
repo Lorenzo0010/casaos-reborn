@@ -16,6 +16,7 @@ import {
 export default function CpuModal({ isOpen, onClose }) {
   const [history, setHistory] = useState([]);
   const [processes, setProcesses] = useState([]);
+  const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,12 +34,13 @@ export default function CpuModal({ isOpen, onClose }) {
       }
     };
 
-    // Fetch top processes
+    // Fetch top processes and containers
     const fetchProcesses = async () => {
       setLoading(true);
       try {
         const res = await axios.get('/api/system/processes', { headers: { Authorization: `Bearer ${token}` } });
-        setProcesses(res.data);
+        setProcesses(res.data.processes || []);
+        setContainers(res.data.containers || []);
       } catch (e) {
         console.error('Failed to fetch processes', e);
       } finally {
@@ -105,10 +107,12 @@ export default function CpuModal({ isOpen, onClose }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
       padding: '20px'
     }}>
-      <div className="modal-content glass-effect" onClick={e => e.stopPropagation()} style={{
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{
+        backgroundColor: 'var(--card-bg)',
         width: '100%', maxWidth: '800px', maxHeight: '90vh',
         display: 'flex', flexDirection: 'column',
-        borderRadius: '16px', overflow: 'hidden'
+        borderRadius: '16px', overflow: 'hidden',
+        border: '1px solid var(--card-border)'
       }}>
         {/* Header */}
         <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -144,34 +148,67 @@ export default function CpuModal({ isOpen, onClose }) {
           </div>
 
           {/* Processes Table */}
-          <h3 style={{ fontSize: '1rem', marginBottom: '15px', color: 'var(--text-color)' }}>Processi (Ordinati per CPU)</h3>
-          
-          {loading && processes.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Caricamento processi...</div>
+          {loading && processes.length === 0 && containers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Caricamento processi e container...</div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                    <th style={{ padding: '10px' }}>PID</th>
-                    <th style={{ padding: '10px' }}>Nome</th>
-                    <th style={{ padding: '10px' }}>CPU %</th>
-                    <th style={{ padding: '10px' }}>Memoria %</th>
-                    <th style={{ padding: '10px' }}>Utente</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {processes.slice(0, 50).map(p => (
-                    <tr key={p.pid} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>{p.pid}</td>
-                      <td style={{ padding: '10px', fontWeight: 500 }}>{p.name}</td>
-                      <td style={{ padding: '10px', color: 'var(--primary)' }}>{p.cpu.toFixed(1)}%</td>
-                      <td style={{ padding: '10px' }}>{p.mem.toFixed(1)}%</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>{p.user}</td>
+            <div style={{ overflowX: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* Containers */}
+              {containers.length > 0 && (
+                <div>
+                  <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ padding: '2px 6px', background: 'var(--primary)', color: 'white', borderRadius: '4px', fontSize: '0.7rem', textTransform: 'uppercase' }}>Container</span>
+                    Container Docker (Ordinati per CPU)
+                  </h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                        <th style={{ padding: '8px' }}>Nome Container</th>
+                        <th style={{ padding: '8px' }}>ID</th>
+                        <th style={{ padding: '8px' }}>CPU %</th>
+                        <th style={{ padding: '8px' }}>Memoria %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {containers.map(c => (
+                        <tr key={c.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                          <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{c.name}</td>
+                          <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{c.id}</td>
+                          <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>{c.cpu.toFixed(1)}%</td>
+                          <td style={{ padding: '8px', color: 'var(--text-color)' }}>{c.mem.toFixed(1)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Processes */}
+              <div>
+                <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)' }}>Processi di Sistema (Ordinati per CPU)</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                      <th style={{ padding: '8px' }}>PID</th>
+                      <th style={{ padding: '8px' }}>Nome</th>
+                      <th style={{ padding: '8px' }}>CPU %</th>
+                      <th style={{ padding: '8px' }}>Memoria %</th>
+                      <th style={{ padding: '8px' }}>Utente</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {processes.slice(0, 50).map(p => (
+                      <tr key={p.pid} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.pid}</td>
+                        <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{p.name}</td>
+                        <td style={{ padding: '8px', color: 'var(--primary)' }}>{p.cpu.toFixed(1)}%</td>
+                        <td style={{ padding: '8px', color: 'var(--text-color)' }}>{p.mem.toFixed(1)}%</td>
+                        <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.user}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

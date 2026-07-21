@@ -64,10 +64,13 @@ router.get('/history', (req, res) => {
   }
 });
 
-// Get top processes
+// Get top processes and container stats
 router.get('/processes', async (req, res) => {
   try {
-    const processData = await si.processes();
+    const [processData, dockerData] = await Promise.all([
+      si.processes(),
+      si.dockerContainerStats('*').catch(() => []) // Catch in case docker is not running or no permissions
+    ]);
     
     // Sort by CPU by default and limit to 100 to save bandwidth
     const topProcesses = processData.list
@@ -81,8 +84,18 @@ router.get('/processes', async (req, res) => {
         user: p.user,
         state: p.state
       }));
+
+    let topContainers = [];
+    if (Array.isArray(dockerData)) {
+      topContainers = dockerData.map(c => ({
+        id: c.id.substring(0, 12),
+        name: c.name || 'Unknown',
+        cpu: c.cpuPercent || 0,
+        mem: c.memPercent || 0
+      })).sort((a, b) => b.cpu - a.cpu);
+    }
       
-    res.json(topProcesses);
+    res.json({ processes: topProcesses, containers: topContainers });
   } catch (error) {
     console.error('Error fetching processes:', error);
     res.status(500).json({ error: 'Failed to fetch processes' });

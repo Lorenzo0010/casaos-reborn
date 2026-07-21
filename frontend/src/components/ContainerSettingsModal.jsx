@@ -235,7 +235,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content casaos-form" style={{ maxWidth: '800px', width: '95vw' }}>
+      <div className="modal-content casaos-form" style={{ maxWidth: '800px', width: '95vw', backgroundColor: 'var(--card-bg)' }}>
         {showYamlExport ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
