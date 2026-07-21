@@ -129,13 +129,13 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
   const renderArrows = (id) => {
     if (!editMode) return null;
     return (
-      <div className="flex justify-between items-center" style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', zIndex: 10 }}>
-        <button onClick={(e) => { e.stopPropagation(); moveWidget(id, -1); }} className="btn-icon-only" style={{ background: 'var(--bg-color)', padding: '4px' }}>
-          <ChevronLeft size={16} />
+      <div className="flex justify-between items-center" style={{ position: 'absolute', top: '8px', left: '8px', right: '8px', zIndex: 10 }}>
+        <button onClick={(e) => { e.stopPropagation(); moveWidget(id, -1); }} className="btn-icon-only" style={{ background: 'var(--card-bg)', padding: '6px', width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+          <ChevronLeft size={18} />
         </button>
-        <div style={{ flex: 1, cursor: 'grab', height: '24px' }} title="Trascina per riordinare"></div>
-        <button onClick={(e) => { e.stopPropagation(); moveWidget(id, 1); }} className="btn-icon-only" style={{ background: 'var(--bg-color)', padding: '4px' }}>
-          <ChevronRight size={16} />
+        <div style={{ flex: 1, cursor: 'grab', height: '32px' }} title="Trascina per riordinare"></div>
+        <button onClick={(e) => { e.stopPropagation(); moveWidget(id, 1); }} className="btn-icon-only" style={{ background: 'var(--card-bg)', padding: '6px', width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+          <ChevronRight size={18} />
         </button>
       </div>
     );

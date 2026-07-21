@@ -101,9 +101,9 @@ export default function RamModal({ isOpen, onClose }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', padding: '10px', borderRadius: '8px', color: 'var(--text-color)' }}>
+        <div style={{ background: 'var(--bg-color)', border: '1px solid var(--card-border)', padding: '10px', borderRadius: '8px', color: 'var(--text-color)' }}>
           <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.8 }}>{formatTime(label)}</p>
-          <p style={{ margin: 0, fontWeight: 'bold', color: '#10b981' }}>RAM: {payload[0].value}%</p>
+          <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--success)' }}>RAM: {payload[0].value}%</p>
         </div>
       );
     }
@@ -125,9 +125,9 @@ export default function RamModal({ isOpen, onClose }) {
         border: '1px solid var(--card-border)'
       }}>
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Activity size={24} color="#10b981" />
+            <Activity size={24} color="var(--success)" />
             <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Dettagli RAM (Ultimi 15 minuti)</h2>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
@@ -144,15 +144,15 @@ export default function RamModal({ isOpen, onClose }) {
               <AreaChart data={history} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRam" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--success)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--success)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
                 <XAxis dataKey="time" tickFormatter={formatTime} tick={{ fill: 'var(--text-muted)' }} tickLine={{ stroke: 'var(--chart-grid)' }} axisLine={{ stroke: 'var(--chart-grid)' }} fontSize={12} minTickGap={50} />
                 <YAxis domain={[0, 100]} tick={{ fill: 'var(--text-muted)' }} tickLine={{ stroke: 'var(--chart-grid)' }} axisLine={{ stroke: 'var(--chart-grid)' }} fontSize={12} tickFormatter={val => `${val}%`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="memory" stroke="#10b981" fillOpacity={1} fill="url(#colorRam)" isAnimationActive={false} />
+                <Area type="monotone" dataKey="memory" stroke="var(--success)" fillOpacity={1} fill="url(#colorRam)" isAnimationActive={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -167,15 +167,16 @@ export default function RamModal({ isOpen, onClose }) {
               {containers.length > 0 && (
                 <div>
                   <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ padding: '2px 6px', background: '#10b981', color: 'white', borderRadius: '4px', fontSize: '0.7rem', textTransform: 'uppercase' }}>Container</span>
+                    <span style={{ padding: '2px 6px', background: 'var(--success)', color: 'white', borderRadius: '4px', fontSize: '0.7rem', textTransform: 'uppercase' }}>Container</span>
                     Container Docker (Ordinati per Memoria)
                   </h3>
+                  <div className="modal-table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
                         <th style={{ padding: '8px' }}>Nome Container</th>
                         <th style={{ padding: '8px' }}>ID</th>
-                        <th style={{ padding: '8px' }}>Memoria %</th>
+                        <th style={{ padding: '8px' }}>Memoria</th>
                         <th style={{ padding: '8px' }}>CPU %</th>
                       </tr>
                     </thead>
@@ -184,24 +185,26 @@ export default function RamModal({ isOpen, onClose }) {
                         <tr key={c.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                           <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{c.name}</td>
                           <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{c.id}</td>
-                          <td style={{ padding: '8px', color: '#10b981', fontWeight: 'bold' }}>{c.memBytes ? formatBytes(c.memBytes) : `${c.mem.toFixed(1)}%`}</td>
+                          <td style={{ padding: '8px', color: 'var(--success)', fontWeight: 'bold' }}>{c.memBytes ? formatBytes(c.memBytes) : `${c.mem.toFixed(1)}%`}</td>
                           <td style={{ padding: '8px', color: 'var(--text-color)' }}>{c.cpu.toFixed(1)}%</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
 
               {/* Processes */}
               <div>
                 <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)' }}>Processi di Sistema (Ordinati per Memoria)</h3>
+                <div className="modal-table-wrapper">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
                       <th style={{ padding: '8px' }}>PID</th>
                       <th style={{ padding: '8px' }}>Nome</th>
-                      <th style={{ padding: '8px' }}>Memoria %</th>
+                      <th style={{ padding: '8px' }}>Memoria</th>
                       <th style={{ padding: '8px' }}>CPU %</th>
                       <th style={{ padding: '8px' }}>Utente</th>
                     </tr>
@@ -211,13 +214,14 @@ export default function RamModal({ isOpen, onClose }) {
                       <tr key={p.pid} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.pid}</td>
                         <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{p.name}</td>
-                        <td style={{ padding: '8px', color: '#10b981' }}>{p.memBytes ? formatBytes(p.memBytes) : `${p.mem.toFixed(1)}%`}</td>
+                        <td style={{ padding: '8px', color: 'var(--success)' }}>{p.memBytes ? formatBytes(p.memBytes) : `${p.mem.toFixed(1)}%`}</td>
                         <td style={{ padding: '8px', color: 'var(--text-color)' }}>{p.cpu.toFixed(1)}%</td>
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.user}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}

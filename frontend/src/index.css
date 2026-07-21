@@ -208,6 +208,10 @@ body {
   margin-bottom: var(--space-6);
 }
 
+.mr-4 {
+  margin-right: var(--space-4);
+}
+
 .mt-2 {
   margin-top: var(--space-2);
 }
@@ -1228,6 +1232,30 @@ input:checked+.slider:before {
 /* ════════════════════════════════════════════
    ANIMATIONS & KEYFRAMES
    ════════════════════════════════════════════ */
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+.shake-animation {
+  animation: shake 0.3s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════
+   MODAL TABLE MOBILE RESPONSIVENESS
+   ════════════════════════════════════════════ */
+
+.modal-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.modal-table-wrapper table {
+  min-width: 600px;
+}
 
 @keyframes fade-in {
   from {

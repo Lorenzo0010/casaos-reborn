@@ -57,7 +57,7 @@ export default function NetworkModal({ isOpen, onClose }) {
         border: '1px solid var(--card-border)'
       }}>
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Globe size={24} color="var(--primary)" />
             <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Dettagli Rete</h2>
@@ -80,6 +80,7 @@ export default function NetworkModal({ isOpen, onClose }) {
                   <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Interfacce di Rete
                   </h3>
+                  <div className="modal-table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
@@ -102,6 +103,7 @@ export default function NetworkModal({ isOpen, onClose }) {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
 
@@ -112,6 +114,7 @@ export default function NetworkModal({ isOpen, onClose }) {
                     <span style={{ padding: '2px 6px', background: 'var(--primary)', color: 'white', borderRadius: '4px', fontSize: '0.7rem', textTransform: 'uppercase' }}>Container</span>
                     Traffico Rete Container
                   </h3>
+                  <div className="modal-table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
@@ -140,6 +143,7 @@ export default function NetworkModal({ isOpen, onClose }) {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
 
