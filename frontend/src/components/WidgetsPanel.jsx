@@ -3,8 +3,13 @@ import { HardDrive, ArrowDown, ArrowUp, ChevronRight, Cpu, Activity, Clock, Moni
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
+import CpuModal from './CpuModal';
+import RamModal from './RamModal';
+
 export default function WidgetsPanel({ className = '', style = {} }) {
   const [stats, setStats] = useState(null);
+  const [isCpuModalOpen, setIsCpuModalOpen] = useState(false);
+  const [isRamModalOpen, setIsRamModalOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -60,10 +65,13 @@ export default function WidgetsPanel({ className = '', style = {} }) {
   }
 
   return (
-    <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
+    <>
+      <CpuModal isOpen={isCpuModalOpen} onClose={() => setIsCpuModalOpen(false)} />
+      <RamModal isOpen={isRamModalOpen} onClose={() => setIsRamModalOpen(false)} />
+      <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
 
       {/* 1. CPU Widget */}
-      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
+      <div onClick={() => setIsCpuModalOpen(true)} className="widget p-4" style={{ cursor: 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Processore</span>
           <Cpu size={16} opacity={0.7} />
@@ -84,7 +92,7 @@ export default function WidgetsPanel({ className = '', style = {} }) {
       </div>
 
       {/* 2. RAM Widget */}
-      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
+      <div onClick={() => setIsRamModalOpen(true)} className="widget p-4" style={{ cursor: 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Memoria RAM</span>
           <Activity size={16} opacity={0.7} />
@@ -181,5 +189,6 @@ export default function WidgetsPanel({ className = '', style = {} }) {
       </div>
 
     </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const si = require('systeminformation');
+const { getSystemHistory } = require('../services/broadcaster');
 
 // Get current system load/stats
 router.get('/stats', async (req, res) => {
@@ -49,6 +50,42 @@ router.get('/stats', async (req, res) => {
   } catch (error) {
     console.error('Error fetching system stats:', error);
     res.status(500).json({ error: 'Failed to fetch system statistics' });
+  }
+});
+
+// Get system history
+router.get('/history', (req, res) => {
+  try {
+    const history = getSystemHistory();
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching system history:', error);
+    res.status(500).json({ error: 'Failed to fetch system history' });
+  }
+});
+
+// Get top processes
+router.get('/processes', async (req, res) => {
+  try {
+    const processData = await si.processes();
+    
+    // Sort by CPU by default and limit to 100 to save bandwidth
+    const topProcesses = processData.list
+      .sort((a, b) => b.cpu - a.cpu)
+      .slice(0, 100)
+      .map(p => ({
+        pid: p.pid,
+        name: p.name,
+        cpu: p.cpu,
+        mem: p.mem,
+        user: p.user,
+        state: p.state
+      }));
+      
+    res.json(topProcesses);
+  } catch (error) {
+    console.error('Error fetching processes:', error);
+    res.status(500).json({ error: 'Failed to fetch processes' });
   }
 });
 
