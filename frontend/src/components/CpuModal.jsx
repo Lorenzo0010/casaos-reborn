@@ -83,9 +83,16 @@ export default function CpuModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const formatTime = (time) => {
-    const d = new Date(time);
-    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+  const formatTime = (timeStr) => {
+    return new Date(timeStr).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+
+  const formatBytes = (bytes) => {
+    if (!bytes || isNaN(bytes)) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -175,7 +182,7 @@ export default function CpuModal({ isOpen, onClose }) {
                           <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{c.name}</td>
                           <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{c.id}</td>
                           <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>{c.cpu.toFixed(1)}%</td>
-                          <td style={{ padding: '8px', color: 'var(--text-color)' }}>{c.mem.toFixed(1)}%</td>
+                          <td style={{ padding: '8px', color: 'var(--text-color)' }}>{c.memBytes ? formatBytes(c.memBytes) : `${c.mem.toFixed(1)}%`}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -202,7 +209,7 @@ export default function CpuModal({ isOpen, onClose }) {
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.pid}</td>
                         <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{p.name}</td>
                         <td style={{ padding: '8px', color: 'var(--primary)' }}>{p.cpu.toFixed(1)}%</td>
-                        <td style={{ padding: '8px', color: 'var(--text-color)' }}>{p.mem.toFixed(1)}%</td>
+                        <td style={{ padding: '8px', color: 'var(--text-color)' }}>{p.memBytes ? formatBytes(p.memBytes) : `${p.mem.toFixed(1)}%`}</td>
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.user}</td>
                       </tr>
                     ))}

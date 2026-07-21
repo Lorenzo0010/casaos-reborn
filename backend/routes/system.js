@@ -65,6 +65,7 @@ router.get('/history', (req, res) => {
 });
 
 // Get top processes and container stats
+const os = require('os');
 router.get('/processes', async (req, res) => {
   try {
     const [processData, dockerStats, dockerContainersInfo] = await Promise.all([
@@ -80,8 +81,9 @@ router.get('/processes', async (req, res) => {
       .map(p => ({
         pid: p.pid,
         name: p.name,
-        cpu: p.cpu,
+        cpu: p.cpu / os.cpus().length,
         mem: p.mem,
+        memBytes: (p.memRss || 0) * 1024,
         user: p.user,
         state: p.state
       }));
@@ -98,8 +100,9 @@ router.get('/processes', async (req, res) => {
         return {
           id: c.id.substring(0, 12),
           name: cName,
-          cpu: c.cpuPercent || 0,
-          mem: c.memPercent || 0
+          cpu: (c.cpuPercent || 0) / os.cpus().length,
+          mem: c.memPercent || 0,
+          memBytes: c.memUsage || 0
         };
       }).sort((a, b) => b.cpu - a.cpu);
     }
