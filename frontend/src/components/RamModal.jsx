@@ -111,7 +111,7 @@ export default function RamModal({ isOpen, onClose }) {
       padding: '20px'
     }}>
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{
-        backgroundColor: 'var(--card-bg)',
+        backgroundColor: 'var(--bg-color)',
         width: '100%', maxWidth: '800px', maxHeight: '90vh',
         display: 'flex', flexDirection: 'column',
         borderRadius: '16px', overflow: 'hidden',
