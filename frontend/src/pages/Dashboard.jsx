@@ -27,6 +27,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [draggedItem, setDraggedItem] = useState(null);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const [showSystemContainers, setShowSystemContainers] = useState(false);
 
   // Load preferences from server on mount
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
         if (Array.isArray(res.data.pinnedContainers)) setPinnedContainers(res.data.pinnedContainers);
         if (Array.isArray(res.data.customOrder)) setCustomOrder(res.data.customOrder);
         if (res.data.containerOverrides) setContainerOverrides(res.data.containerOverrides);
+        if (res.data.showSystemContainers !== undefined) setShowSystemContainers(res.data.showSystemContainers);
       } catch (e) {
         console.error('Error loading preferences from server', e);
       } finally {
@@ -66,7 +68,8 @@ export default function Dashboard({ togglePanel, activePanel }) {
           sortMode,
           pinnedContainers,
           customOrder,
-          containerOverrides
+          containerOverrides,
+          showSystemContainers
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -78,7 +81,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
     // Basic debounce to avoid too many requests while dragging
     const timeout = setTimeout(savePrefs, 500);
     return () => clearTimeout(timeout);
-  }, [sortMode, pinnedContainers, customOrder, containerOverrides, prefsLoaded]);
+  }, [sortMode, pinnedContainers, customOrder, containerOverrides, showSystemContainers, prefsLoaded]);
 
   const fetchContainers = async () => {
     try {
@@ -288,6 +291,13 @@ export default function Dashboard({ togglePanel, activePanel }) {
   const sortedContainers = React.useMemo(() => {
     let sorted = [...containers];
 
+    if (!showSystemContainers) {
+      sorted = sorted.filter(c => {
+        const name = c.Names ? c.Names[0].replace('/', '') : c.Id;
+        return name !== 'casaos-reborn' && name !== 'casaos-updater';
+      });
+    }
+
     if (sortMode === 'alphabetical') {
       sorted.sort((a, b) => {
         const nameA = getContainerName(a);
@@ -320,7 +330,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
     });
 
     return [...pinned, ...unpinned];
-  }, [containers, sortMode, pinnedContainers, customOrder]);
+  }, [containers, sortMode, pinnedContainers, customOrder, showSystemContainers]);
 
   const togglePin = (id) => {
     if (pinnedContainers.includes(id)) {
@@ -458,6 +468,15 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
         {editMode && (
           <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 mr-4" style={{ cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-color)' }}>
+              <input 
+                type="checkbox" 
+                checked={showSystemContainers} 
+                onChange={(e) => setShowSystemContainers(e.target.checked)} 
+                style={{ cursor: 'pointer' }}
+              />
+              Mostra container di sistema
+            </label>
             <select value={sortMode} onChange={e => { setSortMode(e.target.value); if (e.target.value !== 'custom') setEditMode(false); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--card-bg)', color: 'var(--text-color)', outline: 'none' }}>
               <option value="date">Data di Creazione</option>
               <option value="alphabetical">Alfabetico</option>
