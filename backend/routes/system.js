@@ -114,6 +114,45 @@ router.get('/processes', async (req, res) => {
   }
 });
 
+// Get detailed network usage for containers and interfaces
+router.get('/network-details', async (req, res) => {
+  try {
+    const [dockerStats, dockerContainersInfo, networkInterfaces] = await Promise.all([
+      si.dockerContainerStats('*').catch(() => []),
+      si.dockerContainers('all').catch(() => []),
+      si.networkInterfaces().catch(() => [])
+    ]);
+
+    let containers = [];
+    if (Array.isArray(dockerStats)) {
+      containers = dockerStats.map(c => {
+        const info = Array.isArray(dockerContainersInfo) ? dockerContainersInfo.find(info => info.id === c.id) : null;
+        let cName = info ? info.name : (c.name || 'Unknown');
+        if (cName.startsWith('/')) cName = cName.substring(1);
+        
+        return {
+          id: c.id.substring(0, 12),
+          name: cName,
+          rx: c.netIO?.rx || 0,
+          tx: c.netIO?.tx || 0
+        };
+      }).sort((a, b) => (b.rx + b.tx) - (a.rx + a.tx));
+    }
+
+    const interfaces = Array.isArray(networkInterfaces) ? networkInterfaces.map(net => ({
+      iface: net.iface,
+      ip4: net.ip4,
+      operstate: net.operstate,
+      type: net.type
+    })) : [];
+
+    res.json({ containers, interfaces });
+  } catch (error) {
+    console.error('Error fetching network details:', error);
+    res.status(500).json({ error: 'Failed to fetch network details' });
+  }
+});
+
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');

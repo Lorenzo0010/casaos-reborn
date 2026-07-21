@@ -28,6 +28,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
   const [draggedItem, setDraggedItem] = useState(null);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [showSystemContainers, setShowSystemContainers] = useState(false);
+  const [widgetsOrder, setWidgetsOrder] = useState(['cpu', 'ram', 'storage', 'network', 'system']);
 
   // Load preferences from server on mount
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
         if (Array.isArray(res.data.customOrder)) setCustomOrder(res.data.customOrder);
         if (res.data.containerOverrides) setContainerOverrides(res.data.containerOverrides);
         if (res.data.showSystemContainers !== undefined) setShowSystemContainers(res.data.showSystemContainers);
+        if (Array.isArray(res.data.widgetsOrder) && res.data.widgetsOrder.length > 0) setWidgetsOrder(res.data.widgetsOrder);
       } catch (e) {
         console.error('Error loading preferences from server', e);
       } finally {
@@ -69,7 +71,8 @@ export default function Dashboard({ togglePanel, activePanel }) {
           pinnedContainers,
           customOrder,
           containerOverrides,
-          showSystemContainers
+          showSystemContainers,
+          widgetsOrder
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -81,7 +84,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
     // Basic debounce to avoid too many requests while dragging
     const timeout = setTimeout(savePrefs, 500);
     return () => clearTimeout(timeout);
-  }, [sortMode, pinnedContainers, customOrder, containerOverrides, showSystemContainers, prefsLoaded]);
+  }, [sortMode, pinnedContainers, customOrder, containerOverrides, showSystemContainers, widgetsOrder, prefsLoaded]);
 
   const fetchContainers = async () => {
     try {
@@ -472,7 +475,12 @@ export default function Dashboard({ togglePanel, activePanel }) {
       )}
 
       {/* Widgets Row */}
-      <WidgetsPanel className="mb-6" />
+      <WidgetsPanel 
+        className="mb-6" 
+        editMode={editMode} 
+        widgetsOrder={widgetsOrder} 
+        setWidgetsOrder={setWidgetsOrder} 
+      />
 
       {/* Containers Section */}
       <div className="flex justify-between items-center mt-2 mb-5">
