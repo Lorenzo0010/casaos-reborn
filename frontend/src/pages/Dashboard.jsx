@@ -377,6 +377,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
       newOrder[index] = temp;
     }
     setCustomOrder(newOrder);
+    if (sortMode !== 'custom') setSortMode('custom');
   };
 
   const handleDragStart = (e, id) => {
@@ -408,6 +409,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
       newOrder.splice(draggedIndex, 1);
       newOrder.splice(targetIndex, 0, draggedItem);
       setCustomOrder(newOrder);
+      if (sortMode !== 'custom') setSortMode('custom');
     }
     setDraggedItem(null);
   };
@@ -451,7 +453,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
           </Link>
           <button
             className="btn-icon-only"
-            onClick={() => { setEditMode(!editMode); if (!editMode && sortMode !== 'custom') setSortMode('custom'); }}
+            onClick={() => setEditMode(!editMode)}
             title={editMode ? "Fine Modifica" : "Modifica Layout"}
             style={{ color: editMode ? 'var(--success)' : 'inherit' }}
           >
