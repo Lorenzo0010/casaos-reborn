@@ -239,7 +239,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
             <div className="flex items-center gap-2 mt-2">
               <select value={theme} onChange={(e) => {
                 setTheme(e.target.value);
-                onSave({ ...preferences, theme: e.target.value });
+                onSave({ theme: e.target.value });
               }} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--bg-color)', color: 'var(--text-color)' }}>
                 <option value="light">Chiaro</option>
                 <option value="dark">Scuro</option>
@@ -258,7 +258,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
                   title={color.name}
                   onClick={() => {
                     setAccentColor(color.hex);
-                    onSave({ ...preferences, accentColor: color.hex, bgTheme });
+                    onSave({ accentColor: color.hex, bgTheme });
                   }}
                   style={{
                     width: '40px', height: '40px', borderRadius: '50%', border: 'none', cursor: 'pointer',
@@ -283,7 +283,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
                     title={bg.name}
                     onClick={() => {
                       setBgTheme(bg.id);
-                      onSave({ ...preferences, accentColor, bgTheme: bg.id });
+                      onSave({ accentColor, bgTheme: bg.id });
                     }}
                     style={{
                       width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--card-border)', cursor: 'pointer',
