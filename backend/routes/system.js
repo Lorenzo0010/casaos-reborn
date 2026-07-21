@@ -67,9 +67,10 @@ router.get('/history', (req, res) => {
 // Get top processes and container stats
 router.get('/processes', async (req, res) => {
   try {
-    const [processData, dockerData] = await Promise.all([
+    const [processData, dockerStats, dockerContainersInfo] = await Promise.all([
       si.processes(),
-      si.dockerContainerStats('*').catch(() => []) // Catch in case docker is not running or no permissions
+      si.dockerContainerStats('*').catch(() => []),
+      si.dockerContainers('all').catch(() => [])
     ]);
     
     // Sort by CPU by default and limit to 100 to save bandwidth
@@ -86,13 +87,21 @@ router.get('/processes', async (req, res) => {
       }));
 
     let topContainers = [];
-    if (Array.isArray(dockerData)) {
-      topContainers = dockerData.map(c => ({
-        id: c.id.substring(0, 12),
-        name: c.name || 'Unknown',
-        cpu: c.cpuPercent || 0,
-        mem: c.memPercent || 0
-      })).sort((a, b) => b.cpu - a.cpu);
+    if (Array.isArray(dockerStats)) {
+      topContainers = dockerStats.map(c => {
+        // Find matching container info to get the real name
+        const info = Array.isArray(dockerContainersInfo) ? dockerContainersInfo.find(info => info.id === c.id) : null;
+        let cName = info ? info.name : (c.name || 'Unknown');
+        // Clean up name (Docker often prefixes with '/')
+        if (cName.startsWith('/')) cName = cName.substring(1);
+        
+        return {
+          id: c.id.substring(0, 12),
+          name: cName,
+          cpu: c.cpuPercent || 0,
+          mem: c.memPercent || 0
+        };
+      }).sort((a, b) => b.cpu - a.cpu);
     }
       
     res.json({ processes: topProcesses, containers: topContainers });

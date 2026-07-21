@@ -142,8 +142,8 @@ export default function RamModal({ isOpen, onClose }) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
-                <XAxis dataKey="time" tickFormatter={formatTime} stroke="var(--text-muted)" fontSize={12} minTickGap={50} />
-                <YAxis domain={[0, 100]} stroke="var(--text-muted)" fontSize={12} tickFormatter={val => `${val}%`} />
+                <XAxis dataKey="time" tickFormatter={formatTime} tick={{ fill: 'var(--text-muted)' }} tickLine={{ stroke: 'var(--border-subtle)' }} axisLine={{ stroke: 'var(--border-subtle)' }} fontSize={12} minTickGap={50} />
+                <YAxis domain={[0, 100]} tick={{ fill: 'var(--text-muted)' }} tickLine={{ stroke: 'var(--border-subtle)' }} axisLine={{ stroke: 'var(--border-subtle)' }} fontSize={12} tickFormatter={val => `${val}%`} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="memory" stroke="#10b981" fillOpacity={1} fill="url(#colorRam)" isAnimationActive={false} />
               </AreaChart>
