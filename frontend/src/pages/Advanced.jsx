@@ -10,6 +10,10 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
   const [isSaving, setIsSaving] = useState(false);
 
+  // ─── Notifications state ───
+  const [telegramToken, setTelegramToken] = useState(preferences?.telegramToken || '');
+  const [telegramChatId, setTelegramChatId] = useState(preferences?.telegramChatId || '');
+
   // ─── System Logs state ───
   const [logs, setLogs] = useState('');
   const [logsLoading, setLogsLoading] = useState(true);
@@ -22,10 +26,12 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
   const { showAlert, showConfirm } = useDialog();
 
-  // Sync accent/bgTheme when preferences change externally
+  // Sync accent/bgTheme/telegram when preferences change externally
   useEffect(() => {
     if (preferences?.accentColor) setAccentColor(preferences.accentColor);
     if (preferences?.bgTheme) setBgTheme(preferences.bgTheme);
+    if (preferences?.telegramToken !== undefined) setTelegramToken(preferences.telegramToken);
+    if (preferences?.telegramChatId !== undefined) setTelegramChatId(preferences.telegramChatId);
   }, [preferences]);
 
   // ═══════════════════════════════════════
@@ -206,6 +212,35 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
     }
   };
 
+  const handlePruneVolumes = async () => {
+    const confirmed = await showConfirm('Pulizia Volumi', 'Sei sicuro di voler eliminare tutti i volumi Docker non collegati a nessun container? Questo libererà spazio ma potrebbe cancellare dati orfani.');
+    if (!confirmed) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`/api/docker/volumes/prune`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const deletedSpace = (res.data.result?.SpaceReclaimed || 0) / 1024 / 1024;
+      showAlert('Pulizia Completata', `Spazio liberato: ${deletedSpace.toFixed(2)} MB`);
+    } catch (err) {
+      showAlert('Errore', `Errore durante la pulizia dei volumi: ` + err.message, true);
+    }
+  };
+
+  const handlePruneNetworks = async () => {
+    const confirmed = await showConfirm('Pulizia Reti', 'Sei sicuro di voler eliminare tutte le reti Docker non utilizzate?');
+    if (!confirmed) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`/api/docker/networks/prune`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      showAlert('Pulizia Completata', 'Reti orfane rimosse con successo.');
+    } catch (err) {
+      showAlert('Errore', `Errore durante la pulizia delle reti: ` + err.message, true);
+    }
+  };
+
   // ═══════════════════════════════════════
   // Render
   // ═══════════════════════════════════════
@@ -308,6 +343,96 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         </div>
       </div>
 
+      {/* ─── Section 1.2: Telegram Notifications ─── */}
+      <div className="widget flex-col">
+        <h2 className="flex items-center gap-2 mb-5 m-0">
+          <Terminal /> Notifiche Telegram
+        </h2>
+        <div className="glass p-5 rounded-xl flex-col gap-4">
+          <p className="text-sm opacity-80 mb-2">Ricevi avvisi se la CPU o la RAM superano il 90%, o se lo spazio su disco sta per esaurirsi.</p>
+          <div className="input-group">
+            <label>Bot Token</label>
+            <input 
+              type="text" 
+              className="input w-full" 
+              placeholder="es. 123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
+              value={telegramToken}
+              onChange={(e) => setTelegramToken(e.target.value)}
+            />
+          </div>
+          <div className="input-group mt-3">
+            <label>Chat ID</label>
+            <input 
+              type="text" 
+              className="input w-full" 
+              placeholder="es. 123456789"
+              value={telegramChatId}
+              onChange={(e) => setTelegramChatId(e.target.value)}
+            />
+          </div>
+          <div className="flex mt-3">
+            <button className="btn btn-primary flex items-center gap-2" onClick={() => onSave({ telegramToken, telegramChatId })}>
+              <Save size={16} /> Salva Impostazioni Telegram
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Section 1.5: Backup & Restore ─── */}
+      <div className="widget flex-col">
+        <h2 className="flex items-center gap-2 mb-5 m-0">
+          <Save /> Backup & Ripristino
+        </h2>
+        <div className="glass p-5 rounded-xl flex-col gap-4">
+          <p className="text-sm opacity-80 mb-2">Esporta tutte le configurazioni e i docker-compose per tenerli al sicuro, oppure ripristinali da un archivio salvato.</p>
+          <div className="flex flex-wrap gap-4">
+            <button className="btn btn-primary" onClick={async () => {
+              try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/system/backup', {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Errore download backup');
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'casaos_backup.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+              } catch (err) {
+                showAlert('Errore', 'Impossibile scaricare il backup: ' + err.message, true);
+              }
+            }}>
+              <ArrowDown size={18} /> Scarica Backup (.zip)
+            </button>
+            <label className="btn" style={{ background: 'var(--card-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ArrowUpCircle size={18} /> Ripristina da Backup
+              <input type="file" accept=".zip" style={{ display: 'none' }} onChange={async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const confirmed = await showConfirm('Ripristino Backup', 'Sei sicuro? Le impostazioni attuali verranno sovrascritte. I container già in esecuzione non verranno fermati ma i file verranno sostituiti.');
+                if (!confirmed) return;
+                
+                const formData = new FormData();
+                formData.append('backup', file);
+                try {
+                  const token = localStorage.getItem('token');
+                  const res = await axios.post('/api/system/restore', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
+                  });
+                  showAlert('Successo', res.data.message);
+                } catch(err) {
+                  showAlert('Errore', "Impossibile ripristinare il backup: " + (err.response?.data?.error || err.message), true);
+                }
+              }} />
+            </label>
+          </div>
+        </div>
+      </div>
+
       {/* ─── Section 2: System Logs ─── */}
       <div className="widget flex-col">
         <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
@@ -394,12 +519,19 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
             <h3 className="m-0 mb-2 text-lg">Pulizia Sistema</h3>
-            <p className="m-0 text-sm text-muted">Rimuovi le immagini docker orfane per liberare spazio su disco.</p>
+            <p className="m-0 text-sm text-muted">Rimuovi risorse docker orfane per liberare spazio su disco e mantenere il sistema pulito.</p>
           </div>
-          <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneImages}>
-            <Trash2 size={16} />
-            Pulisci Immagini
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneImages}>
+              <Trash2 size={16} /> Immagini
+            </button>
+            <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneVolumes}>
+              <Trash2 size={16} /> Volumi
+            </button>
+            <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneNetworks}>
+              <Trash2 size={16} /> Reti
+            </button>
+          </div>
         </div>
       </div>
 

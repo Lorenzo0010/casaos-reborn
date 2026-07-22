@@ -1,0 +1,73 @@
+[
+  {
+    "id": "pihole",
+    "name": "pihole",
+    "displayName": "Pi-hole",
+    "description": "A black hole for Internet advertisements",
+    "icon": "https://cdn.iconscout.com/icon/free/png-256/pi-hole-3628994-3030219.png",
+    "category": "Network",
+    "image": "pihole/pihole",
+    "tag": "latest",
+    "ports": ["53:53/tcp", "53:53/udp", "80:80/tcp"],
+    "env": ["TZ=Europe/Rome", "WEBPASSWORD=admin"],
+    "volumes": ["/home/orangepi/pihole/etc-pihole:/etc/pihole", "/home/orangepi/pihole/etc-dnsmasq.d:/etc/dnsmasq.d"],
+    "restartPolicy": "unless-stopped"
+  },
+  {
+    "id": "portainer",
+    "name": "portainer",
+    "displayName": "Portainer CE",
+    "description": "Powerful GUI management tool for Docker",
+    "icon": "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/portainer-icon.png",
+    "category": "System",
+    "image": "portainer/portainer-ce",
+    "tag": "latest",
+    "ports": ["8000:8000/tcp", "9443:9443/tcp"],
+    "env": [],
+    "volumes": ["/var/run/docker.sock:/var/run/docker.sock", "portainer_data:/data"],
+    "restartPolicy": "always"
+  },
+  {
+    "id": "jellyfin",
+    "name": "jellyfin",
+    "displayName": "Jellyfin",
+    "description": "The Free Software Media System",
+    "icon": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Jellyfin_logo.svg",
+    "category": "Media",
+    "image": "jellyfin/jellyfin",
+    "tag": "latest",
+    "ports": ["8096:8096/tcp"],
+    "env": ["TZ=Europe/Rome"],
+    "volumes": ["/home/orangepi/jellyfin/config:/config", "/home/orangepi/jellyfin/cache:/cache", "/home/orangepi/Media:/media"],
+    "restartPolicy": "unless-stopped"
+  },
+  {
+    "id": "homeassistant",
+    "name": "homeassistant",
+    "displayName": "Home Assistant",
+    "description": "Open source home automation that puts local control and privacy first.",
+    "icon": "https://upload.wikimedia.org/wikipedia/commons/1/10/Home_Assistant_Logo.svg",
+    "category": "Smart Home",
+    "image": "ghcr.io/home-assistant/home-assistant",
+    "tag": "stable",
+    "ports": ["8123:8123/tcp"],
+    "env": ["TZ=Europe/Rome"],
+    "volumes": ["/home/orangepi/homeassistant/config:/config", "/etc/localtime:/etc/localtime:ro"],
+    "restartPolicy": "unless-stopped",
+    "networkMode": "host"
+  },
+  {
+    "id": "nextcloud",
+    "name": "nextcloud",
+    "displayName": "Nextcloud",
+    "description": "A safe home for all your data",
+    "icon": "https://upload.wikimedia.org/wikipedia/commons/6/60/Nextcloud_Logo.svg",
+    "category": "Productivity",
+    "image": "nextcloud",
+    "tag": "latest",
+    "ports": ["8080:80/tcp"],
+    "env": [],
+    "volumes": ["/home/orangepi/nextcloud/html:/var/www/html", "/home/orangepi/nextcloud/data:/var/www/html/data"],
+    "restartPolicy": "unless-stopped"
+  }
+]

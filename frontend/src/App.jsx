@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Advanced from './pages/Advanced';
 import FileManager from './pages/FileManager';
+import AppStore from './pages/AppStore';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
@@ -307,6 +308,7 @@ function App() {
           <div className="main-scrollable animate-fade-in">
             <Routes>
               <Route path="/" element={<Dashboard togglePanel={togglePanel} activePanel={activePanel} />} />
+              <Route path="/store" element={<AppStore togglePanel={togglePanel} />} />
               <Route path="/new" element={<NewContainer togglePanel={togglePanel} />} />
               <Route path="/files" element={<FileManager togglePanel={togglePanel} />} />
               <Route path="/terminal" element={<TerminalPage togglePanel={togglePanel} />} />

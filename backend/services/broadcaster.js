@@ -72,6 +72,33 @@ const initBroadcaster = (io) => {
         systemHistory.shift();
       }
 
+      // Health Check & Telegram Notifications
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const PREFS_FILE = path.join(__dirname, '..', 'data', 'preferences.json');
+        if (fs.existsSync(PREFS_FILE)) {
+          const prefs = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+          if (prefs.telegramToken && prefs.telegramChatId) {
+            const { sendTelegramMessage } = require('./telegram');
+            const cpuLoad = parseFloat(stats.cpu.load);
+            const memPercent = parseFloat(stats.memory.percent);
+            const diskPercent = typeof stats.disk.percent === 'number' ? stats.disk.percent : parseFloat(stats.disk.percent);
+            if (cpuLoad > 90) {
+              sendTelegramMessage(prefs.telegramToken, prefs.telegramChatId, `⚠️ <b>Allarme CasaOS</b>\nCarico CPU critico: ${cpuLoad}%`);
+            }
+            if (memPercent > 95) {
+              sendTelegramMessage(prefs.telegramToken, prefs.telegramChatId, `⚠️ <b>Allarme CasaOS</b>\nUtilizzo RAM critico: ${memPercent}%`);
+            }
+            if (diskPercent > 90) {
+              sendTelegramMessage(prefs.telegramToken, prefs.telegramChatId, `⚠️ <b>Allarme CasaOS</b>\nSpazio disco in esaurimento: ${diskPercent.toFixed(1)}%`);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[Broadcaster] Telegram check error:', err.message);
+      }
+
       // Emit stats
       io.emit('system.stats', stats);
 

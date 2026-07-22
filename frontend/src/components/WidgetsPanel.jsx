@@ -73,7 +73,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
 
     let newOrder = [...widgetsOrder];
     // Ensure all possible widgets exist
-    const allWidgets = ['cpu', 'ram', 'storage', 'network', 'system'];
+    const allWidgets = ['cpu', 'ram', 'storage', 'network', 'system', 'weather'];
     allWidgets.forEach(w => {
       if (!newOrder.includes(w)) newOrder.push(w);
     });
@@ -93,7 +93,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
     if (!editMode) return;
     let newOrder = [...widgetsOrder];
     // Ensure all possible widgets exist
-    const allWidgets = ['cpu', 'ram', 'storage', 'network', 'system'];
+    const allWidgets = ['cpu', 'ram', 'storage', 'network', 'system', 'weather'];
     allWidgets.forEach(w => {
       if (!newOrder.includes(w)) newOrder.push(w);
     });
@@ -307,10 +307,36 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
           </div>
         </div>
       </div>
+    ),
+    weather: (
+      <div 
+        key="weather"
+        draggable={editMode}
+        onDragStart={(e) => handleDragStart(e, 'weather')}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, 'weather')}
+        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'weather' ? 0.5 : 1 }}
+      >
+        {renderArrows('weather')}
+        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Meteo</span>
+          <span style={{ fontSize: '1.2rem' }}>🌤️</span>
+        </div>
+        <div className="flex-col items-center justify-center text-center my-auto">
+          <div className="value" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--primary)', lineHeight: 1 }}>24°C</div>
+        </div>
+        <div className="flex justify-between items-end mt-2" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <span style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>Milano</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>Parz. Nuvoloso</span>
+          </span>
+        </div>
+      </div>
     )
   };
 
-  const allPossibleWidgets = ['cpu', 'ram', 'storage', 'network', 'system'];
+  const allPossibleWidgets = ['cpu', 'ram', 'storage', 'network', 'system', 'weather'];
   // Array fallback in caso widgetsOrder sia vuoto o manchi roba
   const currentOrder = Array.isArray(widgetsOrder) && widgetsOrder.length > 0 ? widgetsOrder : allPossibleWidgets;
   const missingWidgets = allPossibleWidgets.filter(w => !currentOrder.includes(w));

@@ -232,6 +232,71 @@ router.post('/preferences', (req, res) => {
   }
 });
 
+const archiver = require('archiver');
+const extract = require('extract-zip');
+const os = require('os');
+const { exec } = require('child_process');
+
+const CASAOS_APPS_DIR = process.env.CASAOS_APPS_DIR || (process.platform === 'win32' ? path.join(os.homedir(), 'casaos-apps') : '/var/lib/casaos/apps');
+
+router.get('/backup', async (req, res) => {
+  try {
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    res.attachment('casaos_backup.zip');
+    
+    archive.on('error', (err) => {
+      res.status(500).send({ error: err.message });
+    });
+
+    archive.pipe(res);
+
+    // Add preferences folder
+    if (fs.existsSync(PREFS_DIR)) {
+      archive.directory(PREFS_DIR, 'data');
+    }
+
+    // Add CasaOS apps folder
+    if (fs.existsSync(CASAOS_APPS_DIR)) {
+      archive.directory(CASAOS_APPS_DIR, 'apps');
+    }
+
+    await archive.finalize();
+  } catch (error) {
+    console.error('Backup error:', error);
+    res.status(500).json({ error: 'Failed to create backup' });
+  }
+});
+
+router.post('/restore', upload.single('backup'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nessun file di backup caricato' });
+
+  try {
+    const extractPath = path.join(os.tmpdir(), `casaos_restore_${Date.now()}`);
+    
+    await extract(req.file.path, { dir: extractPath });
+
+    // Copy extracted data back
+    const extractedDataPath = path.join(extractPath, 'data');
+    if (fs.existsSync(extractedDataPath)) {
+      fs.cpSync(extractedDataPath, PREFS_DIR, { recursive: true, force: true });
+    }
+
+    const extractedAppsPath = path.join(extractPath, 'apps');
+    if (fs.existsSync(extractedAppsPath)) {
+      fs.cpSync(extractedAppsPath, CASAOS_APPS_DIR, { recursive: true, force: true });
+    }
+
+    // Clean up
+    fs.rmSync(extractPath, { recursive: true, force: true });
+    fs.rmSync(req.file.path, { force: true });
+
+    res.json({ success: true, message: 'Backup ripristinato. I container non sono stati riavviati automaticamente.' });
+  } catch (error) {
+    console.error('Restore error:', error);
+    res.status(500).json({ error: 'Failed to restore backup' });
+  }
+});
+
 router.get('/logs', (req, res) => {
   try {
     let prevData = '';

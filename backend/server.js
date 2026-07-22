@@ -107,9 +107,11 @@ app.get('/api/health', (req, res) => {
 const systemRoutes = require('./routes/system');
 const dockerRoutes = require('./routes/docker');
 const filesRoutes = require('./routes/files');
+const storeRoutes = require('./routes/store');
 app.use('/api/system', authenticateToken, systemRoutes);
 app.use('/api/docker', authenticateToken, dockerRoutes);
 app.use('/api/files', authenticateToken, filesRoutes);
+app.use('/api/store', authenticateToken, storeRoutes);
 
 const pty = require('node-pty');
 const os = require('os');
