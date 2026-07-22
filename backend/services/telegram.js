@@ -29,84 +29,21 @@ const initBot = (token, chatId) => {
   };
 
   // Commands
-  bot.onText(/\/(start|help)/, (msg) => {
+  bot.onText(/\/(start|help|menu)/, async (msg) => {
     if (!isAuthorized(msg)) return;
-    const text = `🤖 *CasaOS Reborn Bot*\n\nSono il tuo assistente per gestire il server.\n\nScegli un comando dal menu sottostante:`;
-    const opts = {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        keyboard: [
-          [{ text: '📊 System' }, { text: '📦 Containers' }],
-          [{ text: '🔄 Updates' }, { text: '🧹 Prune' }],
-          [{ text: '🌐 Network' }, { text: '⚠️ Host' }]
-        ],
-        resize_keyboard: true,
-        is_persistent: true
-      }
-    };
-    bot.sendMessage(msg.chat.id, text, opts);
-  });
-
-  bot.onText(/(?:\/system|📊 System)/, async (msg) => {
-    if (!isAuthorized(msg)) return;
-    try {
-      const [cpuLoad, mem, fsSize, temp] = await Promise.all([
-        si.currentLoad(), si.mem(), si.fsSize(), si.cpuTemperature()
-      ]);
-      const primaryDisk = fsSize.find(f => f.mount === '/') || fsSize[0];
-      
-      const cpu = cpuLoad.currentLoad.toFixed(1);
-      const ram = ((mem.active / mem.total) * 100).toFixed(1);
-      const disk = primaryDisk ? primaryDisk.use.toFixed(1) : 0;
-      
-      const bar = (pct) => {
-        const blocks = Math.round(pct / 10);
-        return '█'.repeat(blocks) + '░'.repeat(10 - blocks);
-      };
-
-      const text = `📊 *Statistiche di Sistema*\n\n` +
-        `🖥 *CPU:* ${cpu}%\n\`[${bar(cpu)}]\`\n🌡 Temp: ${temp.main || '?'}°C\n\n` +
-        `🧠 *RAM:* ${ram}%\n\`[${bar(ram)}]\`\n\n` +
-        `💾 *Disco:* ${disk}%\n\`[${bar(disk)}]\``;
-      
-      bot.sendMessage(msg.chat.id, text, { parse_mode: 'Markdown' });
-    } catch (e) {
-      bot.sendMessage(msg.chat.id, `Errore recupero statistiche: ${e.message}`);
-    }
-  });
-
-  bot.onText(/(?:\/prune|🧹 Prune)/, (msg) => {
-    if (!isAuthorized(msg)) return;
-    const opts = {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🗑️ Immagini', callback_data: 'prune_images' }],
-          [{ text: '🗑️ Volumi', callback_data: 'prune_volumes' }],
-          [{ text: '🗑️ Reti', callback_data: 'prune_networks' }]
-        ]
-      }
-    };
-    bot.sendMessage(msg.chat.id, 'Cosa vuoi pulire?', opts);
-  });
-
-  bot.onText(/(?:\/updates|🔄 Updates)/, (msg) => {
-    if (!isAuthorized(msg)) return;
-    const updates = Object.values(global.availableUpdates || {});
-    if (updates.length === 0) {
-      bot.sendMessage(msg.chat.id, '✅ Tutti i container sono aggiornati.');
-      return;
-    }
     
-    let text = `📦 *Aggiornamenti Disponibili (${updates.length})*\n\n`;
-    updates.forEach(u => {
-      text += `- *${u.name}*\n  \`${u.image}\`\n`;
-    });
+    // Rimuove la vecchia Reply Keyboard inviando un messaggio temporaneo
+    const sent = await bot.sendMessage(msg.chat.id, '...', { reply_markup: { remove_keyboard: true } });
+    bot.deleteMessage(msg.chat.id, sent.message_id).catch(() => {});
 
+    const text = `🤖 *CasaOS Reborn Bot*\n\nSono il tuo assistente per gestire il server.\n\nScegli un'opzione dal menu:`;
     const opts = {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [{ text: '⬇️ Aggiorna Tutto (Salva e Ricrea)', callback_data: 'update_all' }]
+          [{ text: '📊 System', callback_data: 'menu_system' }, { text: '📦 Containers', callback_data: 'menu_containers' }],
+          [{ text: '🔄 Updates', callback_data: 'menu_updates' }, { text: '🧹 Prune', callback_data: 'menu_prune' }],
+          [{ text: '🌐 Network', callback_data: 'menu_network' }, { text: '⚠️ Host', callback_data: 'menu_host' }]
         ]
       }
     };
@@ -121,69 +58,9 @@ const initBot = (token, chatId) => {
       let result = stdout || stderr || '';
       if (error) result = `Errore:\n${error.message}\n\n${result}`;
       if (!result) result = 'Comando eseguito senza output.';
-      // Telegram max msg length is 4096
       if (result.length > 4000) result = result.substring(0, 4000) + '\n...[TRONCATO]';
       bot.sendMessage(msg.chat.id, `\`\`\`bash\n${result}\n\`\`\``, { parse_mode: 'Markdown' });
     });
-  });
-
-  bot.onText(/(?:\/network|🌐 Network)/, async (msg) => {
-    if (!isAuthorized(msg)) return;
-    try {
-      const net = await si.networkInterfaces();
-      const defaultIface = net.find(n => !n.internal && n.ip4) || net[0];
-      const localIp = defaultIface ? defaultIface.ip4 : 'Sconosciuto';
-      const end0Iface = net.find(n => n.iface === 'end0' && n.ip4);
-      const end0Ip = end0Iface ? end0Iface.ip4 : 'Non connesso';
-      const wlanIface = net.find(n => n.iface === 'wlan0' && n.ip4);
-      const wlanIp = wlanIface ? wlanIface.ip4 : 'Non connesso';
-      
-      https.get('https://api.ipify.org', (res) => {
-        let publicIp = '';
-        res.on('data', d => publicIp += d);
-        res.on('end', () => {
-          const text = `🌐 *Info di Rete*\n\n🏠 IP Locale: \`${localIp}\`\n🔌 IP END0: \`${end0Ip}\`\n📡 IP WLAN0: \`${wlanIp}\`\n🌍 IP Pubblico: \`${publicIp}\``;
-          bot.sendMessage(msg.chat.id, text, {
-            parse_mode: 'Markdown',
-            reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }]] }
-          });
-        });
-      }).on('error', () => {
-        bot.sendMessage(msg.chat.id, `🌐 *Info di Rete*\n\n🏠 IP Locale: \`${localIp}\`\n🔌 IP END0: \`${end0Ip}\`\n📡 IP WLAN0: \`${wlanIp}\`\n🌍 IP Pubblico: Errore recupero`, { parse_mode: 'Markdown' });
-      });
-    } catch (e) {
-      bot.sendMessage(msg.chat.id, `Errore rete: ${e.message}`);
-    }
-  });
-
-  bot.onText(/(?:\/host|⚠️ Host)/, (msg) => {
-    if (!isAuthorized(msg)) return;
-    bot.sendMessage(msg.chat.id, '⚠️ *Attenzione*: Vuoi spegnere o riavviare il server host?', {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🔄 Riavvia', callback_data: 'host_reboot' }, { text: '🛑 Spegni', callback_data: 'host_shutdown' }]
-        ]
-      }
-    });
-  });
-
-  bot.onText(/(?:\/containers|📦 Containers)/, async (msg) => {
-    if (!isAuthorized(msg)) return;
-    try {
-      const containers = await docker.listContainers({ all: true });
-      const keyboard = containers.map(c => {
-        const name = c.Names[0].replace('/', '');
-        const state = c.State === 'running' ? '🟢' : '🔴';
-        return [{ text: `${state} ${name}`, callback_data: `cont_opts_${c.Id.substring(0,12)}` }];
-      });
-      
-      bot.sendMessage(msg.chat.id, 'Seleziona un container:', {
-        reply_markup: { inline_keyboard: keyboard }
-      });
-    } catch (e) {
-      bot.sendMessage(msg.chat.id, `Errore recupero container: ${e.message}`);
-    }
   });
 
   // Handle Callbacks
@@ -193,6 +70,80 @@ const initBot = (token, chatId) => {
     const data = query.data;
 
     try {
+      if (data === 'menu_system') {
+        bot.answerCallbackQuery(query.id);
+        const [cpuLoad, mem, fsSize, temp] = await Promise.all([si.currentLoad(), si.mem(), si.fsSize(), si.cpuTemperature()]);
+        const primaryDisk = fsSize.find(f => f.mount === '/') || fsSize[0];
+        const cpu = cpuLoad.currentLoad.toFixed(1);
+        const ram = ((mem.active / mem.total) * 100).toFixed(1);
+        const disk = primaryDisk ? primaryDisk.use.toFixed(1) : 0;
+        const bar = (pct) => { const blocks = Math.round(pct / 10); return '█'.repeat(blocks) + '░'.repeat(10 - blocks); };
+        const text = `📊 *Statistiche di Sistema*\n\n🖥 *CPU:* ${cpu}%\n\`[${bar(cpu)}]\`\n🌡 Temp: ${temp.main || '?'}°C\n\n🧠 *RAM:* ${ram}%\n\`[${bar(ram)}]\`\n\n💾 *Disco:* ${disk}%\n\`[${bar(disk)}]\``;
+        bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+      }
+
+      if (data === 'menu_containers') {
+        bot.answerCallbackQuery(query.id);
+        const containers = await docker.listContainers({ all: true });
+        const keyboard = containers.map(c => {
+          const name = c.Names[0].replace('/', '');
+          const state = c.State === 'running' ? '🟢' : '🔴';
+          return [{ text: `${state} ${name}`, callback_data: `cont_opts_${c.Id.substring(0,12)}` }];
+        });
+        bot.sendMessage(chatId, 'Seleziona un container:', { reply_markup: { inline_keyboard: keyboard } });
+      }
+
+      if (data === 'menu_updates') {
+        bot.answerCallbackQuery(query.id);
+        const updates = Object.values(global.availableUpdates || {});
+        if (updates.length === 0) return bot.sendMessage(chatId, '✅ Tutti i container sono aggiornati.');
+        let text = `📦 *Aggiornamenti Disponibili (${updates.length})*\n\n`;
+        updates.forEach(u => { text += `- *${u.name}*\n  \`${u.image}\`\n`; });
+        bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬇️ Aggiorna Tutto', callback_data: 'update_all' }]] } });
+      }
+
+      if (data === 'menu_prune') {
+        bot.answerCallbackQuery(query.id);
+        bot.sendMessage(chatId, 'Cosa vuoi pulire?', {
+          reply_markup: { inline_keyboard: [[{ text: '🗑️ Immagini', callback_data: 'prune_images' }], [{ text: '🗑️ Volumi', callback_data: 'prune_volumes' }], [{ text: '🗑️ Reti', callback_data: 'prune_networks' }]] }
+        });
+      }
+
+      if (data === 'menu_network') {
+        bot.answerCallbackQuery(query.id, { text: 'Recupero info rete...' });
+        exec('ip -4 addr', (err, stdout) => {
+          let text = `🌐 *Info di Rete*\n\n`;
+          if (!err && stdout) {
+            const regex = /^\d+:\s+([a-zA-Z0-9]+).*?inet\s+([0-9.]+)/gm;
+            let m;
+            while ((m = regex.exec(stdout)) !== null) {
+              text += `🔹 *${m[1]}*: \`${m[2]}\`\n`;
+            }
+          } else {
+            text += `Errore recupero IP locali.\n`;
+          }
+          https.get('https://api.ipify.org', (res) => {
+            let publicIp = '';
+            res.on('data', d => publicIp += d);
+            res.on('end', () => {
+              text += `\n🌍 *IP Pubblico*: \`${publicIp}\``;
+              bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }]] } });
+            });
+          }).on('error', () => {
+            text += `\n🌍 *IP Pubblico*: Errore`;
+            bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }]] } });
+          });
+        });
+      }
+
+      if (data === 'menu_host') {
+        bot.answerCallbackQuery(query.id);
+        bot.sendMessage(chatId, '⚠️ *Attenzione*: Vuoi spegnere o riavviare il server host?', {
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: [[{ text: '🔄 Riavvia', callback_data: 'host_reboot' }, { text: '🛑 Spegni', callback_data: 'host_shutdown' }]] }
+        });
+      }
+
       if (data.startsWith('prune_')) {
         const type = data.replace('prune_', '');
         bot.answerCallbackQuery(query.id, { text: `Avvio pulizia ${type}...` });
@@ -293,9 +244,23 @@ const initBot = (token, chatId) => {
 
       if (data === 'ts_status') {
         bot.answerCallbackQuery(query.id, { text: 'Controllo Tailscale...' });
-        exec('tailscale status', (err, stdout) => {
-          const res = err ? `Errore o non installato:\n${err.message}` : stdout;
-          bot.sendMessage(chatId, `🌐 *Tailscale Status*\n\`\`\`bash\n${res}\n\`\`\``, { parse_mode: 'Markdown' });
+        exec('systemctl status tailscaled', (err, stdout) => {
+          let text = `🌐 *Tailscale Status*\n\n`;
+          if (stdout) {
+             const activeMatch = stdout.match(/Active:\s+(.*?)\s+since/);
+             const sinceMatch = stdout.match(/since\s+(.*?);(.*?)ago/);
+             const active = activeMatch ? activeMatch[1] : 'Sconosciuto';
+             let uptime = sinceMatch ? sinceMatch[2].trim() : '';
+             
+             if (active.includes('active (running)')) {
+               text += `🟢 **Stato:** Attivo\n⏱ **Uptime:** ${uptime} fa\n`;
+             } else {
+               text += `🔴 **Stato:** ${active}\n`;
+             }
+          } else {
+             text += `Errore o servizio non trovato.\n`;
+          }
+          bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
         });
       }
 
