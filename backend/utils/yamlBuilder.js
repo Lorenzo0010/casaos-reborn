@@ -58,7 +58,7 @@ function buildCasaOSCompose(data) {
     restart: data.restartPolicy || 'unless-stopped',
   };
 
-  if (data.networkMode && data.networkMode !== 'bridge') {
+  if (data.networkMode) {
     service.network_mode = data.networkMode;
   }
 
