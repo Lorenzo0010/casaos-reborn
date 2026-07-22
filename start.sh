@@ -4,6 +4,7 @@ echo "Avvio di casaos-reborn..."
 docker run -d \
   --name casaos-reborn \
   --privileged \
+  --pid host \
   --restart always \
   -p 1111:3000 \
   -v /var/run/docker.sock:/var/run/docker.sock \

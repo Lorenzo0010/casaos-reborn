@@ -150,7 +150,7 @@ const initBot = (token, chatId) => {
                 if (parts.length >= 4) {
                   const iface = parts[1];
                   const ipAddr = parts[3].split('/')[0];
-                  if (['lo', 'wlan0', 'end0'].includes(iface)) {
+                  if (['lo', 'wlan0', 'end0', 'eth0'].includes(iface)) {
                     text += `🔹 *${iface}*: \`${ipAddr}\`\n`;
                   }
                 }
@@ -284,7 +284,7 @@ const initBot = (token, chatId) => {
 
       if (data === 'ts_status') {
         bot.answerCallbackQuery(query.id, { text: 'Controllo Tailscale...' });
-        execHost('sudo systemctl status tailscaled', (err, stdout, stderr) => {
+        execHost('systemctl status tailscaled', (err, stdout, stderr) => {
           let text = `🌐 *Stato Tailscale*\n\n`;
           let sysText = stdout || stderr || (err ? err.message : 'Nessun output.');
           text += `**Systemctl Status:**\n\`\`\`bash\n${sysText.substring(0, 800)}\n\`\`\`\n`;
@@ -310,7 +310,7 @@ const initBot = (token, chatId) => {
 
       if (data === 'ts_restart') {
         bot.answerCallbackQuery(query.id, { text: 'Riavvio Tailscale in corso...' });
-        execHost('sudo systemctl restart tailscaled', (err, stdout, stderr) => {
+        execHost('systemctl restart tailscaled', (err, stdout, stderr) => {
           if (err) {
             bot.sendMessage(chatId, `❌ Errore riavvio Tailscale:\n\`\`\`text\n${stderr || err.message}\n\`\`\``, { parse_mode: 'Markdown' });
           } else {

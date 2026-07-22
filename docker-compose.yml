@@ -5,6 +5,7 @@ services:
     image: ghcr.io/lorenzo0010/casaos-reborn:latest
     container_name: casaos-reborn
     privileged: true
+    pid: "host"
     restart: always
     ports:
       - "1111:3000"
