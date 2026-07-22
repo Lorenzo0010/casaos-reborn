@@ -117,12 +117,16 @@ const pty = require('node-pty');
 const os = require('os');
 const { initUpdater } = require('./services/updater');
 const { initBroadcaster } = require('./services/broadcaster');
+const { reloadBot } = require('./services/telegram');
 
 // Initialize the background updater
 initUpdater(io);
 
 // Initialize the websocket broadcaster
 initBroadcaster(io);
+
+// Initialize Telegram Bot
+reloadBot();
 
 // Socket.io for Terminal & real-time updates
 io.use((socket, next) => {

@@ -225,6 +225,11 @@ router.post('/preferences', (req, res) => {
     }
     const newPrefs = { ...existingPrefs, ...req.body };
     fs.writeFileSync(PREFS_FILE, JSON.stringify(newPrefs, null, 2));
+    
+    // Reload Telegram bot on config change
+    const { reloadBot } = require('../services/telegram');
+    reloadBot();
+
     res.json({ success: true });
   } catch (error) {
     console.error('Error saving preferences:', error);
