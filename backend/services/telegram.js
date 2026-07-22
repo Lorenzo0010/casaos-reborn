@@ -12,6 +12,16 @@ let currentChatId = null;
 let lastNotificationTime = {};
 const NOTIFICATION_COOLDOWN = 1000 * 60 * 15;
 
+const execHost = (cmd, callback) => {
+  exec(`nsenter -t 1 -m -u -i -n -p /bin/sh -c "${cmd}"`, (err, stdout, stderr) => {
+    if (err && (err.message.includes('nsenter: command not found') || err.message.includes('nsenter: failed to execute') || err.message.includes('not found'))) {
+      exec(cmd, callback);
+    } else {
+      callback(err, stdout, stderr);
+    }
+  });
+};
+
 const initBot = (token, chatId) => {
   if (bot) {
     try { bot.stopPolling(); } catch (e) {}
@@ -55,7 +65,7 @@ const initBot = (token, chatId) => {
     if (!isAuthorized(msg)) return;
     const cmd = match[1];
     bot.sendMessage(msg.chat.id, `⏳ Esecuzione di: \`${cmd}\``, { parse_mode: 'Markdown' });
-    exec(cmd, (error, stdout, stderr) => {
+    execHost(cmd, (error, stdout, stderr) => {
       let result = stdout || stderr || '';
       if (error) result = `Errore:\n${error.message}\n\n${result}`;
       if (!result) result = 'Comando eseguito senza output.';
@@ -130,26 +140,36 @@ const initBot = (token, chatId) => {
       if (data === 'menu_network') {
         bot.answerCallbackQuery(query.id, { text: 'Recupero info rete...' });
         let text = `🌐 *Info di Rete*\n\n`;
-        try {
-          const net = await si.networkInterfaces();
-          net.forEach(n => {
-            if (n.ip4 && n.ip4 !== '127.0.0.1') {
-              text += `🔹 *${n.iface}*: \`${n.ip4}\`\n`;
-            }
-          });
-        } catch(e) {
-          text += `Errore recupero IP locali.\n`;
-        }
-        https.get('https://api.ipify.org', (res) => {
-          let publicIp = '';
-          res.on('data', d => publicIp += d);
-          res.on('end', () => {
-            text += `\n🌍 *IP Pubblico*: \`${publicIp}\``;
+        execHost('ip -4 -o addr show', (err, stdout) => {
+          if (!err && stdout) {
+            const lines = stdout.split('\n');
+            lines.forEach(line => {
+              if (line.trim()) {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length >= 4) {
+                  const iface = parts[1];
+                  const ipAddr = parts[3].split('/')[0];
+                  if (iface !== 'lo' && !ipAddr.startsWith('127.') && !iface.startsWith('docker') && !iface.startsWith('br-') && !iface.startsWith('tailscale')) {
+                    text += `🔹 *${iface}*: \`${ipAddr}\`\n`;
+                  }
+                }
+              }
+            });
+          } else {
+            text += `Errore recupero IP host.\n`;
+          }
+          
+          https.get('https://api.ipify.org', (res) => {
+            let publicIp = '';
+            res.on('data', d => publicIp += d);
+            res.on('end', () => {
+              text += `\n🌍 *IP Pubblico*: \`${publicIp}\``;
+              bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }], backBtn[0]] } });
+            });
+          }).on('error', () => {
+            text += `\n🌍 *IP Pubblico*: Errore`;
             bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }], backBtn[0]] } });
           });
-        }).on('error', () => {
-          text += `\n🌍 *IP Pubblico*: Errore`;
-          bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }], backBtn[0]] } });
         });
       }
 
@@ -263,42 +283,57 @@ const initBot = (token, chatId) => {
 
       if (data === 'ts_status') {
         bot.answerCallbackQuery(query.id, { text: 'Controllo Tailscale...' });
-        exec('systemctl status tailscaled', (err, stdout) => {
-          let text = `🌐 *Tailscale Status*\n\n`;
+        execHost('systemctl status tailscaled', (err, stdout) => {
+          let text = `🌐 *Stato Tailscale*\n\n`;
           if (stdout) {
              const activeMatch = stdout.match(/Active:\s+(.*?)\s+since/);
              const sinceMatch = stdout.match(/since\s+(.*?);(.*?)ago/);
              let active = activeMatch ? activeMatch[1].trim() : 'Sconosciuto';
              let uptime = sinceMatch ? sinceMatch[2].trim() : '';
              
-             if (active.includes('active (running)')) {
-               text += `🟢 **Stato:** Attivo\n⏱ **Uptime:** ${uptime} fa\n`;
-             } else {
-               text += `🔴 **Stato:** ${active}\n`;
-             }
-          } else {
-             // Fallback to basic tailscale status command
-             exec('tailscale status', (err2, stdout2) => {
-                if (stdout2) text += `\`\`\`bash\n${stdout2.substring(0, 1000)}\n\`\`\``;
-                else text += `Errore o servizio non trovato.\n`;
-                bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🔙 Menu Principale', callback_data: 'menu_main' }]] } });
-             });
-             return;
+             text += `**Demone:** \`${active}\`\n`;
+             if (uptime) text += `**Uptime:** ${uptime} fa\n\n`;
           }
-          bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🔙 Menu Principale', callback_data: 'menu_main' }]] } });
+          
+          execHost('tailscale status', (err2, stdout2) => {
+             text += `**Connessioni:**\n\`\`\`text\n${stdout2 ? stdout2.substring(0, 1000) : 'Errore esecuzione comando.'}\n\`\`\``;
+             
+             bot.editMessageText(text, { 
+               chat_id: chatId, 
+               message_id: query.message.message_id, 
+               parse_mode: 'Markdown', 
+               reply_markup: { 
+                 inline_keyboard: [
+                   [{ text: '🔄 Riavvia Tailscale', callback_data: 'ts_restart' }],
+                   [{ text: '🔙 Menu Principale', callback_data: 'menu_main' }]
+                 ] 
+               } 
+             });
+          });
+        });
+      }
+
+      if (data === 'ts_restart') {
+        bot.answerCallbackQuery(query.id, { text: 'Riavvio Tailscale in corso...' });
+        execHost('systemctl restart tailscaled', (err, stdout, stderr) => {
+          if (err) {
+            bot.sendMessage(chatId, `❌ Errore riavvio Tailscale:\n\`\`\`text\n${stderr || err.message}\n\`\`\``, { parse_mode: 'Markdown' });
+          } else {
+            bot.sendMessage(chatId, '✅ Tailscale riavviato con successo.');
+          }
         });
       }
 
       if (data === 'host_reboot') {
         bot.answerCallbackQuery(query.id, { text: 'Riavvio in corso...' });
         bot.sendMessage(chatId, `🔄 Riavvio del server in corso...`);
-        exec('reboot');
+        execHost('reboot', () => {});
       }
 
       if (data === 'host_shutdown') {
         bot.answerCallbackQuery(query.id, { text: 'Spegnimento in corso...' });
         bot.sendMessage(chatId, `🛑 Spegnimento del server in corso...`);
-        exec('shutdown -h now');
+        execHost('shutdown -h now', () => {});
       }
     } catch (e) {
       bot.answerCallbackQuery(query.id, { text: '⚠️ Errore: ' + e.message, show_alert: true });
