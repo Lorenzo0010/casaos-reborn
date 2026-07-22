@@ -8,10 +8,15 @@
     "category": "Network",
     "image": "pihole/pihole",
     "tag": "latest",
-    "ports": ["53:53/tcp", "53:53/udp", "80:80/tcp"],
+    "ports": ["53:53/tcp", "53:53/udp", "8081:80/tcp"],
     "env": ["TZ=Europe/Rome", "WEBPASSWORD=admin"],
-    "volumes": ["/home/orangepi/pihole/etc-pihole:/etc/pihole", "/home/orangepi/pihole/etc-dnsmasq.d:/etc/dnsmasq.d"],
-    "restartPolicy": "unless-stopped"
+    "volumes": ["./etc-pihole:/etc/pihole", "./etc-dnsmasq.d:/etc/dnsmasq.d"],
+    "restartPolicy": "unless-stopped",
+    "webUI": {
+      "scheme": "http://",
+      "port": 8081,
+      "path": "/admin"
+    }
   },
   {
     "id": "portainer",
@@ -25,7 +30,12 @@
     "ports": ["8000:8000/tcp", "9443:9443/tcp"],
     "env": [],
     "volumes": ["/var/run/docker.sock:/var/run/docker.sock", "portainer_data:/data"],
-    "restartPolicy": "always"
+    "restartPolicy": "always",
+    "webUI": {
+      "scheme": "https://",
+      "port": 9443,
+      "path": "/"
+    }
   },
   {
     "id": "jellyfin",
@@ -38,8 +48,13 @@
     "tag": "latest",
     "ports": ["8096:8096/tcp"],
     "env": ["TZ=Europe/Rome"],
-    "volumes": ["/home/orangepi/jellyfin/config:/config", "/home/orangepi/jellyfin/cache:/cache", "/home/orangepi/Media:/media"],
-    "restartPolicy": "unless-stopped"
+    "volumes": ["./config:/config", "./cache:/cache", "./media:/media"],
+    "restartPolicy": "unless-stopped",
+    "webUI": {
+      "scheme": "http://",
+      "port": 8096,
+      "path": "/"
+    }
   },
   {
     "id": "homeassistant",
@@ -52,9 +67,14 @@
     "tag": "stable",
     "ports": ["8123:8123/tcp"],
     "env": ["TZ=Europe/Rome"],
-    "volumes": ["/home/orangepi/homeassistant/config:/config", "/etc/localtime:/etc/localtime:ro"],
+    "volumes": ["./config:/config", "/etc/localtime:/etc/localtime:ro"],
     "restartPolicy": "unless-stopped",
-    "networkMode": "host"
+    "networkMode": "host",
+    "webUI": {
+      "scheme": "http://",
+      "port": 8123,
+      "path": "/"
+    }
   },
   {
     "id": "nextcloud",
@@ -67,7 +87,12 @@
     "tag": "latest",
     "ports": ["8080:80/tcp"],
     "env": [],
-    "volumes": ["/home/orangepi/nextcloud/html:/var/www/html", "/home/orangepi/nextcloud/data:/var/www/html/data"],
-    "restartPolicy": "unless-stopped"
+    "volumes": ["./html:/var/www/html", "./data:/var/www/html/data"],
+    "restartPolicy": "unless-stopped",
+    "webUI": {
+      "scheme": "http://",
+      "port": 8080,
+      "path": "/"
+    }
   }
 ]

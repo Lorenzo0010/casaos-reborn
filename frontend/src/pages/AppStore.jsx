@@ -60,7 +60,8 @@ export default function AppStore({ togglePanel }) {
         volumes: app.volumes || [],
         restartPolicy: app.restartPolicy || 'unless-stopped',
         networkMode: app.networkMode || 'bridge',
-        icon: app.icon
+        icon: app.icon,
+        webUI: app.webUI
       };
 
       await axios.post('/api/docker/containers/create', payload, {

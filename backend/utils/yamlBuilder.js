@@ -149,6 +149,21 @@ function buildCasaOSCompose(data) {
     'x-casaos': xCasaos
   };
 
+  // Add named volumes at the root level if any are used
+  if (data.volumes && data.volumes.length > 0) {
+    const namedVolumes = {};
+    for (const vol of data.volumes) {
+      const hostPart = vol.split(':')[0];
+      // If the host part doesn't start with / or ./ or ., it's likely a named volume
+      if (hostPart && !hostPart.startsWith('/') && !hostPart.startsWith('.') && !hostPart.startsWith('~')) {
+        namedVolumes[hostPart] = {};
+      }
+    }
+    if (Object.keys(namedVolumes).length > 0) {
+      compose.volumes = namedVolumes;
+    }
+  }
+
   return dumpYAML(compose) + '\n';
 }
 
