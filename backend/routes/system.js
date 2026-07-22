@@ -234,7 +234,6 @@ router.post('/preferences', (req, res) => {
 
 const archiver = require('archiver');
 const extract = require('extract-zip');
-const os = require('os');
 const { exec } = require('child_process');
 
 const CASAOS_APPS_DIR = process.env.CASAOS_APPS_DIR || (process.platform === 'win32' ? path.join(os.homedir(), 'casaos-apps') : '/var/lib/casaos/apps');
