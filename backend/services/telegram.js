@@ -13,8 +13,9 @@ let lastNotificationTime = {};
 const NOTIFICATION_COOLDOWN = 1000 * 60 * 15;
 
 const execHost = (cmd, callback) => {
-  exec(`nsenter -t 1 -m -u -i -n -p /bin/sh -c "${cmd}"`, (err, stdout, stderr) => {
-    if (err && (err.message.includes('nsenter: command not found') || err.message.includes('nsenter: failed to execute') || err.message.includes('not found'))) {
+  const hostCmd = `export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH; ${cmd}`;
+  exec(`nsenter -t 1 -m -u -i -n -p /bin/sh -c "${hostCmd}"`, (err, stdout, stderr) => {
+    if (err && (err.message.includes('nsenter: command not found') || err.message.includes('nsenter: failed to execute') || err.message.includes('not found') && !err.message.includes('tailscale'))) {
       exec(cmd, callback);
     } else {
       callback(err, stdout, stderr);
@@ -283,21 +284,14 @@ const initBot = (token, chatId) => {
 
       if (data === 'ts_status') {
         bot.answerCallbackQuery(query.id, { text: 'Controllo Tailscale...' });
-        execHost('systemctl status tailscaled', (err, stdout) => {
+        execHost('sudo systemctl status tailscaled', (err, stdout, stderr) => {
           let text = `🌐 *Stato Tailscale*\n\n`;
-          if (stdout) {
-             const activeMatch = stdout.match(/Active:\s+(.*?)\s+since/);
-             const sinceMatch = stdout.match(/since\s+(.*?);(.*?)ago/);
-             let active = activeMatch ? activeMatch[1].trim() : 'Sconosciuto';
-             let uptime = sinceMatch ? sinceMatch[2].trim() : '';
-             
-             text += `**Demone:** \`${active}\`\n`;
-             if (uptime) text += `**Uptime:** ${uptime} fa\n\n`;
-          }
+          let sysText = stdout || stderr || (err ? err.message : 'Nessun output.');
+          text += `**Systemctl Status:**\n\`\`\`bash\n${sysText.substring(0, 800)}\n\`\`\`\n`;
           
           execHost('tailscale status', (err2, stdout2, stderr2) => {
-             let resText = stdout2 || stderr2 || (err2 ? err2.message : 'Nessun output.');
-             text += `**Connessioni:**\n\`\`\`text\n${resText.substring(0, 1000)}\n\`\`\``;
+             let tsText = stdout2 || stderr2 || (err2 ? err2.message : 'Nessun output.');
+             text += `**Tailscale Status:**\n\`\`\`bash\n${tsText.substring(0, 800)}\n\`\`\``;
              
              bot.editMessageText(text, { 
                chat_id: chatId, 
@@ -316,7 +310,7 @@ const initBot = (token, chatId) => {
 
       if (data === 'ts_restart') {
         bot.answerCallbackQuery(query.id, { text: 'Riavvio Tailscale in corso...' });
-        execHost('systemctl restart tailscaled', (err, stdout, stderr) => {
+        execHost('sudo systemctl restart tailscaled', (err, stdout, stderr) => {
           if (err) {
             bot.sendMessage(chatId, `❌ Errore riavvio Tailscale:\n\`\`\`text\n${stderr || err.message}\n\`\`\``, { parse_mode: 'Markdown' });
           } else {
