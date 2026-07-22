@@ -36,16 +36,17 @@ const initBot = (token, chatId) => {
     const sent = await bot.sendMessage(msg.chat.id, '...', { reply_markup: { remove_keyboard: true } });
     bot.deleteMessage(msg.chat.id, sent.message_id).catch(() => {});
 
+    const mainKeyboard = {
+      inline_keyboard: [
+        [{ text: '📊 System', callback_data: 'menu_system' }, { text: '📦 Containers', callback_data: 'menu_containers' }],
+        [{ text: '🔄 Updates', callback_data: 'menu_updates' }, { text: '🧹 Prune', callback_data: 'menu_prune' }],
+        [{ text: '🌐 Network', callback_data: 'menu_network' }, { text: '⚠️ Host', callback_data: 'menu_host' }]
+      ]
+    };
     const text = `🤖 *CasaOS Reborn Bot*\n\nSono il tuo assistente per gestire il server.\n\nScegli un'opzione dal menu:`;
     const opts = {
       parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '📊 System', callback_data: 'menu_system' }, { text: '📦 Containers', callback_data: 'menu_containers' }],
-          [{ text: '🔄 Updates', callback_data: 'menu_updates' }, { text: '🧹 Prune', callback_data: 'menu_prune' }],
-          [{ text: '🌐 Network', callback_data: 'menu_network' }, { text: '⚠️ Host', callback_data: 'menu_host' }]
-        ]
-      }
+      reply_markup: mainKeyboard
     };
     bot.sendMessage(msg.chat.id, text, opts);
   });
@@ -69,7 +70,22 @@ const initBot = (token, chatId) => {
     const chatId = query.message.chat.id;
     const data = query.data;
 
+    const mainKeyboard = {
+      inline_keyboard: [
+        [{ text: '📊 System', callback_data: 'menu_system' }, { text: '📦 Containers', callback_data: 'menu_containers' }],
+        [{ text: '🔄 Updates', callback_data: 'menu_updates' }, { text: '🧹 Prune', callback_data: 'menu_prune' }],
+        [{ text: '🌐 Network', callback_data: 'menu_network' }, { text: '⚠️ Host', callback_data: 'menu_host' }]
+      ]
+    };
+    const backBtn = [[{ text: '🔙 Menu Principale', callback_data: 'menu_main' }]];
+
     try {
+      if (data === 'menu_main') {
+        bot.answerCallbackQuery(query.id);
+        const text = `🤖 *CasaOS Reborn Bot*\n\nSono il tuo assistente per gestire il server.\n\nScegli un'opzione dal menu:`;
+        bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: mainKeyboard });
+      }
+
       if (data === 'menu_system') {
         bot.answerCallbackQuery(query.id);
         const [cpuLoad, mem, fsSize, temp] = await Promise.all([si.currentLoad(), si.mem(), si.fsSize(), si.cpuTemperature()]);
@@ -79,7 +95,7 @@ const initBot = (token, chatId) => {
         const disk = primaryDisk ? primaryDisk.use.toFixed(1) : 0;
         const bar = (pct) => { const blocks = Math.round(pct / 10); return '█'.repeat(blocks) + '░'.repeat(10 - blocks); };
         const text = `📊 *Statistiche di Sistema*\n\n🖥 *CPU:* ${cpu}%\n\`[${bar(cpu)}]\`\n🌡 Temp: ${temp.main || '?'}°C\n\n🧠 *RAM:* ${ram}%\n\`[${bar(ram)}]\`\n\n💾 *Disco:* ${disk}%\n\`[${bar(disk)}]\``;
-        bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+        bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: backBtn } });
       }
 
       if (data === 'menu_containers') {
@@ -90,57 +106,59 @@ const initBot = (token, chatId) => {
           const state = c.State === 'running' ? '🟢' : '🔴';
           return [{ text: `${state} ${name}`, callback_data: `cont_opts_${c.Id.substring(0,12)}` }];
         });
-        bot.sendMessage(chatId, 'Seleziona un container:', { reply_markup: { inline_keyboard: keyboard } });
+        keyboard.push(backBtn[0]);
+        bot.editMessageText('Seleziona un container:', { chat_id: chatId, message_id: query.message.message_id, reply_markup: { inline_keyboard: keyboard } });
       }
 
       if (data === 'menu_updates') {
         bot.answerCallbackQuery(query.id);
         const updates = Object.values(global.availableUpdates || {});
-        if (updates.length === 0) return bot.sendMessage(chatId, '✅ Tutti i container sono aggiornati.');
+        if (updates.length === 0) return bot.editMessageText('✅ Tutti i container sono aggiornati.', { chat_id: chatId, message_id: query.message.message_id, reply_markup: { inline_keyboard: backBtn } });
         let text = `📦 *Aggiornamenti Disponibili (${updates.length})*\n\n`;
         updates.forEach(u => { text += `- *${u.name}*\n  \`${u.image}\`\n`; });
-        bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬇️ Aggiorna Tutto', callback_data: 'update_all' }]] } });
+        bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬇️ Aggiorna Tutto', callback_data: 'update_all' }], backBtn[0]] } });
       }
 
       if (data === 'menu_prune') {
         bot.answerCallbackQuery(query.id);
-        bot.sendMessage(chatId, 'Cosa vuoi pulire?', {
-          reply_markup: { inline_keyboard: [[{ text: '🗑️ Immagini', callback_data: 'prune_images' }], [{ text: '🗑️ Volumi', callback_data: 'prune_volumes' }], [{ text: '🗑️ Reti', callback_data: 'prune_networks' }]] }
+        bot.editMessageText('Cosa vuoi pulire?', {
+          chat_id: chatId, message_id: query.message.message_id,
+          reply_markup: { inline_keyboard: [[{ text: '🗑️ Immagini', callback_data: 'prune_images' }], [{ text: '🗑️ Volumi', callback_data: 'prune_volumes' }], [{ text: '🗑️ Reti', callback_data: 'prune_networks' }], backBtn[0]] }
         });
       }
 
       if (data === 'menu_network') {
         bot.answerCallbackQuery(query.id, { text: 'Recupero info rete...' });
-        exec('ip -4 addr', (err, stdout) => {
-          let text = `🌐 *Info di Rete*\n\n`;
-          if (!err && stdout) {
-            const regex = /^\d+:\s+([a-zA-Z0-9]+).*?inet\s+([0-9.]+)/gm;
-            let m;
-            while ((m = regex.exec(stdout)) !== null) {
-              text += `🔹 *${m[1]}*: \`${m[2]}\`\n`;
+        let text = `🌐 *Info di Rete*\n\n`;
+        try {
+          const net = await si.networkInterfaces();
+          net.forEach(n => {
+            if (n.ip4 && n.ip4 !== '127.0.0.1') {
+              text += `🔹 *${n.iface}*: \`${n.ip4}\`\n`;
             }
-          } else {
-            text += `Errore recupero IP locali.\n`;
-          }
-          https.get('https://api.ipify.org', (res) => {
-            let publicIp = '';
-            res.on('data', d => publicIp += d);
-            res.on('end', () => {
-              text += `\n🌍 *IP Pubblico*: \`${publicIp}\``;
-              bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }]] } });
-            });
-          }).on('error', () => {
-            text += `\n🌍 *IP Pubblico*: Errore`;
-            bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }]] } });
           });
+        } catch(e) {
+          text += `Errore recupero IP locali.\n`;
+        }
+        https.get('https://api.ipify.org', (res) => {
+          let publicIp = '';
+          res.on('data', d => publicIp += d);
+          res.on('end', () => {
+            text += `\n🌍 *IP Pubblico*: \`${publicIp}\``;
+            bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }], backBtn[0]] } });
+          });
+        }).on('error', () => {
+          text += `\n🌍 *IP Pubblico*: Errore`;
+          bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }], backBtn[0]] } });
         });
       }
 
       if (data === 'menu_host') {
         bot.answerCallbackQuery(query.id);
-        bot.sendMessage(chatId, '⚠️ *Attenzione*: Vuoi spegnere o riavviare il server host?', {
+        bot.editMessageText('⚠️ *Attenzione*: Vuoi spegnere o riavviare il server host?', {
+          chat_id: chatId, message_id: query.message.message_id,
           parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: [[{ text: '🔄 Riavvia', callback_data: 'host_reboot' }, { text: '🛑 Spegni', callback_data: 'host_shutdown' }]] }
+          reply_markup: { inline_keyboard: [[{ text: '🔄 Riavvia', callback_data: 'host_reboot' }, { text: '🛑 Spegni', callback_data: 'host_shutdown' }], backBtn[0]] }
         });
       }
 
@@ -186,11 +204,12 @@ const initBot = (token, chatId) => {
             inline_keyboard: [
               [{ text: '▶️ Avvia', callback_data: `cont_start_${cid}` }, { text: '⏹️ Ferma', callback_data: `cont_stop_${cid}` }],
               [{ text: '🔄 Riavvia', callback_data: `cont_restart_${cid}` }],
-              [{ text: '📜 Logs', callback_data: `cont_logs_${cid}` }, { text: '📈 Stats', callback_data: `cont_stats_${cid}` }]
+              [{ text: '📜 Logs', callback_data: `cont_logs_${cid}` }, { text: '📈 Stats', callback_data: `cont_stats_${cid}` }],
+              [{ text: '🔙 Containers', callback_data: 'menu_containers' }]
             ]
           }
         };
-        bot.editMessageText(`Scegli azione:`, {
+        bot.editMessageText(`Scegli azione per il container:`, {
           chat_id: chatId,
           message_id: query.message.message_id,
           reply_markup: opts.reply_markup
@@ -249,7 +268,7 @@ const initBot = (token, chatId) => {
           if (stdout) {
              const activeMatch = stdout.match(/Active:\s+(.*?)\s+since/);
              const sinceMatch = stdout.match(/since\s+(.*?);(.*?)ago/);
-             const active = activeMatch ? activeMatch[1] : 'Sconosciuto';
+             let active = activeMatch ? activeMatch[1].trim() : 'Sconosciuto';
              let uptime = sinceMatch ? sinceMatch[2].trim() : '';
              
              if (active.includes('active (running)')) {
@@ -258,9 +277,15 @@ const initBot = (token, chatId) => {
                text += `🔴 **Stato:** ${active}\n`;
              }
           } else {
-             text += `Errore o servizio non trovato.\n`;
+             // Fallback to basic tailscale status command
+             exec('tailscale status', (err2, stdout2) => {
+                if (stdout2) text += `\`\`\`bash\n${stdout2.substring(0, 1000)}\n\`\`\``;
+                else text += `Errore o servizio non trovato.\n`;
+                bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🔙 Menu Principale', callback_data: 'menu_main' }]] } });
+             });
+             return;
           }
-          bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+          bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🔙 Menu Principale', callback_data: 'menu_main' }]] } });
         });
       }
 
