@@ -58,7 +58,8 @@ function buildCasaOSCompose(data) {
     restart: data.restartPolicy || 'unless-stopped',
   };
 
-  if (data.networkMode) {
+  // Do not write network_mode if it's the auto-generated compose network, otherwise compose breaks
+  if (data.networkMode && !data.networkMode.endsWith('_default')) {
     service.network_mode = data.networkMode;
   }
 
