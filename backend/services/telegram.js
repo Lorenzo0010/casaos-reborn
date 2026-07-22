@@ -150,7 +150,7 @@ const initBot = (token, chatId) => {
                 if (parts.length >= 4) {
                   const iface = parts[1];
                   const ipAddr = parts[3].split('/')[0];
-                  if (iface !== 'lo' && !ipAddr.startsWith('127.') && !iface.startsWith('docker') && !iface.startsWith('br-') && !iface.startsWith('tailscale')) {
+                  if (['lo', 'wlan0', 'end0'].includes(iface)) {
                     text += `🔹 *${iface}*: \`${ipAddr}\`\n`;
                   }
                 }
