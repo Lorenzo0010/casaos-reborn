@@ -14,6 +14,8 @@
   --border-subtle: rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.12);
+  --text-muted: #6b7280;
+  --chart-grid: rgba(0, 0, 0, 0.1);
 
   /* Spacing Variables */
   --space-1: 4px;
@@ -47,6 +49,8 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.5);
   --primary-alpha: color-mix(in srgb, var(--primary) 20%, transparent);
+  --text-muted: #9ca3af;
+  --chart-grid: rgba(255, 255, 255, 0.15);
 }
 
 * {
@@ -202,6 +206,10 @@ body {
 
 .mb-6 {
   margin-bottom: var(--space-6);
+}
+
+.mr-4 {
+  margin-right: var(--space-4);
 }
 
 .mt-2 {
@@ -1224,6 +1232,30 @@ input:checked+.slider:before {
 /* ════════════════════════════════════════════
    ANIMATIONS & KEYFRAMES
    ════════════════════════════════════════════ */
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+.shake-animation {
+  animation: shake 0.3s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════
+   MODAL TABLE MOBILE RESPONSIVENESS
+   ════════════════════════════════════════════ */
+
+.modal-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.modal-table-wrapper table {
+  min-width: 600px;
+}
 
 @keyframes fade-in {
   from {

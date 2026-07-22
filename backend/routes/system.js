@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const si = require('systeminformation');
+const { getSystemHistory } = require('../services/broadcaster');
 
 // Get current system load/stats
 router.get('/stats', async (req, res) => {
@@ -49,6 +50,106 @@ router.get('/stats', async (req, res) => {
   } catch (error) {
     console.error('Error fetching system stats:', error);
     res.status(500).json({ error: 'Failed to fetch system statistics' });
+  }
+});
+
+// Get system history
+router.get('/history', (req, res) => {
+  try {
+    const history = getSystemHistory();
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching system history:', error);
+    res.status(500).json({ error: 'Failed to fetch system history' });
+  }
+});
+
+// Get top processes and container stats
+const os = require('os');
+router.get('/processes', async (req, res) => {
+  try {
+    const [processData, dockerStats, dockerContainersInfo] = await Promise.all([
+      si.processes(),
+      si.dockerContainerStats('*').catch(() => []),
+      si.dockerContainers('all').catch(() => [])
+    ]);
+    
+    // Sort by CPU by default and limit to 100 to save bandwidth
+    const topProcesses = processData.list
+      .sort((a, b) => b.cpu - a.cpu)
+      .slice(0, 100)
+      .map(p => ({
+        pid: p.pid,
+        name: p.name,
+        cpu: p.cpu / os.cpus().length,
+        mem: p.mem,
+        memBytes: (p.memRss || 0) * 1024,
+        user: p.user,
+        state: p.state
+      }));
+
+    let topContainers = [];
+    if (Array.isArray(dockerStats)) {
+      topContainers = dockerStats.map(c => {
+        // Find matching container info to get the real name
+        const info = Array.isArray(dockerContainersInfo) ? dockerContainersInfo.find(info => info.id === c.id) : null;
+        let cName = info ? info.name : (c.name || 'Unknown');
+        // Clean up name (Docker often prefixes with '/')
+        if (cName.startsWith('/')) cName = cName.substring(1);
+        
+        return {
+          id: c.id.substring(0, 12),
+          name: cName,
+          cpu: (c.cpuPercent || 0) / os.cpus().length,
+          mem: c.memPercent || 0,
+          memBytes: c.memUsage || 0
+        };
+      }).sort((a, b) => b.cpu - a.cpu);
+    }
+      
+    res.json({ processes: topProcesses, containers: topContainers });
+  } catch (error) {
+    console.error('Error fetching processes:', error);
+    res.status(500).json({ error: 'Failed to fetch processes' });
+  }
+});
+
+// Get detailed network usage for containers and interfaces
+router.get('/network-details', async (req, res) => {
+  try {
+    const [dockerStats, dockerContainersInfo, networkInterfaces] = await Promise.all([
+      si.dockerContainerStats('*').catch(() => []),
+      si.dockerContainers('all').catch(() => []),
+      si.networkInterfaces().catch(() => [])
+    ]);
+
+    let containers = [];
+    if (Array.isArray(dockerStats)) {
+      containers = dockerStats.map(c => {
+        const info = Array.isArray(dockerContainersInfo) ? dockerContainersInfo.find(info => info.id === c.id) : null;
+        let cName = info ? info.name : (c.name || 'Unknown');
+        if (cName.startsWith('/')) cName = cName.substring(1);
+        
+        return {
+          id: c.id.substring(0, 12),
+          name: cName,
+          rx: c.netIO?.rx || 0,
+          tx: c.netIO?.tx || 0
+        };
+      }).sort((a, b) => (b.rx + b.tx) - (a.rx + a.tx));
+    }
+
+    const interfaces = Array.isArray(networkInterfaces) ? networkInterfaces.map(net => ({
+      iface: net.iface,
+      ip4: net.ip4,
+      operstate: net.operstate,
+      type: net.type
+    })) : [];
+
+    res.json({ containers, interfaces });
+  } catch (error) {
+    console.error('Error fetching network details:', error);
+    res.status(500).json({ error: 'Failed to fetch network details' });
   }
 });
 

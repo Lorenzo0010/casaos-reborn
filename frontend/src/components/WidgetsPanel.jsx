@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { HardDrive, ArrowDown, ArrowUp, ChevronRight, Cpu, Activity, Clock, Monitor } from 'lucide-react';
+import { HardDrive, ArrowDown, ArrowUp, ChevronRight, ChevronLeft, Cpu, Activity, Clock, Monitor } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-export default function WidgetsPanel({ className = '', style = {} }) {
+import CpuModal from './CpuModal';
+import RamModal from './RamModal';
+import NetworkModal from './NetworkModal';
+
+export default function WidgetsPanel({ className = '', style = {}, editMode = false, widgetsOrder = ['cpu', 'ram', 'storage', 'network', 'system'], setWidgetsOrder }) {
   const [stats, setStats] = useState(null);
+  const [isCpuModalOpen, setIsCpuModalOpen] = useState(false);
+  const [isRamModalOpen, setIsRamModalOpen] = useState(false);
+  const [isNetworkModalOpen, setIsNetworkModalOpen] = useState(false);
+  const [draggedWidget, setDraggedWidget] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -47,6 +55,65 @@ export default function WidgetsPanel({ className = '', style = {} }) {
     return `${m}m`;
   };
 
+  const handleDragStart = (e, id) => {
+    if (!editMode) return;
+    setDraggedWidget(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    if (!editMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    if (!editMode || !draggedWidget || draggedWidget === targetId) return;
+
+    let newOrder = [...widgetsOrder];
+    // Ensure all possible widgets exist
+    const allWidgets = ['cpu', 'ram', 'storage', 'network', 'system'];
+    allWidgets.forEach(w => {
+      if (!newOrder.includes(w)) newOrder.push(w);
+    });
+
+    const draggedIndex = newOrder.indexOf(draggedWidget);
+    const targetIndex = newOrder.indexOf(targetId);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      newOrder.splice(draggedIndex, 1);
+      newOrder.splice(targetIndex, 0, draggedWidget);
+      if(setWidgetsOrder) setWidgetsOrder(newOrder);
+    }
+    setDraggedWidget(null);
+  };
+
+  const moveWidget = (id, direction) => {
+    if (!editMode) return;
+    let newOrder = [...widgetsOrder];
+    // Ensure all possible widgets exist
+    const allWidgets = ['cpu', 'ram', 'storage', 'network', 'system'];
+    allWidgets.forEach(w => {
+      if (!newOrder.includes(w)) newOrder.push(w);
+    });
+
+    const index = newOrder.indexOf(id);
+    if (index === -1) return;
+    
+    if (direction === -1 && index > 0) {
+      const temp = newOrder[index - 1];
+      newOrder[index - 1] = newOrder[index];
+      newOrder[index] = temp;
+      if(setWidgetsOrder) setWidgetsOrder(newOrder);
+    } else if (direction === 1 && index < newOrder.length - 1) {
+      const temp = newOrder[index + 1];
+      newOrder[index + 1] = newOrder[index];
+      newOrder[index] = temp;
+      if(setWidgetsOrder) setWidgetsOrder(newOrder);
+    }
+  };
+
   if (!stats) {
     return (
       <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
@@ -59,12 +126,35 @@ export default function WidgetsPanel({ className = '', style = {} }) {
     );
   }
 
-  return (
-    <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
+  const renderArrows = (id) => {
+    if (!editMode) return null;
+    return (
+      <div className="flex justify-between items-center" style={{ position: 'absolute', top: '8px', left: '8px', right: '8px', zIndex: 10 }}>
+        <button onClick={(e) => { e.stopPropagation(); moveWidget(id, -1); }} className="btn-icon-only" style={{ background: 'var(--card-bg)', padding: '6px', width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+          <ChevronLeft size={18} />
+        </button>
+        <div style={{ flex: 1, cursor: 'grab', height: '32px' }} title="Trascina per riordinare"></div>
+        <button onClick={(e) => { e.stopPropagation(); moveWidget(id, 1); }} className="btn-icon-only" style={{ background: 'var(--card-bg)', padding: '6px', width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+          <ChevronRight size={18} />
+        </button>
+      </div>
+    );
+  };
 
-      {/* 1. CPU Widget */}
-      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
-        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
+  const widgetComponents = {
+    cpu: (
+      <div 
+        key="cpu"
+        draggable={editMode}
+        onDragStart={(e) => handleDragStart(e, 'cpu')}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, 'cpu')}
+        onClick={() => !editMode && setIsCpuModalOpen(true)} 
+        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'cpu' ? 0.5 : 1 }}
+      >
+        {renderArrows('cpu')}
+        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Processore</span>
           <Cpu size={16} opacity={0.7} />
         </div>
@@ -82,10 +172,20 @@ export default function WidgetsPanel({ className = '', style = {} }) {
           </span>
         </div>
       </div>
-
-      {/* 2. RAM Widget */}
-      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
-        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
+    ),
+    ram: (
+      <div 
+        key="ram"
+        draggable={editMode}
+        onDragStart={(e) => handleDragStart(e, 'ram')}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, 'ram')}
+        onClick={() => !editMode && setIsRamModalOpen(true)} 
+        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'ram' ? 0.5 : 1 }}
+      >
+        {renderArrows('ram')}
+        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Memoria RAM</span>
           <Activity size={16} opacity={0.7} />
         </div>
@@ -103,10 +203,19 @@ export default function WidgetsPanel({ className = '', style = {} }) {
           </span>
         </div>
       </div>
-
-      {/* 3. Storage Widget */}
-      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
-        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
+    ),
+    storage: (
+      <div 
+        key="storage"
+        draggable={editMode}
+        onDragStart={(e) => handleDragStart(e, 'storage')}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, 'storage')}
+        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'storage' ? 0.5 : 1 }}
+      >
+        {renderArrows('storage')}
+        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Archiviazione</span>
           <HardDrive size={16} opacity={0.7} />
         </div>
@@ -121,10 +230,20 @@ export default function WidgetsPanel({ className = '', style = {} }) {
         </div>
         <progress value={stats.disk?.percent || 0} max="100" style={{ width: '100%', height: '4px', borderRadius: '2px' }}></progress>
       </div>
-
-      {/* 4. Network Widget */}
-      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
-        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
+    ),
+    network: (
+      <div 
+        key="network"
+        draggable={editMode}
+        onDragStart={(e) => handleDragStart(e, 'network')}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, 'network')}
+        onClick={() => !editMode && setIsNetworkModalOpen(true)} 
+        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'network' ? 0.5 : 1 }}
+      >
+        {renderArrows('network')}
+        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stato della Rete</span>
           <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>Attiva</span>
         </div>
@@ -145,10 +264,19 @@ export default function WidgetsPanel({ className = '', style = {} }) {
           </div>
         </div>
       </div>
-
-      {/* 5. System Info Widget */}
-      <div className="widget p-4" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between' }}>
-        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)' }}>
+    ),
+    system: (
+      <div 
+        key="system"
+        draggable={editMode}
+        onDragStart={(e) => handleDragStart(e, 'system')}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, 'system')}
+        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'system' ? 0.5 : 1 }}
+      >
+        {renderArrows('system')}
+        <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Info di Sistema</span>
           <Monitor size={16} opacity={0.7} />
         </div>
@@ -179,7 +307,23 @@ export default function WidgetsPanel({ className = '', style = {} }) {
           </div>
         </div>
       </div>
+    )
+  };
 
-    </div>
+  const allPossibleWidgets = ['cpu', 'ram', 'storage', 'network', 'system'];
+  // Array fallback in caso widgetsOrder sia vuoto o manchi roba
+  const currentOrder = Array.isArray(widgetsOrder) && widgetsOrder.length > 0 ? widgetsOrder : allPossibleWidgets;
+  const missingWidgets = allPossibleWidgets.filter(w => !currentOrder.includes(w));
+  const finalOrder = [...currentOrder, ...missingWidgets];
+
+  return (
+    <>
+      <CpuModal isOpen={isCpuModalOpen} onClose={() => setIsCpuModalOpen(false)} />
+      <RamModal isOpen={isRamModalOpen} onClose={() => setIsRamModalOpen(false)} />
+      <NetworkModal isOpen={isNetworkModalOpen} onClose={() => setIsNetworkModalOpen(false)} />
+      <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
+        {finalOrder.map(widgetId => widgetComponents[widgetId])}
+      </div>
+    </>
   );
 }

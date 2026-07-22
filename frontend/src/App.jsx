@@ -261,11 +261,15 @@ function App() {
     
   };
 
-  const savePreferences = async (newPrefs) => {
-    // Aggiornamento ottimistico per un feedback istantaneo
-    setPreferences(newPrefs);
-    applyCustomStyles(newPrefs, actualTheme);
+  const savePreferences = async (partialPrefs) => {
+    if (!token) return;
     
+    setPreferences(prev => {
+      const nextPrefs = { ...(prev || {}), ...partialPrefs };
+      applyCustomStyles(nextPrefs, actualTheme);
+      return nextPrefs;
+    });
+
     try {
       await fetch('/api/system/preferences', {
         method: 'POST',
@@ -273,7 +277,7 @@ function App() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(newPrefs)
+        body: JSON.stringify(partialPrefs)
       });
     } catch (e) {
       console.error(e);

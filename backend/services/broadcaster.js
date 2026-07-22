@@ -4,6 +4,12 @@ const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 
 let intervalId = null;
 
+// History array to keep last 15 minutes (300 samples at 3 sec interval)
+const MAX_HISTORY = 300;
+let systemHistory = [];
+
+const getSystemHistory = () => systemHistory;
+
 const initBroadcaster = (io) => {
   if (intervalId) return;
 
@@ -54,6 +60,18 @@ const initBroadcaster = (io) => {
         }
       };
 
+      // Push to history
+      systemHistory.push({
+        time: Date.now(),
+        cpu: parseFloat(stats.cpu.load),
+        memory: parseFloat(stats.memory.percent),
+        memoryUsed: stats.memory.used,
+        memoryTotal: stats.memory.total
+      });
+      if (systemHistory.length > MAX_HISTORY) {
+        systemHistory.shift();
+      }
+
       // Emit stats
       io.emit('system.stats', stats);
 
@@ -72,4 +90,4 @@ const initBroadcaster = (io) => {
   }, 3000); // Poll every 3 seconds for broadcast
 };
 
-module.exports = { initBroadcaster };
+module.exports = { initBroadcaster, getSystemHistory };
