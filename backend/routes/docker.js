@@ -189,15 +189,13 @@ router.post('/containers/:id/recreate', async (req, res) => {
 
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Recreating container via Compose...', taskId });
     
-    // Rimuoviamo il container forzatamente prima per evitare errori di 'name conflict' con docker compose up,
-    // ma SOLO se non fa già parte di un progetto compose. Se lo è, docker-compose gestirà la ricreazione da solo.
-    if (!projectName) {
-      if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...', taskId });
-      try {
-        await oldContainer.remove({ force: true });
-      } catch (removeErr) {
-        console.warn('Failed to remove old container (might be already gone):', removeErr.message);
-      }
+    // Rimuoviamo sempre il container forzatamente prima per evitare errori di 'name conflict' con docker compose up.
+    // Docker Compose lo ricreerà tranquillamente.
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Removing old container...', taskId });
+    try {
+      await oldContainer.remove({ force: true });
+    } catch (removeErr) {
+      console.warn('Failed to remove old container (might be already gone):', removeErr.message);
     }
 
     // Execute Docker Compose
@@ -271,6 +269,13 @@ router.post('/containers/:id/update', async (req, res) => {
             resolve();
           });
         });
+
+        if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Removing old container...', taskId });
+        try {
+          await oldContainer.remove({ force: true });
+        } catch (removeErr) {
+          console.warn('Failed to remove old container (might be already gone):', removeErr.message);
+        }
 
         if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Recreating container via Compose...', taskId });
         
