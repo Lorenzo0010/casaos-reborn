@@ -295,8 +295,9 @@ const initBot = (token, chatId) => {
              if (uptime) text += `**Uptime:** ${uptime} fa\n\n`;
           }
           
-          execHost('tailscale status', (err2, stdout2) => {
-             text += `**Connessioni:**\n\`\`\`text\n${stdout2 ? stdout2.substring(0, 1000) : 'Errore esecuzione comando.'}\n\`\`\``;
+          execHost('tailscale status', (err2, stdout2, stderr2) => {
+             let resText = stdout2 || stderr2 || (err2 ? err2.message : 'Nessun output.');
+             text += `**Connessioni:**\n\`\`\`text\n${resText.substring(0, 1000)}\n\`\`\``;
              
              bot.editMessageText(text, { 
                chat_id: chatId, 
