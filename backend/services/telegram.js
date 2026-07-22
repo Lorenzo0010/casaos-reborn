@@ -3,8 +3,11 @@ const si = require('systeminformation');
 const Docker = require('dockerode');
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 const http = require('http');
+const https = require('https');
+const { exec } = require('child_process');
 
 let bot = null;
+let alertInterval = null;
 let currentChatId = null;
 let lastNotificationTime = {};
 const NOTIFICATION_COOLDOWN = 1000 * 60 * 15;
@@ -28,11 +31,23 @@ const initBot = (token, chatId) => {
   // Commands
   bot.onText(/\/(start|help)/, (msg) => {
     if (!isAuthorized(msg)) return;
-    const text = `🤖 *CasaOS Reborn Bot*\n\nSono il tuo assistente per gestire il server.\n\nComandi disponibili:\n/system - Statistiche di sistema (CPU, RAM, Disco)\n/containers - Gestisci i container (Avvia/Ferma)\n/updates - Controlla e installa aggiornamenti\n/prune - Pulisci risorse Docker inutilizzate`;
-    bot.sendMessage(msg.chat.id, text, { parse_mode: 'Markdown' });
+    const text = `🤖 *CasaOS Reborn Bot*\n\nSono il tuo assistente per gestire il server.\n\nScegli un comando dal menu sottostante:`;
+    const opts = {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        keyboard: [
+          [{ text: '📊 System' }, { text: '📦 Containers' }],
+          [{ text: '🔄 Updates' }, { text: '🧹 Prune' }],
+          [{ text: '🌐 Network' }, { text: '⚠️ Host' }]
+        ],
+        resize_keyboard: true,
+        is_persistent: true
+      }
+    };
+    bot.sendMessage(msg.chat.id, text, opts);
   });
 
-  bot.onText(/\/system/, async (msg) => {
+  bot.onText(/(?:\/system|📊 System)/, async (msg) => {
     if (!isAuthorized(msg)) return;
     try {
       const [cpuLoad, mem, fsSize, temp] = await Promise.all([
@@ -60,7 +75,7 @@ const initBot = (token, chatId) => {
     }
   });
 
-  bot.onText(/\/prune/, (msg) => {
+  bot.onText(/(?:\/prune|🧹 Prune)/, (msg) => {
     if (!isAuthorized(msg)) return;
     const opts = {
       reply_markup: {
@@ -74,7 +89,7 @@ const initBot = (token, chatId) => {
     bot.sendMessage(msg.chat.id, 'Cosa vuoi pulire?', opts);
   });
 
-  bot.onText(/\/updates/, (msg) => {
+  bot.onText(/(?:\/updates|🔄 Updates)/, (msg) => {
     if (!isAuthorized(msg)) return;
     const updates = Object.values(global.availableUpdates || {});
     if (updates.length === 0) {
@@ -98,7 +113,62 @@ const initBot = (token, chatId) => {
     bot.sendMessage(msg.chat.id, text, opts);
   });
 
-  bot.onText(/\/containers/, async (msg) => {
+  bot.onText(/^\/cmd\s+(.+)/, (msg, match) => {
+    if (!isAuthorized(msg)) return;
+    const cmd = match[1];
+    bot.sendMessage(msg.chat.id, `⏳ Esecuzione di: \`${cmd}\``, { parse_mode: 'Markdown' });
+    exec(cmd, (error, stdout, stderr) => {
+      let result = stdout || stderr || '';
+      if (error) result = `Errore:\n${error.message}\n\n${result}`;
+      if (!result) result = 'Comando eseguito senza output.';
+      // Telegram max msg length is 4096
+      if (result.length > 4000) result = result.substring(0, 4000) + '\n...[TRONCATO]';
+      bot.sendMessage(msg.chat.id, `\`\`\`bash\n${result}\n\`\`\``, { parse_mode: 'Markdown' });
+    });
+  });
+
+  bot.onText(/(?:\/network|🌐 Network)/, async (msg) => {
+    if (!isAuthorized(msg)) return;
+    try {
+      const net = await si.networkInterfaces();
+      const defaultIface = net.find(n => !n.internal && n.ip4) || net[0];
+      const localIp = defaultIface ? defaultIface.ip4 : 'Sconosciuto';
+      const end0Iface = net.find(n => n.iface === 'end0' && n.ip4);
+      const end0Ip = end0Iface ? end0Iface.ip4 : 'Non connesso';
+      const wlanIface = net.find(n => n.iface === 'wlan0' && n.ip4);
+      const wlanIp = wlanIface ? wlanIface.ip4 : 'Non connesso';
+      
+      https.get('https://api.ipify.org', (res) => {
+        let publicIp = '';
+        res.on('data', d => publicIp += d);
+        res.on('end', () => {
+          const text = `🌐 *Info di Rete*\n\n🏠 IP Locale: \`${localIp}\`\n🔌 IP END0: \`${end0Ip}\`\n📡 IP WLAN0: \`${wlanIp}\`\n🌍 IP Pubblico: \`${publicIp}\``;
+          bot.sendMessage(msg.chat.id, text, {
+            parse_mode: 'Markdown',
+            reply_markup: { inline_keyboard: [[{ text: 'Tailscale Status', callback_data: 'ts_status' }]] }
+          });
+        });
+      }).on('error', () => {
+        bot.sendMessage(msg.chat.id, `🌐 *Info di Rete*\n\n🏠 IP Locale: \`${localIp}\`\n🔌 IP END0: \`${end0Ip}\`\n📡 IP WLAN0: \`${wlanIp}\`\n🌍 IP Pubblico: Errore recupero`, { parse_mode: 'Markdown' });
+      });
+    } catch (e) {
+      bot.sendMessage(msg.chat.id, `Errore rete: ${e.message}`);
+    }
+  });
+
+  bot.onText(/(?:\/host|⚠️ Host)/, (msg) => {
+    if (!isAuthorized(msg)) return;
+    bot.sendMessage(msg.chat.id, '⚠️ *Attenzione*: Vuoi spegnere o riavviare il server host?', {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Riavvia', callback_data: 'host_reboot' }, { text: '🛑 Spegni', callback_data: 'host_shutdown' }]
+        ]
+      }
+    });
+  });
+
+  bot.onText(/(?:\/containers|📦 Containers)/, async (msg) => {
     if (!isAuthorized(msg)) return;
     try {
       const containers = await docker.listContainers({ all: true });
@@ -164,7 +234,8 @@ const initBot = (token, chatId) => {
           reply_markup: {
             inline_keyboard: [
               [{ text: '▶️ Avvia', callback_data: `cont_start_${cid}` }, { text: '⏹️ Ferma', callback_data: `cont_stop_${cid}` }],
-              [{ text: '🔄 Riavvia', callback_data: `cont_restart_${cid}` }]
+              [{ text: '🔄 Riavvia', callback_data: `cont_restart_${cid}` }],
+              [{ text: '📜 Logs', callback_data: `cont_logs_${cid}` }, { text: '📈 Stats', callback_data: `cont_stats_${cid}` }]
             ]
           }
         };
@@ -193,10 +264,72 @@ const initBot = (token, chatId) => {
         await docker.getContainer(cid).restart();
         bot.sendMessage(chatId, `✅ Container riavviato.`);
       }
+      if (data.startsWith('cont_logs_')) {
+        const cid = data.replace('cont_logs_', '');
+        bot.answerCallbackQuery(query.id, { text: 'Recupero logs...' });
+        const logBuffer = await docker.getContainer(cid).logs({ tail: 50, stdout: true, stderr: true });
+        let logs = logBuffer.toString('utf8').replace(/[\u0000-\u001F]/g, ''); // Clean docker log multiplexing headers
+        if (logs.length > 3900) logs = logs.substring(logs.length - 3900);
+        if (!logs) logs = "Nessun log disponibile.";
+        bot.sendMessage(chatId, `📜 *Logs Container*\n\`\`\`text\n${logs}\n\`\`\``, { parse_mode: 'Markdown' });
+      }
+      if (data.startsWith('cont_stats_')) {
+        const cid = data.replace('cont_stats_', '');
+        bot.answerCallbackQuery(query.id, { text: 'Recupero stats...' });
+        const stats = await docker.getContainer(cid).stats({ stream: false });
+        
+        let cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage;
+        let systemDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage;
+        let cpu = 0.0;
+        if (systemDelta > 0.0 && cpuDelta > 0.0) {
+          cpu = (cpuDelta / systemDelta) * stats.cpu_stats.online_cpus * 100.0;
+        }
+        
+        let usedMemory = stats.memory_stats.usage - (stats.memory_stats.stats?.cache || 0);
+        let mem = (usedMemory / stats.memory_stats.limit) * 100.0;
+        
+        bot.sendMessage(chatId, `📈 *Stats Live Container*\nCPU: ${cpu.toFixed(2)}%\nRAM: ${mem.toFixed(2)}%`, { parse_mode: 'Markdown' });
+      }
+
+      if (data === 'ts_status') {
+        bot.answerCallbackQuery(query.id, { text: 'Controllo Tailscale...' });
+        exec('tailscale status', (err, stdout) => {
+          const res = err ? `Errore o non installato:\n${err.message}` : stdout;
+          bot.sendMessage(chatId, `🌐 *Tailscale Status*\n\`\`\`bash\n${res}\n\`\`\``, { parse_mode: 'Markdown' });
+        });
+      }
+
+      if (data === 'host_reboot') {
+        bot.answerCallbackQuery(query.id, { text: 'Riavvio in corso...' });
+        bot.sendMessage(chatId, `🔄 Riavvio del server in corso...`);
+        exec('reboot');
+      }
+
+      if (data === 'host_shutdown') {
+        bot.answerCallbackQuery(query.id, { text: 'Spegnimento in corso...' });
+        bot.sendMessage(chatId, `🛑 Spegnimento del server in corso...`);
+        exec('shutdown -h now');
+      }
     } catch (e) {
       bot.answerCallbackQuery(query.id, { text: '⚠️ Errore: ' + e.message, show_alert: true });
     }
   });
+
+  if (alertInterval) clearInterval(alertInterval);
+  alertInterval = setInterval(async () => {
+    try {
+      const [cpuLoad, mem, fsSize] = await Promise.all([si.currentLoad(), si.mem(), si.fsSize()]);
+      const primaryDisk = fsSize.find(f => f.mount === '/') || fsSize[0];
+      
+      const cpuPct = cpuLoad.currentLoad;
+      const ramPct = (mem.active / mem.total) * 100;
+      const diskPct = primaryDisk ? primaryDisk.use : 0;
+      
+      if (cpuPct > 90 || ramPct > 90 || diskPct > 90) {
+        bot.sendMessage(currentChatId, `🚨 *ALLARME SISTEMA* 🚨\n\nRisorse oltre il 90%:\nCPU: ${cpuPct.toFixed(1)}%\nRAM: ${ramPct.toFixed(1)}%\nDisco: ${diskPct.toFixed(1)}%`, { parse_mode: 'Markdown' });
+      }
+    } catch (e) {}
+  }, 1000 * 60 * 5); // 5 minutes
 
   console.log('[Telegram] Bot avviato in modalità polling');
 };
