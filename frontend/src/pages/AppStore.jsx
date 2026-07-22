@@ -35,14 +35,29 @@ export default function AppStore({ togglePanel }) {
     try {
       const token = localStorage.getItem('token');
       // Mappiamo i campi dello store sul formato richiesto da /containers/create
+      const portsObj = {};
+      if (app.ports) {
+        app.ports.forEach(p => {
+          const [host, rest] = p.split(':');
+          let container = rest;
+          let protocol = 'tcp';
+          if (rest.includes('/')) {
+            [container, protocol] = rest.split('/');
+          }
+          const key = `${container}/${protocol}`;
+          if (!portsObj[key]) portsObj[key] = [];
+          portsObj[key].push({ HostPort: host });
+        });
+      }
+
       const payload = {
         name: app.name,
         displayName: app.displayName,
         image: app.image,
         tag: app.tag || 'latest',
-        ports: app.ports?.map(p => ({ mapped: p.split(':')[0], original: p.split(':')[1]?.split('/')[0] })) || [],
-        env: app.env?.map(e => ({ name: e.split('=')[0], value: e.split('=')[1] })) || [],
-        volumes: app.volumes?.map(v => ({ host: v.split(':')[0], container: v.split(':')[1] })) || [],
+        ports: portsObj,
+        env: app.env || [],
+        volumes: app.volumes || [],
         restartPolicy: app.restartPolicy || 'unless-stopped',
         networkMode: app.networkMode || 'bridge',
         icon: app.icon
