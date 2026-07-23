@@ -253,10 +253,11 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
             <Menu size={24} />
           </button>
-          <h1 className="flex items-center gap-2 m-0">
-            <Wrench /> Avanzate
-          </h1>
         </div>
+        <h1 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>
+          <Wrench /> Avanzate
+        </h1>
+        <div className="flex items-center gap-2" style={{ width: '40px' }}></div>
       </div>
 
       {/* ─── Section 1: UI Settings ─── */}

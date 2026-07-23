@@ -80,10 +80,11 @@ export default function TerminalPage({ togglePanel }) {
               <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
                 <Menu size={24} />
               </button>
-              <h2 className="m-0 flex items-center gap-2" style={{ fontSize: '1.25rem' }}>
-                <TermIcon size={24} color="var(--primary)" /> Connessione SSH Host
-              </h2>
             </div>
+            <h2 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ fontSize: '1.25rem', flexGrow: 1 }}>
+              <TermIcon size={24} color="var(--primary)" /> Connessione SSH Host
+            </h2>
+            <div className="flex items-center gap-2" style={{ width: '40px' }}></div>
           </div>
           
           <p style={{ opacity: 0.7, marginBottom: '20px', fontSize: '0.9rem' }}>
@@ -115,8 +116,8 @@ export default function TerminalPage({ togglePanel }) {
           <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
             <Menu size={24} />
           </button>
-          <h1>Terminale SSH</h1>
         </div>
+        <h1 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>Terminale SSH</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted">{sshUser}@{sshHost}</span>
           <button className="btn" onClick={() => setConnected(false)} style={{ padding: '6px 12px', fontSize: '0.875rem' }}>Disconnetti</button>

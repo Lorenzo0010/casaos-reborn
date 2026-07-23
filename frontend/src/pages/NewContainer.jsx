@@ -331,10 +331,11 @@ export default function NewContainer({ togglePanel }) {
           <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
             <Menu size={24} />
           </button>
-          <h2 className="flex items-center gap-2 m-0">
-            <PlusSquare size={24} /> Create New Container
-          </h2>
         </div>
+        <h2 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>
+          <PlusSquare size={24} /> Create New Container
+        </h2>
+        <div className="flex items-center gap-2" style={{ width: '40px' }}></div>
       </div>
 
       <div className="widget" style={{ overflow: 'hidden', padding: 0 }}>

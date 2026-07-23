@@ -200,15 +200,16 @@ export default function FileManager({ togglePanel }) {
       
       {/* Header & Toolbar */}
       <div className="widget flex justify-between items-center p-5">
-        <div className="flex items-center flex-wrap flex-1 gap-2">
+        <div className="flex items-center gap-2">
           <button 
             onClick={() => togglePanel('menu')} 
             className="btn-icon-only" 
             title="Menu"
-            style={{ marginRight: '5px' }}
           >
             <Menu size={24} />
           </button>
+        </div>
+        <div className="flex items-center flex-wrap flex-1 gap-2 justify-center">
           <button 
             className="btn-icon" 
             onClick={() => fetchFiles(parentPath)} 

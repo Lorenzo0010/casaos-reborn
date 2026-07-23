@@ -91,20 +91,22 @@ export default function AppStore({ togglePanel }) {
           <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
             <Menu size={24} />
           </button>
-          <h1 className="flex items-center gap-2 m-0">
-            App Store
-          </h1>
         </div>
-        <div style={{ position: 'relative' }}>
-          <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} size={18} />
-          <input 
-            type="text" 
-            placeholder="Cerca app..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input glass"
-            style={{ borderRadius: '20px', paddingLeft: '38px', width: '100%', maxWidth: '280px', minWidth: '180px' }}
-          />
+        <h1 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>
+          App Store
+        </h1>
+        <div className="flex items-center gap-2">
+          <div style={{ position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} size={18} />
+            <input 
+              type="text" 
+              placeholder="Cerca app..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input glass"
+              style={{ borderRadius: '20px', paddingLeft: '38px', width: '100%', maxWidth: '280px', minWidth: '180px' }}
+            />
+          </div>
         </div>
       </div>
 
