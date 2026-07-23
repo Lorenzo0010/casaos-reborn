@@ -300,6 +300,7 @@ body {
 .layout {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   position: relative;
 }
@@ -817,6 +818,7 @@ progress::-moz-progress-bar {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  height: 100dvh;
 }
 
 .login-card {

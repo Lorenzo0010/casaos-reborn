@@ -26,7 +26,7 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
         overflowY: 'auto',
         overflowX: 'hidden',
         position: isMobile ? 'fixed' : 'relative',
-        height: '100vh',
+        height: '100dvh',
         zIndex: 100
       }}>
         
