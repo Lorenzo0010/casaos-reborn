@@ -83,10 +83,18 @@ export default function AppStore({ togglePanel }) {
   );
 
   return (
-    <div className="flex-col gap-6" style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '20px', paddingBottom: '40px' }}>
-      
+    <div className="flex-col h-full">
       {/* Header con menu hamburger per mobile */}
-      <div className="page-header">
+      <div className="page-header" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        backgroundColor: 'var(--bg-color)',
+        padding: '0 0 0 0',
+        margin: '0 0 20px 0',
+        borderBottom: '1px solid transparent',
+        boxShadow: '0 4px 20px -10px var(--bg-color)'
+      }}>
         <div className="flex items-center gap-2">
           <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
             <Menu size={24} />
@@ -109,6 +117,8 @@ export default function AppStore({ togglePanel }) {
           </div>
         </div>
       </div>
+
+      <div className="flex-col gap-6" style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
 
       {error && (
         <div className="glass" style={{ padding: '16px', marginBottom: '8px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', borderLeft: '4px solid #ef4444' }}>
@@ -176,6 +186,7 @@ export default function AppStore({ togglePanel }) {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

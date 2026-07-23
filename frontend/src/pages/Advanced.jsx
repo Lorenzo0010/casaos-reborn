@@ -246,9 +246,17 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   // ═══════════════════════════════════════
 
   return (
-    <div className="flex-col gap-6" style={{ maxWidth: '900px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
-      
-      <div className="page-header">
+    <div className="flex-col h-full">
+      <div className="page-header" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        backgroundColor: 'var(--bg-color)',
+        padding: '0 0 0 0',
+        margin: '0 0 20px 0',
+        borderBottom: '1px solid transparent',
+        boxShadow: '0 4px 20px -10px var(--bg-color)'
+      }}>
         <div className="flex items-center gap-2">
           <button onClick={() => togglePanel('menu')} className="btn-icon-only" title="Menu">
             <Menu size={24} />
@@ -259,6 +267,8 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         </h1>
         <div className="flex items-center gap-2" style={{ width: '40px' }}></div>
       </div>
+
+      <div className="flex-col gap-6" style={{ maxWidth: '900px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
 
       {/* ─── Section 1: UI Settings ─── */}
       <div className="widget">
@@ -557,6 +567,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         </button>
       </div>
 
+      </div>
     </div>
   );
 }
