@@ -199,7 +199,16 @@ export default function FileManager({ togglePanel }) {
     <div className="flex-col h-full gap-4">
       
       {/* Header & Toolbar */}
-      <div className="widget flex justify-between items-center p-5">
+      <div className="page-header" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        backgroundColor: 'var(--bg-color)',
+        padding: '0 0 0 0',
+        margin: '0 0 20px 0',
+        borderBottom: '1px solid transparent',
+        boxShadow: '0 4px 20px -10px var(--bg-color)'
+      }}>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => togglePanel('menu')} 
@@ -209,38 +218,39 @@ export default function FileManager({ togglePanel }) {
             <Menu size={24} />
           </button>
         </div>
-        <div className="flex items-center flex-wrap flex-1 gap-2 justify-center">
+
+        <div className="flex items-center flex-1 gap-2 min-w-0 justify-start" style={{ paddingLeft: '10px' }}>
           <button 
-            className="btn-icon" 
+            className="btn-icon flex-shrink-0" 
             onClick={() => fetchFiles(parentPath)} 
             disabled={!parentPath}
-            style={{ opacity: parentPath ? 1 : 0.5 }}
+            style={{ opacity: parentPath ? 1 : 0.5, border: 'none', background: 'transparent' }}
           >
             <ChevronRight style={{ transform: 'rotate(180deg)' }} />
           </button>
           
-          <div className="flex items-center gap-1 font-semibold" style={{ fontSize: '1.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            <Folder size={20} color="var(--primary)" />
+          <div className="flex items-center gap-1 font-semibold min-w-0" style={{ fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <Folder size={20} color="var(--primary)" className="flex-shrink-0" style={{ marginRight: '5px' }} />
             {breadcrumbs.length === 0 ? '/' : breadcrumbs.map((crumb, idx) => (
               <React.Fragment key={idx}>
-                {idx > 0 && <span style={{ opacity: 0.5 }}>/</span>}
-                <span>{crumb}</span>
+                {idx > 0 && <span style={{ opacity: 0.5, margin: '0 4px' }}>/</span>}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{crumb}</span>
               </React.Fragment>
             ))}
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <button className="btn-icon-only" onClick={fetchFiles} title="Aggiorna">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button className="btn-icon-only flex-shrink-0" onClick={fetchFiles} title="Aggiorna">
             <RefreshCw size={18} className={loading ? 'spin' : ''} />
           </button>
-          <button className="btn-icon-only" onClick={() => createItem(true)} title="Nuova Cartella">
+          <button className="btn-icon-only flex-shrink-0" onClick={() => createItem(true)} title="Nuova Cartella">
             <FolderPlus size={18} />
           </button>
-          <button className="btn-icon-only" onClick={() => createItem(false)} title="Nuovo File">
+          <button className="btn-icon-only flex-shrink-0" onClick={() => createItem(false)} title="Nuovo File">
             <FilePlus size={18} />
           </button>
-          <button className="btn btn-primary" onClick={handleUploadClick}>
+          <button className="btn btn-primary flex-shrink-0" style={{ whiteSpace: 'nowrap' }} onClick={handleUploadClick}>
             <Upload size={18} style={{ marginRight: '5px' }} /> Upload
           </button>
           <input type="file" multiple ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
