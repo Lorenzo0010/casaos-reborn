@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   casaos-reborn:
     image: ghcr.io/lorenzo0010/casaos-reborn:latest
@@ -17,7 +15,7 @@ services:
       - JWT_SECRET=supersecretcasaoskey
       - ADMIN_USER=admin
       - ADMIN_PASS=casaos
-      
+
   casaos-updater:
     image: ghcr.io/lorenzo0010/casaos-updater:latest
     container_name: casaos-updater
