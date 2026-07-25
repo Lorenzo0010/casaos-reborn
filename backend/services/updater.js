@@ -23,7 +23,7 @@ const checkUpdates = async (io) => {
 
     const containers = await docker.listContainers({ all: true });
     
-    for (const container of containers) {
+    await Promise.all(containers.map(async (container) => {
       const containerInfo = await docker.getContainer(container.Id).inspect();
       let fullImage = containerInfo.Config.Image;
       
@@ -98,7 +98,7 @@ const checkUpdates = async (io) => {
       } catch (err) {
         console.warn(`[Updater] Failed to check update for ${fullImage}:`, err.message);
       }
-    }
+    }));
 
     // Pulisce le immagini dangling (inutilizzate) per non accumulare spazzatura
     console.log('[Updater] Pruning unused dangling images...');
