@@ -25,19 +25,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     x-casaos:
-      envs:
-        - container: PORT
-          description:
-            en_us: Port for the web interface
-        - container: JWT_SECRET
-          description:
-            en_us: Secret key for JWT authentication
-        - container: ADMIN_USER
-          description:
-            en_us: Default admin username
-        - container: ADMIN_PASS
-          description:
-            en_us: Default admin password
       ports:
         - container: "3000"
           description:

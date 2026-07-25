@@ -119,7 +119,7 @@ function App() {
       })
       .catch(console.error);
     }
-  }, [token, theme]);
+  }, [token]);
 
   const getContrastColor = (hex) => {
     if (!hex) return '#ffffff';
@@ -141,8 +141,8 @@ function App() {
     if (!prefs) return;
     const root = document.documentElement;
     
-    // We check for mobileTheme/activeTheme or fallback to bgTheme for backward compatibility, default 'navy'
-    const activeThemeId = prefs.mobileTheme || prefs.activeTheme || (predefinedThemes.some(t => t.id === prefs.bgTheme) ? prefs.bgTheme : 'navy');
+    // We check for activeTheme or fallback to mobileTheme/bgTheme for backward compatibility, default 'navy'
+    const activeThemeId = prefs.activeTheme || prefs.mobileTheme || (predefinedThemes.some(t => t.id === prefs.bgTheme) ? prefs.bgTheme : 'navy');
     const themeDef = predefinedThemes.find(t => t.id === activeThemeId) || predefinedThemes[0];
     
     // Primary Color & Contrast

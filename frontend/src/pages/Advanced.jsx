@@ -7,7 +7,7 @@ import { predefinedThemes } from '../App';
 
 export default function Advanced({ togglePanel, theme, actualTheme, setTheme, preferences, onSave, logout }) {
   // ─── UI Settings state ───
-  const initialTheme = preferences?.mobileTheme || preferences?.activeTheme || (predefinedThemes.some(t => t.id === preferences?.bgTheme) ? preferences?.bgTheme : 'navy');
+  const initialTheme = preferences?.activeTheme || preferences?.mobileTheme || (predefinedThemes.some(t => t.id === preferences?.bgTheme) ? preferences?.bgTheme : 'navy');
   const [activeTheme, setActiveTheme] = useState(initialTheme);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -29,8 +29,8 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
   // Sync activeTheme/telegram when preferences change externally
   useEffect(() => {
-    if (preferences?.mobileTheme || preferences?.activeTheme || preferences?.bgTheme) {
-      const newTheme = preferences.mobileTheme || preferences.activeTheme || preferences.bgTheme;
+    if (preferences?.activeTheme || preferences?.mobileTheme || preferences?.bgTheme) {
+      const newTheme = preferences.activeTheme || preferences.mobileTheme || preferences.bgTheme;
       if (predefinedThemes.some(t => t.id === newTheme)) {
         setActiveTheme(newTheme);
       }
