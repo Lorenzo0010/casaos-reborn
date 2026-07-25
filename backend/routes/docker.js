@@ -357,6 +357,13 @@ router.post('/containers/:id/:action', async (req, res) => {
       throw e;
     }
     
+    const containerName = inspectData.Name.replace(/^\//, '');
+    
+    // Blocco di sicurezza per i container di sistema
+    if ((containerName === 'casaos-reborn' || containerName === 'casaos-updater') && (action === 'stop' || action === 'delete')) {
+      return res.status(403).json({ error: "Azione negata: Non puoi arrestare o eliminare i container di sistema di CasaOS Reborn per evitare danni irreparabili." });
+    }
+    
     if (action === 'start') await container.start();
     else if (action === 'stop') await container.stop();
     else if (action === 'restart') await container.restart();
@@ -389,7 +396,12 @@ router.post('/containers/:id/:action', async (req, res) => {
     
     res.json({ success: true, action, id });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    let errorMsg = error.message;
+    // Se l'engine Docker restituisce un 404 durante l'avvio, spesso è dovuto a una rete o un volume eliminato.
+    if (error.statusCode === 404 && action === 'start') {
+      errorMsg = "Il container non può essere avviato perché una risorsa da cui dipende (es. una Rete o un Volume) è stata eliminata. Prova a ricreare o aggiornare il container dalle impostazioni.";
+    }
+    res.status(500).json({ error: errorMsg });
   }
 });
 

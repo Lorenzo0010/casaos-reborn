@@ -177,7 +177,6 @@ export default function RamModal({ isOpen, onClose }) {
                         <th style={{ padding: '8px' }}>Nome Container</th>
                         <th style={{ padding: '8px' }}>ID</th>
                         <th style={{ padding: '8px' }}>Memoria</th>
-                        <th style={{ padding: '8px' }}>CPU %</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -186,7 +185,6 @@ export default function RamModal({ isOpen, onClose }) {
                           <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{c.name}</td>
                           <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{c.id}</td>
                           <td style={{ padding: '8px', color: 'var(--success)', fontWeight: 'bold' }}>{c.memBytes ? formatBytes(c.memBytes) : `${c.mem.toFixed(1)}%`}</td>
-                          <td style={{ padding: '8px', color: 'var(--text-color)' }}>{c.cpu.toFixed(1)}%</td>
                         </tr>
                       ))}
                     </tbody>
@@ -205,7 +203,6 @@ export default function RamModal({ isOpen, onClose }) {
                       <th style={{ padding: '8px' }}>PID</th>
                       <th style={{ padding: '8px' }}>Nome</th>
                       <th style={{ padding: '8px' }}>Memoria</th>
-                      <th style={{ padding: '8px' }}>CPU %</th>
                       <th style={{ padding: '8px' }}>Utente</th>
                     </tr>
                   </thead>
@@ -215,7 +212,6 @@ export default function RamModal({ isOpen, onClose }) {
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.pid}</td>
                         <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{p.name}</td>
                         <td style={{ padding: '8px', color: 'var(--success)' }}>{p.memBytes ? formatBytes(p.memBytes) : `${p.mem.toFixed(1)}%`}</td>
-                        <td style={{ padding: '8px', color: 'var(--text-color)' }}>{p.cpu.toFixed(1)}%</td>
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.user}</td>
                       </tr>
                     ))}

@@ -174,7 +174,6 @@ export default function CpuModal({ isOpen, onClose }) {
                         <th style={{ padding: '8px' }}>Nome Container</th>
                         <th style={{ padding: '8px' }}>ID</th>
                         <th style={{ padding: '8px' }}>CPU %</th>
-                        <th style={{ padding: '8px' }}>Memoria</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -183,7 +182,6 @@ export default function CpuModal({ isOpen, onClose }) {
                           <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{c.name}</td>
                           <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{c.id}</td>
                           <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>{c.cpu.toFixed(1)}%</td>
-                          <td style={{ padding: '8px', color: 'var(--text-color)' }}>{c.memBytes ? formatBytes(c.memBytes) : `${c.mem.toFixed(1)}%`}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -202,7 +200,6 @@ export default function CpuModal({ isOpen, onClose }) {
                       <th style={{ padding: '8px' }}>PID</th>
                       <th style={{ padding: '8px' }}>Nome</th>
                       <th style={{ padding: '8px' }}>CPU %</th>
-                      <th style={{ padding: '8px' }}>Memoria</th>
                       <th style={{ padding: '8px' }}>Utente</th>
                     </tr>
                   </thead>
@@ -212,7 +209,6 @@ export default function CpuModal({ isOpen, onClose }) {
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.pid}</td>
                         <td style={{ padding: '8px', fontWeight: 500, color: 'var(--text-color)' }}>{p.name}</td>
                         <td style={{ padding: '8px', color: 'var(--primary)' }}>{p.cpu.toFixed(1)}%</td>
-                        <td style={{ padding: '8px', color: 'var(--text-color)' }}>{p.memBytes ? formatBytes(p.memBytes) : `${p.mem.toFixed(1)}%`}</td>
                         <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.user}</td>
                       </tr>
                     ))}
