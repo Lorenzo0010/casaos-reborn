@@ -9,6 +9,45 @@ import Advanced from './pages/Advanced';
 import FileManager from './pages/FileManager';
 import AppStore from './pages/AppStore';
 
+export const predefinedThemes = [
+  { 
+    id: 'navy', name: 'Oceano', 
+    primary: '#3b82f6', 
+    darkBg: '#020617', darkSurface: '#0f172a',
+    lightBg: '#f8f9fb', lightSurface: '#ffffff'
+  },
+  { 
+    id: 'forest', name: 'Smeraldo', 
+    primary: '#10b981', 
+    darkBg: '#022c22', darkSurface: '#064e3b',
+    lightBg: '#f0fdf4', lightSurface: '#ffffff'
+  },
+  { 
+    id: 'red', name: 'Rubino', 
+    primary: '#f43f5e', 
+    darkBg: '#2a040d', darkSurface: '#4c0519',
+    lightBg: '#fff1f2', lightSurface: '#ffffff'
+  },
+  { 
+    id: 'rust', name: 'Ambra', 
+    primary: '#f59e0b', 
+    darkBg: '#451a03', darkSurface: '#78350f',
+    lightBg: '#fffbeb', lightSurface: '#ffffff'
+  },
+  { 
+    id: 'purple', name: 'Ametista', 
+    primary: '#8b5cf6', 
+    darkBg: '#2e1065', darkSurface: '#4c1d95',
+    lightBg: '#f5f3ff', lightSurface: '#ffffff'
+  },
+  { 
+    id: 'anthracite', name: 'Antracite', 
+    primary: '#94a3b8', 
+    darkBg: '#18181b', darkSurface: '#27272a',
+    lightBg: '#f8f9fb', lightSurface: '#ffffff'
+  }
+];
+
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -102,164 +141,30 @@ function App() {
     if (!prefs) return;
     const root = document.documentElement;
     
+    // We check for mobileTheme/activeTheme or fallback to bgTheme for backward compatibility, default 'navy'
+    const activeThemeId = prefs.mobileTheme || prefs.activeTheme || (predefinedThemes.some(t => t.id === prefs.bgTheme) ? prefs.bgTheme : 'navy');
+    const themeDef = predefinedThemes.find(t => t.id === activeThemeId) || predefinedThemes[0];
+    
     // Primary Color & Contrast
-    const primary = prefs.accentColor || '#3b82f6';
+    const primary = themeDef.primary;
     root.style.setProperty('--primary', primary);
     root.style.setProperty('--primary-text', getContrastColor(primary));
 
     // Background Image support removed
     root.style.removeProperty('--bg-image');
 
-    // Background Themes
-    const bgTheme = prefs.bgTheme || 'gray';
+    const isDark = currentTheme === 'dark';
     
-    if (currentTheme === 'light') {
-      if (bgTheme === 'gray') {
-        root.style.setProperty('--bg-color', '#f8f9fb');
-        root.style.setProperty('--text-color', '#1f2937');
-        root.style.setProperty('--card-bg', '#ffffff');
-        root.style.setProperty('--sidebar-bg', '#ffffff');
-      } else if (bgTheme === 'lightgray') {
-        root.style.setProperty('--bg-color', '#e5e7eb');
-        root.style.setProperty('--text-color', '#111827');
-        root.style.setProperty('--card-bg', '#f9fafb');
-        root.style.setProperty('--sidebar-bg', '#f9fafb');
-      } else if (bgTheme === 'mediumgray') {
-        root.style.setProperty('--bg-color', '#d1d5db');
-        root.style.setProperty('--text-color', '#111827');
-        root.style.setProperty('--card-bg', '#f3f4f6');
-        root.style.setProperty('--sidebar-bg', '#f3f4f6');
-      } else if (bgTheme === 'darkgray') {
-        root.style.setProperty('--bg-color', '#9ca3af');
-        root.style.setProperty('--text-color', '#030712');
-        root.style.setProperty('--card-bg', '#e5e7eb');
-        root.style.setProperty('--sidebar-bg', '#e5e7eb');
-      } else if (bgTheme === 'black') {
-        root.style.setProperty('--bg-color', '#e5e7eb');
-        root.style.setProperty('--text-color', '#000000');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#ffffff');
-      } else if (bgTheme === 'navy') {
-        root.style.setProperty('--bg-color', '#e0e7ff');
-        root.style.setProperty('--text-color', '#1e1b4b');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#eef2ff');
-      } else if (bgTheme === 'red') {
-        root.style.setProperty('--bg-color', '#ffe4e6');
-        root.style.setProperty('--text-color', '#4c0519');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#fff1f2');
-      } else if (bgTheme === 'purple') {
-        root.style.setProperty('--bg-color', '#f3e8ff');
-        root.style.setProperty('--text-color', '#3b0764');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#faf5ff');
-      } else if (bgTheme === 'forest') {
-        root.style.setProperty('--bg-color', '#dcfce7');
-        root.style.setProperty('--text-color', '#064e3b');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#f0fdf4');
-      } else if (bgTheme === 'mocha') {
-        root.style.setProperty('--bg-color', '#ffedd5');
-        root.style.setProperty('--text-color', '#431407');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#fff7ed');
-      } else if (bgTheme === 'anthracite') {
-        root.style.setProperty('--bg-color', '#e4e4e7');
-        root.style.setProperty('--text-color', '#18181b');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#f4f4f5');
-      } else if (bgTheme === 'ocean') {
-        root.style.setProperty('--bg-color', '#cffafe');
-        root.style.setProperty('--text-color', '#164e63');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#ecfeff');
-      } else if (bgTheme === 'military') {
-        root.style.setProperty('--bg-color', '#e9edc9');
-        root.style.setProperty('--text-color', '#3f4a3c');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#fefae0');
-      } else if (bgTheme === 'rust') {
-        root.style.setProperty('--bg-color', '#ffedbf');
-        root.style.setProperty('--text-color', '#7c2d12');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#fff7ed');
-      }
+    // Apply background and surface colors
+    root.style.setProperty('--bg-color', isDark ? themeDef.darkBg : themeDef.lightBg);
+    root.style.setProperty('--card-bg', isDark ? themeDef.darkSurface : themeDef.lightSurface);
+    root.style.setProperty('--sidebar-bg', isDark ? themeDef.darkSurface : themeDef.lightSurface);
+    
+    if (isDark) {
+      root.style.setProperty('--text-color', '#f9fafb');
     } else {
-      // Dark Mode
-      if (bgTheme === 'gray') {
-        root.style.setProperty('--bg-color', '#0f1117');
-        root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', '#1a1d27');
-        root.style.setProperty('--sidebar-bg', '#1a1d27');
-      } else if (bgTheme === 'lightgray') {
-        root.style.setProperty('--bg-color', '#4b5563');
-        root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', '#6b7280');
-        root.style.setProperty('--sidebar-bg', '#6b7280');
-      } else if (bgTheme === 'mediumgray') {
-        root.style.setProperty('--bg-color', '#374151');
-        root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', '#4b5563');
-        root.style.setProperty('--sidebar-bg', '#4b5563');
-      } else if (bgTheme === 'darkgray') {
-        root.style.setProperty('--bg-color', '#1f2937');
-        root.style.setProperty('--text-color', '#f9fafb');
-        root.style.setProperty('--card-bg', '#374151');
-        root.style.setProperty('--sidebar-bg', '#374151');
-      } else if (bgTheme === 'black') {
-        root.style.setProperty('--bg-color', '#000000');
-        root.style.setProperty('--text-color', '#ffffff');
-        root.style.setProperty('--card-bg', 'rgba(20, 20, 20, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#0a0a0a');
-      } else if (bgTheme === 'navy') {
-        root.style.setProperty('--bg-color', '#020617');
-        root.style.setProperty('--text-color', '#f8fafc');
-        root.style.setProperty('--card-bg', 'rgba(15, 23, 42, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#0f172a');
-      } else if (bgTheme === 'red') {
-        root.style.setProperty('--bg-color', '#2a040d');
-        root.style.setProperty('--text-color', '#fff1f2');
-        root.style.setProperty('--card-bg', 'rgba(67, 10, 23, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#4c0519');
-      } else if (bgTheme === 'purple') {
-        root.style.setProperty('--bg-color', '#2e1065');
-        root.style.setProperty('--text-color', '#f3e8ff');
-        root.style.setProperty('--card-bg', 'rgba(59, 7, 100, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#3b0764');
-      } else if (bgTheme === 'forest') {
-        root.style.setProperty('--bg-color', '#022c22');
-        root.style.setProperty('--text-color', '#d1fae5');
-        root.style.setProperty('--card-bg', 'rgba(6, 78, 59, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#064e3b');
-      } else if (bgTheme === 'mocha') {
-        root.style.setProperty('--bg-color', '#2e1008');
-        root.style.setProperty('--text-color', '#ffedd5');
-        root.style.setProperty('--card-bg', 'rgba(67, 20, 7, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#431407');
-      } else if (bgTheme === 'anthracite') {
-        root.style.setProperty('--bg-color', '#18181b');
-        root.style.setProperty('--text-color', '#f4f4f5');
-        root.style.setProperty('--card-bg', 'rgba(39, 39, 42, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#27272a');
-      } else if (bgTheme === 'ocean') {
-        root.style.setProperty('--bg-color', '#083344');
-        root.style.setProperty('--text-color', '#cffafe');
-        root.style.setProperty('--card-bg', 'rgba(22, 78, 99, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#164e63');
-      } else if (bgTheme === 'military') {
-        root.style.setProperty('--bg-color', '#333d29');
-        root.style.setProperty('--text-color', '#e9edc9');
-        root.style.setProperty('--card-bg', 'rgba(65, 72, 51, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#414833');
-      } else if (bgTheme === 'rust') {
-        root.style.setProperty('--bg-color', '#451a03');
-        root.style.setProperty('--text-color', '#ffedd5');
-        root.style.setProperty('--card-bg', 'rgba(124, 45, 18, 0.7)');
-        root.style.setProperty('--sidebar-bg', '#7c2d12');
-      }
+      root.style.setProperty('--text-color', '#1f2937');
     }
-    
   };
 
   const savePreferences = async (partialPrefs) => {

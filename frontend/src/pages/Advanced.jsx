@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Wrench, Palette, Save, RefreshCcw, Moon, Sun, Terminal, RefreshCw, Trash2, ArrowDown, LogOut, ArrowUpCircle, Menu } from 'lucide-react';
+import { Wrench, Palette, Save, RefreshCcw, Moon, Sun, Terminal, RefreshCw, Trash2, ArrowDown, LogOut, ArrowUpCircle, Menu, Monitor } from 'lucide-react';
 import { useDialog } from '../contexts/DialogContext';
 import { io } from 'socket.io-client';
+import { predefinedThemes } from '../App';
 
 export default function Advanced({ togglePanel, theme, actualTheme, setTheme, preferences, onSave, logout }) {
   // ─── UI Settings state ───
-  const [accentColor, setAccentColor] = useState(preferences?.accentColor || '#3b82f6');
-  const [bgTheme, setBgTheme] = useState(preferences?.bgTheme || 'gray');
+  const initialTheme = preferences?.mobileTheme || preferences?.activeTheme || (predefinedThemes.some(t => t.id === preferences?.bgTheme) ? preferences?.bgTheme : 'navy');
+  const [activeTheme, setActiveTheme] = useState(initialTheme);
   const [isSaving, setIsSaving] = useState(false);
 
   // ─── Notifications state ───
   const [telegramToken, setTelegramToken] = useState(preferences?.telegramToken || '');
   const [telegramChatId, setTelegramChatId] = useState(preferences?.telegramChatId || '');
-
+  
   // ─── System Logs state ───
   const [logs, setLogs] = useState('');
   const [logsLoading, setLogsLoading] = useState(true);
@@ -26,10 +27,14 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
   const { showAlert, showConfirm } = useDialog();
 
-  // Sync accent/bgTheme/telegram when preferences change externally
+  // Sync activeTheme/telegram when preferences change externally
   useEffect(() => {
-    if (preferences?.accentColor) setAccentColor(preferences.accentColor);
-    if (preferences?.bgTheme) setBgTheme(preferences.bgTheme);
+    if (preferences?.mobileTheme || preferences?.activeTheme || preferences?.bgTheme) {
+      const newTheme = preferences.mobileTheme || preferences.activeTheme || preferences.bgTheme;
+      if (predefinedThemes.some(t => t.id === newTheme)) {
+        setActiveTheme(newTheme);
+      }
+    }
     if (preferences?.telegramToken !== undefined) setTelegramToken(preferences.telegramToken);
     if (preferences?.telegramChatId !== undefined) setTelegramChatId(preferences.telegramChatId);
   }, [preferences]);
@@ -38,37 +43,13 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   // UI Settings logic
   // ═══════════════════════════════════════
 
-  const predefinedAccents = [
-    { name: 'Rosso', hex: '#ef4444' },
-    { name: 'Arancione', hex: '#f97316' },
-    { name: 'Giallo', hex: '#eab308' },
-    { name: 'Giallo Cyber', hex: '#facc15' },
-    { name: 'Smeraldo', hex: '#10b981' },
-    { name: 'Azzurro', hex: '#0ea5e9' },
-    { name: 'Blu CasaOS', hex: '#3b82f6' },
-    { name: 'Viola', hex: '#8b5cf6' },
-    { name: 'Rosa', hex: '#ec4899' },
-  ];
-
-  const predefinedBackgrounds = [
-    { id: 'gray', name: 'Grigio Scuro', lightHex: '#e5e7eb', darkHex: '#1f2937' },
-    { id: 'mediumgray', name: 'Grigio Medio', lightHex: '#d1d5db', darkHex: '#374151' },
-    { id: 'anthracite', name: 'Antracite', lightHex: '#e4e4e7', darkHex: '#18181b' },
-    { id: 'black', name: 'Total Black', lightHex: '#e5e7eb', darkHex: '#000000' },
-    { id: 'navy', name: 'Blu Scuro', lightHex: '#e0e7ff', darkHex: '#020617' },
-    { id: 'ocean', name: 'Verde Petrolio', lightHex: '#cffafe', darkHex: '#083344' },
-    { id: 'red', name: 'Rosso Scuro', lightHex: '#ffe4e6', darkHex: '#2a040d' },
-  ];
-
   const handleReset = async () => {
     setIsSaving(true);
     await onSave({
       ...preferences,
-      accentColor: '#3b82f6',
-      bgTheme: 'gray'
+      activeTheme: 'navy'
     });
-    setAccentColor('#3b82f6');
-    setBgTheme('gray');
+    setActiveTheme('navy');
     setIsSaving(false);
   };
 
@@ -276,78 +257,90 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           <Palette /> Impostazioni UI
         </h2>
         
-        <div className="casaos-form flex-col gap-5">
+        <div className="casaos-form flex-col gap-6">
           
           <div className="input-group">
-            <label className="flex items-center gap-2">
-              Tema Dark Mode {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+            <label className="flex items-center gap-2 font-semibold">
+              Modalità Tema
             </label>
-            <div className="flex items-center gap-2 mt-2">
-              <select value={theme} onChange={(e) => {
-                setTheme(e.target.value);
-                onSave({ theme: e.target.value });
-              }} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--bg-color)', color: 'var(--text-color)' }}>
-                <option value="light">Chiaro</option>
-                <option value="dark">Scuro</option>
-                <option value="auto">Auto (Sistema)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="input-group" style={{ marginTop: '10px' }}>
-            <label>Colore Accento</label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {predefinedAccents.map(color => (
-                <button
-                  key={color.hex}
-                  type="button"
-                  title={color.name}
-                  onClick={() => {
-                    setAccentColor(color.hex);
-                    onSave({ accentColor: color.hex, bgTheme });
-                  }}
-                  style={{
-                    width: '40px', height: '40px', borderRadius: '50%', border: 'none', cursor: 'pointer',
-                    backgroundColor: color.hex,
-                    boxShadow: accentColor === color.hex ? `0 0 0 3px var(--card-bg), 0 0 0 5px ${color.hex}` : 'none',
-                    transition: 'all 0.2s'
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="input-group" style={{ marginTop: '10px' }}>
-            <label>Sfondo Adattivo (Light/Dark)</label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {predefinedBackgrounds.map(bg => {
-                const currentHex = actualTheme === 'dark' ? bg.darkHex : bg.lightHex;
+            <div className="flex items-center gap-3 mt-3">
+              {[
+                { id: 'auto', label: 'Sistema', icon: Monitor },
+                { id: 'light', label: 'Chiaro', icon: Sun },
+                { id: 'dark', label: 'Scuro', icon: Moon }
+              ].map(mode => {
+                const isSelected = theme === mode.id;
+                const Icon = mode.icon;
                 return (
                   <button
-                    key={bg.id}
+                    key={mode.id}
                     type="button"
-                    title={bg.name}
                     onClick={() => {
-                      setBgTheme(bg.id);
-                      onSave({ accentColor, bgTheme: bg.id });
+                      setTheme(mode.id);
+                      onSave({ theme: mode.id });
                     }}
+                    className="flex items-center gap-2"
                     style={{
-                      width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--card-border)', cursor: 'pointer',
-                      backgroundColor: currentHex,
-                      boxShadow: bgTheme === bg.id ? `0 0 0 3px var(--card-bg), 0 0 0 5px var(--primary)` : 'none',
-                      transition: 'all 0.2s',
-                      position: 'relative'
+                      flex: 1,
+                      justifyContent: 'center',
+                      padding: '10px',
+                      borderRadius: '12px',
+                      border: isSelected ? '2px solid var(--primary)' : '2px solid var(--card-border)',
+                      background: isSelected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'transparent',
+                      color: isSelected ? 'var(--primary)' : 'var(--text-color)',
+                      fontWeight: isSelected ? '600' : '400',
+                      transition: 'all 0.2s'
                     }}
-                  />
-                );
+                  >
+                    <Icon size={18} />
+                    {mode.label}
+                  </button>
+                )
               })}
             </div>
           </div>
 
+          <div className="input-group">
+            <label className="font-semibold">Tema Grafico</label>
+            <div className="flex flex-wrap gap-4 mt-3">
+              {predefinedThemes.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  title={t.name}
+                  onClick={() => {
+                    setActiveTheme(t.id);
+                    onSave({ activeTheme: t.id });
+                  }}
+                  className="flex-col items-center gap-2"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    width: '60px'
+                  }}
+                >
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '50%',
+                    backgroundColor: t.primary,
+                    boxShadow: activeTheme === t.id ? `0 0 0 3px var(--card-bg), 0 0 0 5px ${t.primary}` : 'none',
+                    transition: 'all 0.2s',
+                    marginBottom: '4px'
+                  }} />
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: activeTheme === t.id ? 'var(--primary)' : 'var(--text-muted)',
+                    fontWeight: activeTheme === t.id ? '600' : '400'
+                  }}>
+                    {t.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-
-          <div className="flex mt-5" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
-            <button type="button" className="btn btn-action danger" onClick={handleReset} disabled={isSaving}>
+          <div className="flex mt-2" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
+            <button type="button" className="btn btn-action danger flex items-center gap-2" onClick={handleReset} disabled={isSaving}>
               <RefreshCcw size={16} /> Ripristina Default
             </button>
           </div>

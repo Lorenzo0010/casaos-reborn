@@ -667,7 +667,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
                     <FileText size={22} />
                   </button>
                   <button onClick={() => setEditingContainerId(c.Id)} className="btn-action-square neutral" title="Impostazioni">
-                    <Settings size={22} />
+                    <Settings size={22} color="var(--primary)" />
                   </button>
                 </div>
 

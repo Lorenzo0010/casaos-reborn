@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HardDrive, ArrowDown, ArrowUp, ChevronRight, ChevronLeft, Cpu, Activity, Clock, Monitor } from 'lucide-react';
+import { HardDrive, ArrowDown, ArrowUp, ChevronRight, ChevronLeft, Cpu, Activity, Clock, Monitor, Server, Smartphone } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
@@ -278,13 +278,13 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         {renderArrows('system')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Info di Sistema</span>
-          <Monitor size={16} opacity={0.7} />
+          <Server size={16} opacity={0.7} />
         </div>
 
         <div className="flex-col my-auto" style={{ display: 'flex', gap: '12px' }}>
           <div className="flex items-center gap-3">
-            <div style={{ background: 'var(--card-border)', padding: '8px', borderRadius: '12px' }}>
-              <Monitor size={20} color="var(--text-color)" />
+            <div style={{ background: 'rgba(139, 92, 246, 0.2)', padding: '8px', borderRadius: '12px' }}>
+              <Smartphone size={20} color="#8b5cf6" />
             </div>
             <div className="flex-col">
               <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Sistema Operativo</span>
