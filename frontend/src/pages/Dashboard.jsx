@@ -531,14 +531,24 @@ export default function Dashboard({ togglePanel, activePanel }) {
             const isPinned = pinnedContainers.includes(stableId);
 
             const getRepositoryUrl = () => {
-              const sourceLabel = c.Labels?.['org.opencontainers.image.source'];
-              if (sourceLabel) return sourceLabel;
-              
               let imgName = c.Image || '';
               const colonIdx = imgName.lastIndexOf(':');
               if (colonIdx > 0 && !imgName.substring(colonIdx).includes('/')) {
                 imgName = imgName.substring(0, colonIdx);
               }
+              
+              // Se l'immagine è su GHCR, generiamo il link ai pacchetti (funziona anche per pacchetti pubblici di repo privati)
+              if (imgName.startsWith('ghcr.io/')) {
+                const parts = imgName.split('/');
+                if (parts.length >= 3) {
+                  const owner = parts[1];
+                  const pkg = parts.slice(2).join('/');
+                  return `https://github.com/${owner}?tab=packages&q=${pkg}`;
+                }
+              }
+
+              const sourceLabel = c.Labels?.['org.opencontainers.image.source'];
+              if (sourceLabel) return sourceLabel;
               
               if (imgName) {
                 if (imgName.includes('/')) {
