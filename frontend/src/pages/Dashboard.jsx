@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Square, CheckSquare, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu } from 'lucide-react';
+import { Play, Square, CheckSquare, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu, Github } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
@@ -530,6 +530,27 @@ export default function Dashboard({ togglePanel, activePanel }) {
             const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
             const isPinned = pinnedContainers.includes(stableId);
 
+            const getRepositoryUrl = () => {
+              const sourceLabel = c.Labels?.['org.opencontainers.image.source'];
+              if (sourceLabel) return sourceLabel;
+              
+              let imgName = c.Image || '';
+              const colonIdx = imgName.lastIndexOf(':');
+              if (colonIdx > 0 && !imgName.substring(colonIdx).includes('/')) {
+                imgName = imgName.substring(0, colonIdx);
+              }
+              
+              if (imgName) {
+                if (imgName.includes('/')) {
+                  return `https://hub.docker.com/r/${imgName}`;
+                } else {
+                  return `https://hub.docker.com/_/${imgName}`;
+                }
+              }
+              return null;
+            };
+            const repoUrl = getRepositoryUrl();
+
             return (
               <div
                 key={c.Id}
@@ -618,6 +639,11 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
                 {/* Action Buttons */}
                 <div className="card-actions">
+                  {repoUrl && (
+                    <button onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')} className="btn-action-square neutral" title="Sorgente (GitHub/DockerHub)">
+                      <Github size={22} />
+                    </button>
+                  )}
                   {c.State !== 'running' ? (
                     <button onClick={() => handleAction(c.Id, 'start')} className="btn-action-square success" title="Avvia">
                       <Play size={22} />
