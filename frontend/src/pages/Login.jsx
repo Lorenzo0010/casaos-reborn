@@ -27,7 +27,18 @@ export default function Login({ setToken }) {
           <p style={{ opacity: 0.7 }}>Login to manage your server</p>
         </div>
         
-        {error && <div style={{ color: 'var(--danger)', textAlign: 'center' }}>{error}</div>}
+        {error && (
+          <div style={{
+            color: 'var(--danger)',
+            textAlign: 'center',
+            marginBottom: '16px',
+            backgroundColor: 'rgba(248, 113, 113, 0.1)',
+            padding: '12px',
+            borderRadius: '8px'
+          }}>
+            {error}
+          </div>
+        )}
 
         <div className="form-group">
           <label>Username</label>

@@ -171,6 +171,9 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
             <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{stats.cpu?.temperature != null ? `${Math.round(stats.cpu.temperature)}°C` : 'N/A'}</span>
           </span>
         </div>
+        <div style={{ background: 'var(--border-subtle)', height: '6px', borderRadius: '3px', marginTop: '16px', overflow: 'hidden' }}>
+          <div style={{ width: `${Math.min(100, Math.max(0, stats.cpu?.load || 0))}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px', transition: 'width 0.3s' }}></div>
+        </div>
       </div>
     ),
     ram: (
@@ -202,6 +205,9 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
             <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{((stats.memory?.total || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
           </span>
         </div>
+        <div style={{ background: 'var(--border-subtle)', height: '6px', borderRadius: '3px', marginTop: '16px', overflow: 'hidden' }}>
+          <div style={{ width: `${Math.min(100, Math.max(0, stats.memory?.percent || 0))}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px', transition: 'width 0.3s' }}></div>
+        </div>
       </div>
     ),
     storage: (
@@ -228,7 +234,9 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         <div className="flex justify-between mb-2" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
           <span>Totale: {((stats.disk?.total || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
         </div>
-        <progress value={stats.disk?.percent || 0} max="100" style={{ width: '100%', height: '4px', borderRadius: '2px' }}></progress>
+        <div style={{ background: 'var(--border-subtle)', height: '6px', borderRadius: '3px', marginTop: '16px', overflow: 'hidden' }}>
+          <div style={{ width: `${Math.min(100, Math.max(0, stats.disk?.percent || 0))}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px', transition: 'width 0.3s' }}></div>
+        </div>
       </div>
     ),
     network: (

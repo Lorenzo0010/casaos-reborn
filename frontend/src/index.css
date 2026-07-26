@@ -269,6 +269,43 @@ body {
   text-align: center;
 }
 
+/* Typography Standard Classes */
+.typography-h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.typography-h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.typography-h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.typography-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.typography-body-medium {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.typography-caption {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
 /* Page Header */
 .page-header {
   display: flex;
@@ -313,7 +350,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  border-right: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  margin: 16px;
+  height: calc(100vh - 32px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
   overflow-y: auto;
