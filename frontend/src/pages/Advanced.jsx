@@ -178,49 +178,6 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   };
 
 
-  const handlePruneImages = async () => {
-    const confirmed = await showConfirm('Pulizia Immagini', 'Sei sicuro di voler eliminare tutte le immagini Docker non utilizzate da alcun container?');
-    if (!confirmed) return;
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`/api/docker/images/prune`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const deletedSpace = (res.data.result?.SpaceReclaimed || 0) / 1024 / 1024;
-      showAlert('Pulizia Completata', `Spazio liberato: ${deletedSpace.toFixed(2)} MB`);
-    } catch (err) {
-      showAlert('Errore', `Errore durante la pulizia delle immagini: ` + err.message, true);
-    }
-  };
-
-  const handlePruneVolumes = async () => {
-    const confirmed = await showConfirm('Pulizia Volumi', 'Sei sicuro di voler eliminare tutti i volumi Docker non collegati a nessun container? Questo libererà spazio ma potrebbe cancellare dati orfani.');
-    if (!confirmed) return;
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`/api/docker/volumes/prune`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const deletedSpace = (res.data.result?.SpaceReclaimed || 0) / 1024 / 1024;
-      showAlert('Pulizia Completata', `Spazio liberato: ${deletedSpace.toFixed(2)} MB`);
-    } catch (err) {
-      showAlert('Errore', `Errore durante la pulizia dei volumi: ` + err.message, true);
-    }
-  };
-
-  const handlePruneNetworks = async () => {
-    const confirmed = await showConfirm('Pulizia Reti', 'Sei sicuro di voler eliminare tutte le reti Docker non utilizzate?');
-    if (!confirmed) return;
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`/api/docker/networks/prune`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      showAlert('Pulizia Completata', 'Reti orfane rimosse con successo.');
-    } catch (err) {
-      showAlert('Errore', `Errore durante la pulizia delle reti: ` + err.message, true);
-    }
-  };
 
   // ═══════════════════════════════════════
   // Render
@@ -517,26 +474,6 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </div>
         )}
 
-        <div style={{ width: '100%', height: '1px', background: 'var(--card-border)', margin: 'var(--space-2) 0' }}></div>
-
-        {/* Prune Section */}
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <div>
-            <h3 className="m-0 mb-2 text-lg">Pulizia Sistema</h3>
-            <p className="m-0 text-sm text-muted">Rimuovi risorse docker orfane per liberare spazio su disco e mantenere il sistema pulito.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneImages}>
-              <Trash2 size={16} /> Immagini
-            </button>
-            <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneVolumes}>
-              <Trash2 size={16} /> Volumi
-            </button>
-            <button className="btn btn-danger flex items-center gap-2" onClick={handlePruneNetworks}>
-              <Trash2 size={16} /> Reti
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* ─── Section 4: Logout ─── */}

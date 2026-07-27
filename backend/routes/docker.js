@@ -527,38 +527,6 @@ router.post('/containers/create', async (req, res) => {
 });
 
 
-// Prune unused images
-router.post('/images/prune', async (req, res) => {
-  try {
-    const result = await docker.pruneImages({ filters: { dangling: ["false"] } });
-    res.json({ message: 'Immagini rimosse con successo', result });
-  } catch (error) {
-    console.error('Error pruning images:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Prune unused volumes
-router.post('/volumes/prune', async (req, res) => {
-  try {
-    const result = await docker.pruneVolumes();
-    res.json({ message: 'Volumi non utilizzati rimossi con successo', result });
-  } catch (error) {
-    console.error('Error pruning volumes:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Prune unused networks
-router.post('/networks/prune', async (req, res) => {
-  try {
-    const result = await docker.pruneNetworks();
-    res.json({ message: 'Reti non utilizzate rimosse con successo', result });
-  } catch (error) {
-    console.error('Error pruning networks:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // Get container logs
 router.get('/containers/:id/logs', async (req, res) => {
