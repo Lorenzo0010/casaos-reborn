@@ -238,7 +238,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
 // Update a container preserving ALL its existing settings
 router.post('/containers/:id/update', async (req, res) => {
   const { id } = req.params;
-  const { image } = req.body;
+  let { image } = req.body;
   const io = req.io;
 
   res.status(202).json({ success: true, message: 'Update started', id });
@@ -247,6 +247,12 @@ router.post('/containers/:id/update', async (req, res) => {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect();
     const containerName = oldInspect.Name.replace('/', '');
+    
+    // Se l'immagine non è passata nel body, usa quella attuale del container
+    if (!image) {
+      image = oldInspect.Config.Image;
+    }
+
     const taskId = `recreate_${id}`;
     
     global.activeTasks[taskId] = {
@@ -301,6 +307,21 @@ router.post('/containers/:id/update', async (req, res) => {
     }
 
     // Fallback: Legacy / Standalone Container Update
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling latest image...', taskId });
+    try {
+      await new Promise((resolve, reject) => {
+        docker.pull(image, (err, stream) => {
+          if (err) return reject(err);
+          docker.modem.followProgress(stream, (err, output) => {
+            if (err) return reject(err);
+            resolve(output);
+          });
+        });
+      });
+    } catch (pullError) {
+      console.warn(`[Update] Failed to pull image ${image}: ${pullError.message}`);
+    }
+
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Stopping old container...', taskId });
     try { await oldContainer.stop({ t: 10 }); } catch (e) {}
 
