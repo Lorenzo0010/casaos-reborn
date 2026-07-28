@@ -160,6 +160,19 @@
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 8px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
     * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.15) transparent; }
+
+    @media (max-width: 600px) {
+      .list-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .actions {
+        flex-direction: column;
+      }
+      .btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
