@@ -88,6 +88,12 @@ To run the project locally for development:
 
 *Note: The backend requires access to the Docker daemon. If you are developing on Windows/macOS, ensure Docker Desktop is running and the socket is accessible.*
 
-## License
+## License & Disclaimer
 
-This project is open-source and available for anyone looking to simplify their Docker homelab experience.
+This project is open-source and available under the **MIT License**.
+
+> [!WARNING]
+> **DISCLAIMER OF LIABILITY (ESENZIONE DI RESPONSABILITÀ)**
+> This software is provided "AS IS", without warranty of any kind, express or implied. The author (Lorenzo Cassano) assumes no responsibility for any data loss, server downtime, security breaches, or any other damages arising from the use of this software. You are granting this application privileged access to your Docker daemon. **Use it at your own risk.** Always backup your critical data before managing containers through third-party interfaces.
+
+For more details, see the [LICENSE](./LICENSE) file.
