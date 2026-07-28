@@ -666,7 +666,13 @@ export default function Dashboard({ togglePanel, activePanel }) {
                   <button onClick={() => setLogsContainer({ id: c.Id, name: getContainerName(c) })} className="btn-action-square neutral" title="Log">
                     <FileText size={22} />
                   </button>
-                  <button onClick={() => setEditingContainerId(c.Id)} className="btn-action-square neutral" title="Impostazioni">
+                  <button onClick={() => {
+                    if (stableId === 'casaos-reborn') {
+                      window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/';
+                    } else {
+                      setEditingContainerId(c.Id);
+                    }
+                  }} className="btn-action-square neutral" title="Impostazioni">
                     <Settings size={22} color="var(--primary)" />
                   </button>
                 </div>

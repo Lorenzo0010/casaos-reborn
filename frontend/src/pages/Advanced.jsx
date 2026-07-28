@@ -179,6 +179,22 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
 
 
+  const handleUpdateContainer = async (upd) => {
+    if (upd.name === 'casaos-reborn') {
+      window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/';
+    } else {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(`/api/docker/containers/${upd.id}/update`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        showAlert('Aggiornamento avviato', `L'aggiornamento per ${upd.name} è iniziato in background.`);
+      } catch (err) {
+        showAlert('Errore', `Impossibile aggiornare ${upd.name}: ${err.response?.data?.error || err.message}`, true);
+      }
+    }
+  };
+
   // ═══════════════════════════════════════
   // Render
   // ═══════════════════════════════════════
@@ -467,7 +483,14 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
               {updates.map(upd => (
                 <div key={upd.id} style={{ background: 'var(--bg-color)', padding: '10px', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
                   <div style={{ fontWeight: '600', marginBottom: '2px' }}>{upd.name}</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.6, wordBreak: 'break-all' }}>{upd.image}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.6, wordBreak: 'break-all', marginBottom: '8px' }}>{upd.image}</div>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', padding: '6px' }}
+                    onClick={() => handleUpdateContainer(upd)}
+                  >
+                    Aggiorna
+                  </button>
                 </div>
               ))}
             </div>
