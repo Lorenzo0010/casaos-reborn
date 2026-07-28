@@ -237,6 +237,39 @@ router.post('/preferences', (req, res) => {
   }
 });
 
+router.get('/weather', async (req, res) => {
+  try {
+    let weatherCity = 'Roma'; // Default
+    if (fs.existsSync(PREFS_FILE)) {
+      try {
+        const prefs = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+        if (prefs.weatherCity) weatherCity = prefs.weatherCity;
+      } catch (e) {}
+    }
+
+    const response = await fetch(`https://wttr.in/${encodeURIComponent(weatherCity)}?format=j1`);
+    if (!response.ok) {
+      throw new Error('Weather API failed');
+    }
+    const data = await response.json();
+    
+    if (data && data.current_condition && data.current_condition.length > 0) {
+      const condition = data.current_condition[0];
+      res.json({
+        city: weatherCity,
+        temp: condition.temp_C,
+        description: condition.weatherDesc && condition.weatherDesc.length > 0 ? condition.weatherDesc[0].value : 'Sconosciuto',
+        weatherCode: condition.weatherCode
+      });
+    } else {
+      res.status(500).json({ error: 'Invalid weather data' });
+    }
+  } catch (error) {
+    console.error('Error fetching weather:', error);
+    res.status(500).json({ error: 'Failed to fetch weather' });
+  }
+});
+
 const archiver = require('archiver');
 const extract = require('extract-zip');
 const { exec } = require('child_process');

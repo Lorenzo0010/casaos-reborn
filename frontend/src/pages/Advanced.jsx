@@ -15,6 +15,9 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   const [telegramToken, setTelegramToken] = useState(preferences?.telegramToken || '');
   const [telegramChatId, setTelegramChatId] = useState(preferences?.telegramChatId || '');
   
+  // ─── Widgets Settings state ───
+  const [weatherCity, setWeatherCity] = useState(preferences?.weatherCity || 'Roma');
+  
   // ─── System Logs state ───
   const [logs, setLogs] = useState('');
   const [logsLoading, setLogsLoading] = useState(true);
@@ -37,6 +40,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
     }
     if (preferences?.telegramToken !== undefined) setTelegramToken(preferences.telegramToken);
     if (preferences?.telegramChatId !== undefined) setTelegramChatId(preferences.telegramChatId);
+    if (preferences?.weatherCity !== undefined) setWeatherCity(preferences.weatherCity);
   }, [preferences]);
 
   // ═══════════════════════════════════════
@@ -350,6 +354,31 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           <div className="flex mt-3">
             <button className="btn btn-primary flex items-center gap-2" onClick={() => onSave({ telegramToken, telegramChatId })}>
               <Save size={16} /> Salva Impostazioni Telegram
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Section 1.3: Widget Settings ─── */}
+      <div className="widget flex-col">
+        <h2 className="flex items-center gap-2 mb-5 m-0">
+          <Monitor /> Impostazioni Widget
+        </h2>
+        <div className="glass p-5 rounded-xl flex-col gap-4">
+          <p className="text-sm opacity-80 mb-2">Configura le opzioni per i widget della dashboard.</p>
+          <div className="input-group">
+            <label>Città per Widget Meteo</label>
+            <input 
+              type="text" 
+              className="input w-full" 
+              placeholder="es. Roma, Milano, Napoli"
+              value={weatherCity}
+              onChange={(e) => setWeatherCity(e.target.value)}
+            />
+          </div>
+          <div className="flex mt-3">
+            <button className="btn btn-primary flex items-center gap-2" onClick={() => onSave({ weatherCity })}>
+              <Save size={16} /> Salva Impostazioni Widget
             </button>
           </div>
         </div>

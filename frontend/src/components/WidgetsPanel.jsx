@@ -13,6 +13,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
   const [isRamModalOpen, setIsRamModalOpen] = useState(false);
   const [isNetworkModalOpen, setIsNetworkModalOpen] = useState(false);
   const [draggedWidget, setDraggedWidget] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -25,7 +26,18 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       } catch (err) { }
     };
 
+    const fetchWeather = async () => {
+      try {
+        const res = await axios.get('/api/system/weather', { headers: { Authorization: `Bearer ${token}` } });
+        setWeatherData(res.data);
+      } catch (err) { }
+    };
+
     fetchStats();
+    fetchWeather();
+    
+    // Poll weather every 30 minutes (wttr.in shouldn't be spammed)
+    const weatherInterval = setInterval(fetchWeather, 30 * 60 * 1000);
 
     const socket = io(window.location.origin, {
       auth: { token, type: 'web' }
@@ -33,7 +45,10 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
 
     socket.on('system.stats', (data) => setStats(data));
 
-    return () => socket.disconnect();
+    return () => {
+      clearInterval(weatherInterval);
+      socket.disconnect();
+    };
   }, []);
 
   const formatSpeed = (bytesPerSec) => {
@@ -329,15 +344,22 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         {renderArrows('weather')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Meteo</span>
-          <span style={{ fontSize: '1.2rem' }}>🌤️</span>
+          <span style={{ fontSize: '1.2rem' }}>
+            {weatherData?.description?.toLowerCase().includes('sun') || weatherData?.description?.toLowerCase().includes('clear') ? '☀️' : 
+             weatherData?.description?.toLowerCase().includes('cloud') ? '☁️' : 
+             weatherData?.description?.toLowerCase().includes('rain') ? '🌧️' : 
+             weatherData?.description?.toLowerCase().includes('snow') ? '❄️' : '🌤️'}
+          </span>
         </div>
         <div className="flex-col items-center justify-center text-center my-auto">
-          <div className="value" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--primary)', lineHeight: 1 }}>24°C</div>
+          <div className="value" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--primary)', lineHeight: 1 }}>
+            {weatherData ? `${weatherData.temp}°C` : '--°C'}
+          </div>
         </div>
         <div className="flex justify-between items-end mt-2" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
           <span style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>Milano</span>
-            <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>Parz. Nuvoloso</span>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>{weatherData ? weatherData.city : 'Caricamento...'}</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{weatherData ? weatherData.description : '--'}</span>
           </span>
         </div>
       </div>
