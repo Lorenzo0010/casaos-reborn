@@ -18,15 +18,6 @@ This project is a labor of love, developed during my free time to provide a bett
 
 ---
 
-## 📸 Screenshots
-
-> **Note:** Replace these placeholders with your actual screenshots. 
-> *Showcase your beautiful glassmorphism dashboard, terminal, and container management here!*
-
-![Dashboard Preview](https://via.placeholder.com/800x400.png?text=Dashboard+Screenshot+Here)
-
----
-
 ## ✨ How it works (Features)
 
 - **Sleek Dashboard & UI**: A modern interface with responsive design. Includes an extensive theming engine with 19 accent colors and 14 background themes (including automatic Light/Dark mode switching).
