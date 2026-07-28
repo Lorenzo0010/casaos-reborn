@@ -8,6 +8,16 @@ const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
+app.get('/api/config', async (req, res) => {
+  try {
+    const container = docker.getContainer('casaos-reborn');
+    const info = await container.inspect();
+    res.json(info);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/update', async (req, res) => {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -63,13 +73,18 @@ app.post('/api/update', async (req, res) => {
 
     send({ status: 'info', message: 'Creando il nuovo container...' });
     
+    const overrides = req.body || {};
+
     const createOptions = {
       name: 'casaos-reborn',
       Image: image,
-      Env: containerInfo.Config.Env,
+      Env: overrides.Env || containerInfo.Config.Env,
       Labels: containerInfo.Config.Labels,
-      ExposedPorts: containerInfo.Config.ExposedPorts,
-      HostConfig: containerInfo.HostConfig,
+      ExposedPorts: overrides.ExposedPorts || containerInfo.Config.ExposedPorts,
+      HostConfig: {
+        ...containerInfo.HostConfig,
+        ...(overrides.HostConfig || {})
+      },
       NetworkingConfig: {
         EndpointsConfig: containerInfo.NetworkSettings.Networks
       }

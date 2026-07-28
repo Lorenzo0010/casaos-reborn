@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CasaOS Updater</title>
+  <title>CasaOS Updater - Impostazioni</title>
   <style>
     body {
       margin: 0;
@@ -14,51 +14,136 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
+    }
+    .header {
+      width: 100%;
+      background: #1a1d27;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      box-sizing: border-box;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
     }
     .container {
       background: #1a1d27;
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 12px;
-      padding: 40px;
+      padding: 30px;
       width: 100%;
-      max-width: 600px;
-      text-align: center;
+      max-width: 800px;
+      margin: 40px 20px;
       box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
     }
-    h1 {
-      margin-top: 0;
-      font-size: 24px;
-    }
-    p {
+    .loading {
+      text-align: center;
+      padding: 40px;
       color: #9ca3af;
-      margin-bottom: 30px;
     }
-    button {
+    .section {
+      margin-bottom: 30px;
+      background: #111827;
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .section h3 {
+      margin-top: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      color: #e5e7eb;
+    }
+    .list-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    input, select {
+      flex: 1;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: #3b82f6;
+    }
+    .btn {
       background-color: #3b82f6;
       color: white;
       border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, opacity 0.2s;
     }
-    button:hover {
+    .btn:hover {
       background-color: #2563eb;
     }
-    button:disabled {
+    .btn-danger {
+      background-color: transparent;
+      color: #ef4444;
+      border: 1px solid #ef4444;
+      padding: 8px 12px;
+    }
+    .btn-danger:hover {
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+    .btn-secondary {
+      background-color: #374151;
+      color: white;
+    }
+    .btn-secondary:hover {
       background-color: #4b5563;
+    }
+    .btn:disabled {
+      opacity: 0.5;
       cursor: not-allowed;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .checkbox-group input {
+      flex: none;
+      width: auto;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 20px;
     }
     .logs {
       margin-top: 30px;
-      background: #111827;
+      background: #000;
       padding: 15px;
       border-radius: 8px;
-      height: 200px;
+      height: 250px;
       overflow-y: auto;
       text-align: left;
       font-family: monospace;
@@ -66,46 +151,234 @@
       color: #d1d5db;
       display: none;
     }
-    .log-entry {
-      margin-bottom: 4px;
-    }
+    .log-entry { margin-bottom: 4px; }
     .log-success { color: #10b981; }
     .log-error { color: #ef4444; }
 
-    /* Scrollbar personalizzata e discreta */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+    * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.15) transparent; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Aggiornamento CasaOS Reborn</h1>
-    <p>Usa questo strumento isolato per forzare l'aggiornamento sicuro del container principale.</p>
-    
-    <button id="updateBtn">Forza Aggiornamento (Pull & Recreate)</button>
-    
+  
+  <div class="header">
+    <h1>CasaOS Reborn - Updater & Config</h1>
+  </div>
+
+  <div class="container" id="mainContainer">
+    <div id="loading" class="loading">
+      Caricamento configurazione in corso...
+    </div>
+
+    <div id="editor" style="display: none;">
+      
+      <!-- Ports -->
+      <div class="section">
+        <h3>Porte (Port Bindings)</h3>
+        <div id="portsList"></div>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addPort()">+ Aggiungi Porta</button>
+      </div>
+
+      <!-- Volumes -->
+      <div class="section">
+        <h3>Volumi (Binds)</h3>
+        <div id="volumesList"></div>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addVolume()">+ Aggiungi Volume</button>
+      </div>
+
+      <!-- Environment -->
+      <div class="section">
+        <h3>Variabili d'Ambiente (Env)</h3>
+        <div id="envList"></div>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addEnv()">+ Aggiungi Variabile</button>
+      </div>
+
+      <!-- Advanced -->
+      <div class="section">
+        <h3>Avanzate</h3>
+        <div class="form-group">
+          <label>PID Mode</label>
+          <select id="pidMode">
+            <option value="">Predefinito</option>
+            <option value="host">Host</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Restart Policy</label>
+          <select id="restartPolicy">
+            <option value="no">No</option>
+            <option value="always">Always</option>
+            <option value="unless-stopped">Unless Stopped</option>
+            <option value="on-failure">On Failure</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Limite Memoria (MB) - 0 per illimitata</label>
+          <input type="number" id="memoryLimit" value="0" min="0">
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="privilegedMode">
+          <label for="privilegedMode" style="margin:0;">Modalità Privilegiata (Privileged)</label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="updateBtn" class="btn" style="padding: 12px 24px;">Salva & Aggiorna Container</button>
+      </div>
+    </div>
+
     <div class="logs" id="logsPanel"></div>
   </div>
 
   <script>
+    let containerData = {
+      ports: [],
+      volumes: [],
+      env: [],
+      pidMode: '',
+      restartPolicy: 'unless-stopped',
+      memory: 0,
+      privileged: false
+    };
+
+    // UI Elements
+    const portsListEl = document.getElementById('portsList');
+    const volumesListEl = document.getElementById('volumesList');
+    const envListEl = document.getElementById('envList');
     const updateBtn = document.getElementById('updateBtn');
     const logsPanel = document.getElementById('logsPanel');
+    const loadingEl = document.getElementById('loading');
+    const editorEl = document.getElementById('editor');
+
+    // Fetch Config
+    async function fetchConfig() {
+      try {
+        const res = await fetch('/api/config');
+        if (!res.ok) throw new Error('Errore nel caricamento della configurazione');
+        const info = await res.json();
+        
+        // Parse Ports
+        const parsedPorts = [];
+        const portBindings = info?.HostConfig?.PortBindings || {};
+        for (const [key, valArray] of Object.entries(portBindings)) {
+          const [cPort, proto] = key.split('/');
+          if (valArray && valArray.length > 0) {
+            parsedPorts.push({
+              hostPort: valArray[0].HostPort || '',
+              containerPort: cPort,
+              protocol: proto
+            });
+          }
+        }
+        
+        // Parse Volumes
+        let parsedVolumes = [];
+        if (info?.HostConfig?.Binds && info.HostConfig.Binds.length > 0) {
+          parsedVolumes = info.HostConfig.Binds.map(b => {
+            const parts = b.split(':');
+            return { hostPath: parts[0] || '', containerPath: parts[1] || '' };
+          });
+        }
+        
+        // Parse Env
+        const parsedEnv = (info?.Config?.Env || []).map(e => {
+          const idx = e.indexOf('=');
+          return { key: e.substring(0, idx), value: e.substring(idx + 1) };
+        });
+
+        containerData.ports = parsedPorts;
+        containerData.volumes = parsedVolumes;
+        containerData.env = parsedEnv;
+        containerData.pidMode = info?.HostConfig?.PidMode || '';
+        containerData.privileged = !!info?.HostConfig?.Privileged;
+        containerData.memory = info?.HostConfig?.Memory ? Math.round(info.HostConfig.Memory / (1024 * 1024)) : 0;
+        containerData.restartPolicy = info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped';
+
+        // Set Advanced UI
+        document.getElementById('pidMode').value = containerData.pidMode;
+        document.getElementById('restartPolicy').value = containerData.restartPolicy;
+        document.getElementById('memoryLimit').value = containerData.memory;
+        document.getElementById('privilegedMode').checked = containerData.privileged;
+
+        renderLists();
+        
+        loadingEl.style.display = 'none';
+        editorEl.style.display = 'block';
+
+      } catch (err) {
+        loadingEl.innerHTML = `<span style="color:#ef4444;">Errore: ${err.message}</span>`;
+      }
+    }
+
+    // Render Lists
+    function renderLists() {
+      // Ports
+      portsListEl.innerHTML = '';
+      containerData.ports.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = `
+          <input type="text" placeholder="Host Port (es. 1111)" value="${p.hostPort}" onchange="updateData('ports', ${idx}, 'hostPort', this.value)">
+          <input type="text" placeholder="Container Port (es. 3000)" value="${p.containerPort}" onchange="updateData('ports', ${idx}, 'containerPort', this.value)">
+          <select style="flex: 0.5;" onchange="updateData('ports', ${idx}, 'protocol', this.value)">
+            <option value="tcp" ${p.protocol==='tcp'?'selected':''}>TCP</option>
+            <option value="udp" ${p.protocol==='udp'?'selected':''}>UDP</option>
+          </select>
+          <button class="btn btn-danger" onclick="removeData('ports', ${idx})">X</button>
+        `;
+        portsListEl.appendChild(row);
+      });
+
+      // Volumes
+      volumesListEl.innerHTML = '';
+      containerData.volumes.forEach((v, idx) => {
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = `
+          <input type="text" placeholder="/path/su/host" value="${v.hostPath}" onchange="updateData('volumes', ${idx}, 'hostPath', this.value)">
+          <input type="text" placeholder="/path/nel/container" value="${v.containerPath}" onchange="updateData('volumes', ${idx}, 'containerPath', this.value)">
+          <button class="btn btn-danger" onclick="removeData('volumes', ${idx})">X</button>
+        `;
+        volumesListEl.appendChild(row);
+      });
+
+      // Env
+      envListEl.innerHTML = '';
+      containerData.env.forEach((e, idx) => {
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = `
+          <input type="text" placeholder="CHIAVE" value="${e.key}" onchange="updateData('env', ${idx}, 'key', this.value)">
+          <input type="text" placeholder="Valore" value="${e.value}" onchange="updateData('env', ${idx}, 'value', this.value)">
+          <button class="btn btn-danger" onclick="removeData('env', ${idx})">X</button>
+        `;
+        envListEl.appendChild(row);
+      });
+    }
+
+    // Data Handlers
+    window.updateData = (type, idx, field, value) => {
+      containerData[type][idx][field] = value;
+    };
+    window.removeData = (type, idx) => {
+      containerData[type].splice(idx, 1);
+      renderLists();
+    };
+    window.addPort = () => {
+      containerData.ports.push({ hostPort: '', containerPort: '', protocol: 'tcp' });
+      renderLists();
+    };
+    window.addVolume = () => {
+      containerData.volumes.push({ hostPath: '', containerPath: '' });
+      renderLists();
+    };
+    window.addEnv = () => {
+      containerData.env.push({ key: '', value: '' });
+      renderLists();
+    };
 
     function appendLog(text, type = 'info') {
       const el = document.createElement('div');
@@ -117,11 +390,46 @@
 
     updateBtn.addEventListener('click', async () => {
       updateBtn.disabled = true;
+      document.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+      
       logsPanel.style.display = 'block';
       logsPanel.innerHTML = '';
       
+      // Update advanced fields
+      containerData.pidMode = document.getElementById('pidMode').value;
+      containerData.restartPolicy = document.getElementById('restartPolicy').value;
+      containerData.memory = parseInt(document.getElementById('memoryLimit').value) || 0;
+      containerData.privileged = document.getElementById('privilegedMode').checked;
+
+      // Prepare payload
+      const payload = {
+        Env: containerData.env.filter(e => e.key).map(e => `${e.key}=${e.value}`),
+        ExposedPorts: {},
+        HostConfig: {
+          PortBindings: {},
+          Binds: containerData.volumes.filter(v => v.hostPath && v.containerPath).map(v => `${v.hostPath}:${v.containerPath}`),
+          PidMode: containerData.pidMode,
+          Privileged: containerData.privileged,
+          Memory: containerData.memory > 0 ? containerData.memory * 1024 * 1024 : 0,
+          RestartPolicy: { Name: containerData.restartPolicy, MaximumRetryCount: 0 }
+        }
+      };
+
+      containerData.ports.forEach(p => {
+        if (p.containerPort) {
+          const key = `${p.containerPort}/${p.protocol || 'tcp'}`;
+          payload.ExposedPorts[key] = {};
+          payload.HostConfig.PortBindings[key] = p.hostPort ? [{ HostPort: p.hostPort }] : [];
+        }
+      });
+
       try {
-        const response = await fetch('/api/update', { method: 'POST' });
+        const response = await fetch('/api/update', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
@@ -147,8 +455,12 @@
         appendLog('Errore di rete: ' + err.message, 'error');
       } finally {
         updateBtn.disabled = false;
+        document.querySelectorAll('input, select, button').forEach(el => el.disabled = false);
       }
     });
+
+    // Start
+    fetchConfig();
   </script>
 </body>
 </html>
