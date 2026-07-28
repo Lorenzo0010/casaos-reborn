@@ -34,9 +34,14 @@ We are actively working on massive upgrades to turn CasaOS-Reborn into a complet
 - **Frontend**: React, Vite, Lucide-React (Icons), xterm.js (Terminal)
 - **Backend**: Node.js, Express, Socket.io (Real-time updates), Dockerode (Docker API integration)
 
-## Quick Start (Docker)
+## 📦 Dependencies & Installation (Docker)
 
-To deploy CasaOS Reborn on your system, use the following `docker-compose.yml`. Ensure you map the Docker socket and specify a host directory to save your configuration persistently.
+**Dependencies:**
+To *use* the backend container, the only requirements are **Docker** and **Docker Compose**. You do **not** need Node.js, npm, or any other software installed on your host system.
+
+**Installation Method:**
+1. Create a new directory on your server (e.g., `mkdir casaos-reborn && cd casaos-reborn`).
+2. Inside that folder, create a file named `docker-compose.yml` and paste the configuration below. Ensure you map the Docker socket correctly and specify a valid host directory to save your configuration persistently.
 
 ```yaml
 services:
@@ -57,6 +62,12 @@ services:
       - ADMIN_USER=admin
       - ADMIN_PASS=casaos
 ```
+
+3. Open your terminal in the same folder and run the following command to start the container in the background:
+   ```bash
+   docker-compose up -d
+   ```
+4. Access the web interface at `http://<your-server-ip>:1111` and log in with your credentials.
 
 ## Security & Authentication
 
