@@ -119,6 +119,6 @@ This project is open-source and available under the **MIT License**.
 
 > [!WARNING]
 > **DISCLAIMER OF LIABILITY**
-> This software is provided "AS IS", without warranty of any kind, express or implied. The author (Lorenzo Cassano) assumes no responsibility for any data loss, server downtime, security breaches, or any other damages arising from the use of this software. You are granting this application privileged access to your Docker daemon. **Use it at your own risk.** Always backup your critical data before managing containers through third-party interfaces.
+> This software is provided "AS IS", without warranty of any kind, express or implied. The author assumes no responsibility for any data loss, server downtime, security breaches, or any other damages arising from the use of this software. You are granting this application privileged access to your Docker daemon. **Use it at your own risk.** Always backup your critical data before managing containers through third-party interfaces.
 
 For more details, see the [LICENSE](./LICENSE) file.
