@@ -175,7 +175,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
     // Pull image using compose
     try {
       await new Promise((resolve, reject) => {
-        exec('docker compose pull', { cwd: appDir }, (error, stdout, stderr) => {
+        exec('docker compose pull -q', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
           if (error) {
              console.warn(`docker compose pull error: ${error.message}`);
              // We don't reject here, we allow up -d to try
@@ -200,7 +200,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
 
     // Execute Docker Compose
     await new Promise((resolve, reject) => {
-      exec('docker compose up -d', { cwd: appDir }, (error, stdout, stderr) => {
+      exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
         if (error) {
           console.error(`docker compose up error: ${error.message}`);
           return reject(error);
@@ -216,6 +216,10 @@ router.post('/containers/:id/recreate', async (req, res) => {
       (c.Labels && c.Labels['com.docker.compose.project'] === containerName)
     );
 
+    if (global.availableUpdates && global.availableUpdates[id]) {
+      delete global.availableUpdates[id];
+      if (io) io.emit('updater.results', Object.values(global.availableUpdates));
+    }
     if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
     if (io) io.emit('container.recreate.success', { 
       id: newContainerInfo ? newContainerInfo.Id : id, 
@@ -264,7 +268,7 @@ router.post('/containers/:id/update', async (req, res) => {
         if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling latest image via Compose...', taskId });
         
         await new Promise((resolve, reject) => {
-          exec('docker compose pull', { cwd: appDir }, (error) => {
+          exec('docker compose pull -q', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error) => {
             if (error) console.warn(`docker compose pull error: ${error.message}`);
             resolve();
           });
@@ -280,12 +284,16 @@ router.post('/containers/:id/update', async (req, res) => {
         if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Recreating container via Compose...', taskId });
         
         await new Promise((resolve, reject) => {
-          exec('docker compose up -d', { cwd: appDir }, (error, stdout) => {
+          exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout) => {
             if (error) return reject(error);
             resolve(stdout);
           });
         });
         
+        if (global.availableUpdates && global.availableUpdates[id]) {
+          delete global.availableUpdates[id];
+          if (io) io.emit('updater.results', Object.values(global.availableUpdates));
+        }
         if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
         if (io) io.emit('container.recreate.success', { id, name: containerName, taskId });
         return;
@@ -496,7 +504,7 @@ router.post('/containers/create', async (req, res) => {
 
     // 3. Execute Docker Compose
     await new Promise((resolve, reject) => {
-      exec('docker compose up -d', { cwd: appDir }, (error, stdout, stderr) => {
+      exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
         if (error) {
           console.error(`docker compose error: ${error.message}`);
           return reject(error);
