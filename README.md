@@ -1,6 +1,12 @@
-# CasaOS Reborn
+# 🚀 CasaOS Reborn
 
 CasaOS Reborn is a lightweight, modern, and powerful web-based interface for managing Docker containers. Built as a sleek alternative to CasaOS, it allows you to orchestrate your homelab environment with ease, directly from your browser.
+
+---
+
+## 💖 Support the Project
+
+This project is a labor of love, developed during my free time to provide a better, modern alternative for homelab management. If you find CasaOS Reborn useful and want to help me maintain it, add new features, and keep the coffee flowing, please consider making a donation!
 
 <div align="center">
   <a href="https://paypal.me/LorenzoCassano77" target="_blank">
@@ -8,7 +14,20 @@ CasaOS Reborn is a lightweight, modern, and powerful web-based interface for man
   </a>
 </div>
 
-## Features
+*Every single contribution is deeply appreciated and fuels future development.*
+
+---
+
+## 📸 Screenshots
+
+> **Note:** Replace these placeholders with your actual screenshots. 
+> *Showcase your beautiful glassmorphism dashboard, terminal, and container management here!*
+
+![Dashboard Preview](https://via.placeholder.com/800x400.png?text=Dashboard+Screenshot+Here)
+
+---
+
+## ✨ How it works (Features)
 
 - **Sleek Dashboard & UI**: A modern interface with responsive design. Includes an extensive theming engine with 19 accent colors and 14 background themes (including automatic Light/Dark mode switching).
 - **Customizable Layout**: Drag-and-drop to reorder system widgets (CPU, RAM, Disk, Network) and pin or sort your favorite Docker containers.
@@ -19,22 +38,19 @@ CasaOS Reborn is a lightweight, modern, and powerful web-based interface for man
 - **Intelligent Self-Updater**: A robust, built-in self-updating mechanism that verifies image hashes and seamlessly updates its own container without manual intervention or data loss.
 - **Persistent Preferences**: All layout and theme settings are safely stored in a local backend JSON file, preserving your customized workspace across all devices.
 
-## Roadmap 🚀 
-
+### 🚀 Roadmap
 We are actively working on massive upgrades to turn CasaOS-Reborn into a complete web operating system. The upcoming features include:
-
 1. **Web File Manager**: Browse, manage, upload, and download host files directly from the browser.
 2. **Glassmorphism UI**: A complete visual overhaul featuring frosted-glass effects on cards and modals.
-3. **Host Control**: Safely Reboot and Shutdown the host machine (e.g., Orange Pi/Raspberry Pi) from the web interface.
+3. **Host Control**: Safely Reboot and Shutdown the host machine from the web interface.
 
-*For full details on the upcoming architecture and implementation, see the [ROADMAP.md](./ROADMAP.md) file.*
+*For full details on the upcoming architecture, see the [ROADMAP.md](./ROADMAP.md) file.*
 
-## Architecture
+---
 
-- **Frontend**: React, Vite, Lucide-React (Icons), xterm.js (Terminal)
-- **Backend**: Node.js, Express, Socket.io (Real-time updates), Dockerode (Docker API integration)
+## 📦 Installation & Dependencies
 
-## 📦 Dependencies & Installation (Docker)
+### For End Users (Docker Deployment)
 
 **Dependencies:**
 To *use* the backend container, the only requirements are **Docker** and **Docker Compose**. You do **not** need Node.js, npm, or any other software installed on your host system.
@@ -69,27 +85,26 @@ services:
    ```
 4. Access the web interface at `http://<your-server-ip>:1111` and log in with your credentials.
 
-## Security & Authentication
+---
 
-The application is protected by a JWT-based authentication system. By default, you can configure your credentials using the `ADMIN_USER` and `ADMIN_PASS` environment variables in your deployment configuration.
+## 🛠 For Developers
 
-## Development
+**Architecture:**
+- **Frontend**: React, Vite, Lucide-React (Icons), xterm.js (Terminal)
+- **Backend**: Node.js, Express, Socket.io (Real-time updates), Dockerode (Docker API integration)
 
-To run the project locally for development:
-
+**Running Locally:**
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Lorenzo0010/casaos-reborn.git
    cd casaos-reborn
    ```
-
 2. **Install Frontend Dependencies**:
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
-
 3. **Install Backend Dependencies**:
    ```bash
    cd backend
@@ -99,12 +114,20 @@ To run the project locally for development:
 
 *Note: The backend requires access to the Docker daemon. If you are developing on Windows/macOS, ensure Docker Desktop is running and the socket is accessible.*
 
-## License & Disclaimer
+---
+
+## 🔒 Security & Authentication
+
+The application is protected by a JWT-based authentication system. By default, you can configure your credentials using the `ADMIN_USER` and `ADMIN_PASS` environment variables in your deployment configuration.
+
+---
+
+## ⚖️ License & Disclaimer
 
 This project is open-source and available under the **MIT License**.
 
 > [!WARNING]
-> **DISCLAIMER OF LIABILITY (ESENZIONE DI RESPONSABILITÀ)**
+> **DISCLAIMER OF LIABILITY**
 > This software is provided "AS IS", without warranty of any kind, express or implied. The author (Lorenzo Cassano) assumes no responsibility for any data loss, server downtime, security breaches, or any other damages arising from the use of this software. You are granting this application privileged access to your Docker daemon. **Use it at your own risk.** Always backup your critical data before managing containers through third-party interfaces.
 
 For more details, see the [LICENSE](./LICENSE) file.
