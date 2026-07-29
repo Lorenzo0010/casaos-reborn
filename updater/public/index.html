@@ -239,6 +239,9 @@
       </div>
 
       <div class="actions">
+        <div id="waitMessage" style="display: none; color: #3b82f6; font-weight: bold; margin-right: auto; align-self: center;">
+          Please wait until the system restarts...
+        </div>
         <button id="updateBtn" class="btn" style="padding: 12px 24px;">Salva & Aggiorna Container</button>
       </div>
     </div>
@@ -403,6 +406,8 @@
 
     updateBtn.addEventListener('click', async () => {
       updateBtn.disabled = true;
+      updateBtn.textContent = 'Updating...';
+      document.getElementById('waitMessage').style.display = 'block';
       document.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
       
       logsPanel.style.display = 'block';
