@@ -20,6 +20,8 @@ This project is a labor of love, developed during my free time to provide a bett
 
 ## ✨ How it works (Features)
 
+> **Note:** The **File Manager** and **App Store** features are currently built-in but have been temporarily disabled for maintenance and improvements. They will be re-enabled in a future update!
+
 - **Sleek Dashboard & UI**: A modern interface with responsive design. Includes an extensive theming engine with 19 accent colors and 14 background themes (including automatic Light/Dark mode switching).
 - **Customizable Layout**: Drag-and-drop to reorder system widgets (CPU, RAM, Disk, Network) and pin or sort your favorite Docker containers.
 - **Container Management**: View, start, stop, restart, and delete Docker containers effortlessly.
