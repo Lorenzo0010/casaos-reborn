@@ -238,7 +238,7 @@ export default function NewContainer({ togglePanel }) {
 
   const handleCreate = async () => {
     if (!formData.image) {
-      showAlert('Attenzione', 'Image is required');
+      showAlert('Warning', 'Image is required');
       return;
     }
     
@@ -302,7 +302,7 @@ export default function NewContainer({ togglePanel }) {
       // Navigate to dashboard immediately, creation continues in background
       navigate('/');
     } catch (err) {
-      showAlert('Errore', err.message, true);
+      showAlert('Error', err.message, true);
     }
   };
 
@@ -630,7 +630,7 @@ export default function NewContainer({ togglePanel }) {
                   }} 
                   style={{ padding: '15px', fontSize: '1.1rem', background: 'var(--card-bg)' }}
                 >
-                  <Download size={20} /> Esporta YAML
+                  <Download size={20} /> Export YAML
                 </button>
               </div>
             </div>

@@ -45,10 +45,10 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
               <TermIcon /> <span className="sidebar-link-text">Terminal</span>
             </NavLink>
             <NavLink to="/advanced" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
-              <Wrench /> <span className="sidebar-link-text">Avanzate</span>
+              <Wrench /> <span className="sidebar-link-text">Advanced</span>
             </NavLink>
             <a href="#" onClick={(e) => { e.preventDefault(); window.open(window.location.origin.replace(':1111', ':1112'), '_blank'); closeMobile(); }} className="sidebar-link">
-              <Rocket /> <span className="sidebar-link-text">Updater Rapido</span>
+              <Rocket /> <span className="sidebar-link-text">System Update</span>
             </a>
           </div>
 

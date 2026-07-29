@@ -106,7 +106,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
         });
       } catch (err) {
         console.error(err);
-        showAlert('Errore di Caricamento', 'Failed to load container details', true);
+        showAlert('Loading Error', 'Failed to load container details', true);
         onClose();
       } finally {
         setLoading(false);
@@ -163,14 +163,14 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
       }
     } catch (err) {
       console.error(err);
-      showAlert('Errore Salvataggio', 'Failed to save container: ' + (err.response?.data?.error || err.message), true);
+      showAlert('Save Error', 'Failed to save container: ' + (err.response?.data?.error || err.message), true);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    const confirmed = await showConfirm('Elimina Container', 'Sei sicuro di voler eliminare questo container? Questa azione è irreversibile.');
+    const confirmed = await showConfirm('Delete Container', 'Are you sure you want to delete this container? This action is irreversible.');
     if (!confirmed) return;
     setSaving(true);
     try {
@@ -181,7 +181,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
       onSaved();
     } catch (err) {
       console.error(err);
-      showAlert('Errore Eliminazione', 'Failed to delete container: ' + (err.response?.data?.error || err.message), true);
+      showAlert('Deletion Error', 'Failed to delete container: ' + (err.response?.data?.error || err.message), true);
       setSaving(false);
     }
   };
@@ -198,7 +198,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
 
   const copyYaml = () => {
     navigator.clipboard.writeText(yamlContent);
-    showAlert('Copiato', 'File YAML copiato negli appunti.');
+    showAlert('Copied', 'YAML file copied to clipboard.');
   };
 
   const updateField = (field, value) => setData(prev => ({ ...prev, [field]: value }));
@@ -239,7 +239,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
         {showYamlExport ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0 }}>YAML Esportato</h2>
+              <h2 style={{ margin: 0 }}>Exported YAML</h2>
               <button className="btn-icon" onClick={() => setShowYamlExport(false)}><X size={20} /></button>
             </div>
             <div className="form-body" style={{ flex: 1 }}>
@@ -250,13 +250,13 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
               />
             </div>
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-              <button className="btn" onClick={() => setShowYamlExport(false)} style={{ background: 'var(--card-bg)' }}>Indietro</button>
+              <button className="btn" onClick={() => setShowYamlExport(false)} style={{ background: 'var(--card-bg)' }}>Back</button>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button className="btn" onClick={copyYaml} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-                  <Copy size={16} /> Copia
+                  <Copy size={16} /> Copy
                 </button>
                 <button className="btn btn-primary" onClick={downloadYaml}>
-                  <Download size={16} /> Scarica
+                  <Download size={16} /> Download
                 </button>
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             {/* Image + Tag */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '10px' }}>
               <div>
-                <label>Immagine Docker *</label>
+                <label>Docker Image *</label>
                 <input type="text" className="valid" value={data.image} onChange={e => updateField('image', e.target.value)} placeholder="nginx" />
               </div>
               <div>
@@ -287,7 +287,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             </div>
 
             <div className="form-group">
-              <label>Nome del contenitore (Docker) *</label>
+              <label>Docker Container Name *</label>
               <div className="input-with-icon">
                 <input type="text" className="valid" value={data.name} onChange={e => updateField('name', e.target.value)} />
                 <Check className="valid-icon" size={16} />
@@ -295,13 +295,13 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             </div>
 
             <div className="form-group">
-              <label>Nome visualizzato nella dashboard (opzionale)</label>
-              <input type="text" value={data.displayName} onChange={e => updateField('displayName', e.target.value)} placeholder={data.name || "Nome App"} />
+              <label>Display Name in Dashboard (optional)</label>
+              <input type="text" value={data.displayName} onChange={e => updateField('displayName', e.target.value)} placeholder={data.name || "App Name"} />
             </div>
 
             {/* Icon URL */}
             <div className="form-group">
-              <label>Icona (URL immagine)</label>
+              <label>Icon (Image URL)</label>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <input type="text" value={data.icon} onChange={e => updateField('icon', e.target.value)} placeholder="https://example.com/icon.png" style={{ flex: 1 }} />
                 {data.icon && (
@@ -311,9 +311,9 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             </div>
 
             <div className="form-group">
-              <label>Link Web UI (solo per la dashboard)</label>
+              <label>Web UI Link (Dashboard only)</label>
               <p style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '8px', marginTop: '-4px' }}>
-                Nota: Questo campo serve solo per il link sulla schermata principale. Per esporre fisicamente la porta, aggiungila nella sezione "Porte" sottostante.
+                Note: This field is only for the link on the main screen. To physically expose the port, add it to the "Ports" section below.
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '0', borderRadius: '6px', border: '1px solid var(--card-border)', overflow: 'hidden' }}>
                 <select 
@@ -327,7 +327,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
                 <input 
                   type="text" 
                   list="mapped-ports"
-                  placeholder="Porta (auto)" 
+                  placeholder="Port (auto)" 
                   style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
                   value={data.webUI.port} 
                   onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, port: e.target.value } }))} 
@@ -339,7 +339,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
                 </datalist>
                 <input 
                   type="text" 
-                  placeholder="Percorso (es. /)" 
+                  placeholder="Path (e.g. /)" 
                   style={{ border: 'none', borderRadius: 0 }} 
                   value={data.webUI.path} 
                   onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, path: e.target.value } }))} 
@@ -349,13 +349,13 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
 
             <div className="form-group">
               <div className="section-header">
-                <label>Porta</label>
+                <label>Port</label>
                 <button className="btn-pill" onClick={() => addListItem('ports', { hostPort: '', containerPort: '', protocol: 'tcp' })}>
-                  <Plus size={14} /> Aggiungi
+                  <Plus size={14} /> Add
                 </button>
               </div>
               <div className="list-grid ports-grid">
-                <span>Host</span><span>Contenitore</span><span>Protocollo</span><span></span>
+                <span>Host</span><span>Container</span><span>Protocol</span><span></span>
                 {data.ports.map((p, i) => (
                   <React.Fragment key={i}>
                     <input type="text" className="valid" value={p.hostPort} onChange={e => updateListItem('ports', i, 'hostPort', e.target.value)} />
@@ -374,11 +374,11 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
               <div className="section-header">
                 <label>Volume</label>
                 <button className="btn-pill" onClick={() => addListItem('volumes', { hostPath: '', containerPath: '' })}>
-                  <Plus size={14} /> Aggiungi
+                  <Plus size={14} /> Add
                 </button>
               </div>
               <div className="list-grid volumes-grid">
-                <span>Host</span><span>Contenitore</span><span></span>
+                <span>Host</span><span>Container</span><span></span>
                 {data.volumes.map((v, i) => (
                   <React.Fragment key={i}>
                     <input type="text" value={v.hostPath} onChange={e => updateListItem('volumes', i, 'hostPath', e.target.value)} />
@@ -391,13 +391,13 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
 
             <div className="form-group">
               <div className="section-header">
-                <label>Variabili d'ambiente</label>
+                <label>Environment Variables</label>
                 <button className="btn-pill" onClick={() => addListItem('env', { key: '', value: '' })}>
-                  <Plus size={14} /> Aggiungi
+                  <Plus size={14} /> Add
                 </button>
               </div>
               <div className="list-grid env-grid">
-                <span>Chiave</span><span>Valore</span><span></span>
+                <span>Key</span><span>Value</span><span></span>
                 {data.env.map((env, i) => (
                   <React.Fragment key={i}>
                     <input type="text" value={env.key} onChange={e => updateListItem('env', i, 'key', e.target.value)} />
@@ -409,7 +409,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             </div>
 
             <div className="form-group">
-              <label>Privilegi</label>
+              <label>Privileges</label>
               <label className="switch">
                 <input type="checkbox" checked={data.privileged} onChange={e => updateField('privileged', e.target.checked)} />
                 <span className="slider round"></span>
@@ -417,7 +417,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             </div>
 
             <div className="form-group">
-              <label>Policy di riavvio</label>
+              <label>Restart Policy</label>
               <select value={data.restartPolicy} onChange={e => updateField('restartPolicy', e.target.value)} style={{ width: '100%', padding: '10px' }}>
                 <option value="unless-stopped">unless-stopped</option>
                 <option value="always">always</option>
@@ -428,7 +428,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
 
             <div className="form-group">
               <label>PID Mode</label>
-              <input type="text" value={data.pidMode} onChange={e => updateField('pidMode', e.target.value)} placeholder="es. host" list="pid-options-modal" style={{ width: '100%', padding: '10px' }} />
+              <input type="text" value={data.pidMode} onChange={e => updateField('pidMode', e.target.value)} placeholder="e.g. host" list="pid-options-modal" style={{ width: '100%', padding: '10px' }} />
               <datalist id="pid-options-modal">
                 <option value="host" />
               </datalist>
@@ -438,19 +438,19 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
             
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <button className="btn" onClick={handleExportYaml} disabled={saving} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-                <Download size={16} /> Esporta YAML
+                <Download size={16} /> Export YAML
               </button>
               <button className="btn btn-danger" onClick={handleDelete} disabled={saving}>
-                Elimina Container
+                Delete Container
               </button>
             </div>
 
           </div>
           <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn" onClick={onClose} disabled={saving} style={{ background: 'var(--card-bg)' }}>Annulla</button>
+              <button className="btn" onClick={onClose} disabled={saving} style={{ background: 'var(--card-bg)' }}>Cancel</button>
               <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Salvataggio...' : 'Salva e Ricrea'}
+                {saving ? 'Saving...' : 'Save and Recreate'}
               </button>
             </div>
           </div>

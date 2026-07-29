@@ -125,7 +125,7 @@ export default function CpuModal({ isOpen, onClose }) {
         <div style={{ padding: '20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Activity size={24} color="var(--primary)" />
-            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Dettagli CPU (Ultimi 15 minuti)</h2>
+            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>CPU Details (Last 15 minutes)</h2>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={24} />
@@ -156,7 +156,7 @@ export default function CpuModal({ isOpen, onClose }) {
 
           {/* Processes Table */}
           {loading && processes.length === 0 && containers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Caricamento processi e container...</div>
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Loading processes and containers...</div>
           ) : (
             <div style={{ overflowX: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
@@ -165,13 +165,13 @@ export default function CpuModal({ isOpen, onClose }) {
                 <div>
                   <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ padding: '2px 6px', background: 'var(--primary)', color: 'white', borderRadius: '4px', fontSize: '0.7rem', textTransform: 'uppercase' }}>Container</span>
-                    Container Docker (Ordinati per CPU)
+                    Docker Containers (Sorted by CPU)
                   </h3>
                   <div className="modal-table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                        <th style={{ padding: '8px' }}>Nome Container</th>
+                        <th style={{ padding: '8px' }}>Container Name</th>
                         <th style={{ padding: '8px' }}>ID</th>
                         <th style={{ padding: '8px' }}>CPU %</th>
                       </tr>
@@ -192,15 +192,15 @@ export default function CpuModal({ isOpen, onClose }) {
 
               {/* Processes */}
               <div>
-                <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)' }}>Processi di Sistema (Ordinati per CPU)</h3>
+                <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)' }}>System Processes (Sorted by CPU)</h3>
                 <div className="modal-table-wrapper">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
                       <th style={{ padding: '8px' }}>PID</th>
-                      <th style={{ padding: '8px' }}>Nome</th>
+                      <th style={{ padding: '8px' }}>Name</th>
                       <th style={{ padding: '8px' }}>CPU %</th>
-                      <th style={{ padding: '8px' }}>Utente</th>
+                      <th style={{ padding: '8px' }}>User</th>
                     </tr>
                   </thead>
                   <tbody>

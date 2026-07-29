@@ -90,31 +90,31 @@ export default function TerminalPage({ togglePanel }) {
             </button>
           </div>
           <h1 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>
-            <TermIcon size={24} color="var(--primary)" /> Terminale SSH
+            <TermIcon size={24} color="var(--primary)" /> SSH Terminal
           </h1>
           <div className="flex items-center gap-2" style={{ width: '40px' }}></div>
         </div>
 
         <div className="flex justify-center items-center" style={{ flex: 1 }}>
           <div className="widget" style={{ padding: '30px', width: '100%', maxWidth: '400px' }}>
-            <h2 className="m-0 text-center font-bold mb-4" style={{ fontSize: '1.25rem' }}>Connessione Host</h2>
+            <h2 className="m-0 text-center font-bold mb-4" style={{ fontSize: '1.25rem' }}>Host Connection</h2>
             
             <p style={{ opacity: 0.7, marginBottom: '20px', fontSize: '0.9rem' }}>
-              Inserisci le credenziali per accedere all'intera macchina. La password verrà richiesta in modo sicuro nel terminale.
+              Enter credentials to access the entire machine. The password will be securely requested in the terminal.
             </p>
 
             <form onSubmit={connectSSH} className="casaos-form">
               <div className="form-group mb-4">
-                <label className="flex items-center gap-2"><Server size={16}/> Indirizzo IP / Host</label>
+                <label className="flex items-center gap-2"><Server size={16}/> IP Address / Host</label>
                 <input type="text" className="form-control" value={sshHost} onChange={(e) => setSshHost(e.target.value)} required />
               </div>
               
               <div className="form-group mb-6">
-                <label className="flex items-center gap-2"><User size={16}/> Nome Utente</label>
+                <label className="flex items-center gap-2"><User size={16}/> Username</label>
                 <input type="text" className="form-control" value={sshUser} onChange={(e) => setSshUser(e.target.value)} required />
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Connetti</button>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Connect</button>
             </form>
           </div>
         </div>
@@ -140,11 +140,11 @@ export default function TerminalPage({ togglePanel }) {
           </button>
         </div>
         <h1 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>
-          <TermIcon size={24} color="var(--primary)" /> Terminale SSH
+          <TermIcon size={24} color="var(--primary)" /> SSH Terminal
         </h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted">{sshUser}@{sshHost}</span>
-          <button className="btn" onClick={() => setConnected(false)} style={{ padding: '6px 12px', fontSize: '0.875rem' }}>Disconnetti</button>
+          <button className="btn" onClick={() => setConnected(false)} style={{ padding: '6px 12px', fontSize: '0.875rem' }}>Disconnect</button>
         </div>
       </div>
       <div 

@@ -160,7 +160,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
         if (data.taskId) delete p[data.taskId];
         return p;
       });
-      showAlert('Errore Ricreazione', 'Error recreating container: ' + data.error, true);
+      showAlert('Recreation Error', 'Error recreating container: ' + data.error, true);
     });
 
     socket.on('container.create.error', (data) => {
@@ -169,7 +169,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
         if (data.taskId) delete p[data.taskId];
         return p;
       });
-      showAlert('Errore Creazione', 'Error creating container: ' + data.error, true);
+      showAlert('Creation Error', 'Error creating container: ' + data.error, true);
     });
 
     socket.on('container.recreate.rollback', (data) => {
@@ -180,7 +180,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
         return p;
       });
       fetchContainers();
-      showAlert('Rollback Automatico Eseguito', `Errore durante la creazione del container. È stato eseguito un rollback automatico al container precedente.\n\nErrore originale: ${data.error}`, true);
+      showAlert('Automatic Rollback Performed', `Error during container creation. An automatic rollback to the previous container was performed.\n\nOriginal error: ${data.error}`, true);
     });
 
     socket.on('disconnect', () => {
@@ -228,7 +228,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
       });
       fetchContainers();
     } catch (err) {
-      showAlert('Errore', `Error performing ${action}: ` + err.message, true);
+      showAlert('Error', `Error performing ${action}: ` + err.message, true);
     }
   };
 
@@ -285,10 +285,10 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 5) return 'Buonanotte';
-    if (hour < 12) return 'Buongiorno';
-    if (hour < 18) return 'Buon pomeriggio';
-    return 'Buonasera';
+    if (hour < 5) return 'Good night';
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
   };
 
   const sortedContainers = React.useMemo(() => {
@@ -446,7 +446,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
           <Link
             to="/new"
             className="btn-icon-only"
-            title="Nuovo Container"
+            title="New Container"
             style={{ textDecoration: 'none' }}
           >
             <PlusCircle size={24} />
@@ -454,7 +454,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
           <button
             className="btn-icon-only"
             onClick={() => setEditMode(!editMode)}
-            title={editMode ? "Fine Modifica" : "Modifica Layout"}
+            title={editMode ? "Done Editing" : "Edit Layout"}
             style={{ color: editMode ? 'var(--success)' : 'inherit' }}
           >
             {editMode ? <Check size={24} /> : <Edit size={24} />}
@@ -471,8 +471,8 @@ export default function Dashboard({ togglePanel, activePanel }) {
           zIndex: 2000, color: 'white'
         }}>
           <Loader className="spin" size={48} style={{ marginBottom: '20px' }} />
-          <h2 style={{ margin: '0 0 8px 0' }}>Sistema in aggiornamento</h2>
-          <p style={{ opacity: 0.7 }}>Riconnessione in corso...</p>
+          <h2 style={{ margin: '0 0 8px 0' }}>System updating</h2>
+          <p style={{ opacity: 0.7 }}>Reconnecting...</p>
         </div>
       )}
 
@@ -486,7 +486,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
       {/* Containers Section */}
       <div className="flex justify-between items-center mt-2 mb-5">
-        <h2 className="m-0">I tuoi Container</h2>
+        <h2 className="m-0">Your Containers</h2>
 
         {editMode && (
           <div className="flex items-center gap-2">
@@ -498,13 +498,13 @@ export default function Dashboard({ togglePanel, activePanel }) {
               <div style={{ color: showSystemContainers ? 'var(--primary)' : 'var(--text-muted)' }}>
                 {showSystemContainers ? <CheckSquare size={18} /> : <Square size={18} />}
               </div>
-              Mostra container di sistema
+              Show system containers
             </div>
             <select value={sortMode} onChange={e => { setSortMode(e.target.value); if (e.target.value !== 'custom') setEditMode(false); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--card-bg)', color: 'var(--text-color)', outline: 'none' }}>
-              <option value="date">Data di Creazione</option>
-              <option value="alphabetical">Alfabetico</option>
-              <option value="status">Stato (Avviati prima)</option>
-              <option value="custom">Personalizzato</option>
+              <option value="date">Creation Date</option>
+              <option value="alphabetical">Alphabetical</option>
+              <option value="status">Status (Running first)</option>
+              <option value="custom">Custom</option>
             </select>
           </div>
         )}
@@ -630,7 +630,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
                       justifyContent: 'center',
                       gap: '8px'
                     }}
-                    title="Apri Web UI"
+                    title="Open Web UI"
                     className="card-clickable-area"
                   >
                     <img src={getContainerIcon(c)} alt="" className="card-icon" style={{ cursor: 'pointer' }} onError={e => { e.target.style.display = 'none'; }} />
@@ -650,20 +650,20 @@ export default function Dashboard({ togglePanel, activePanel }) {
                 {/* Action Buttons */}
                 <div className="card-actions">
                   {repoUrl && (
-                    <button onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')} className="btn-action-square neutral" title="Sorgente (GitHub/DockerHub)">
+                    <button onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')} className="btn-action-square neutral" title="Source (GitHub/DockerHub)">
                       <Github size={22} />
                     </button>
                   )}
                   {c.State !== 'running' ? (
-                    <button onClick={() => handleAction(c.Id, 'start')} className="btn-action-square success" title="Avvia">
+                    <button onClick={() => handleAction(c.Id, 'start')} className="btn-action-square success" title="Start">
                       <Play size={22} />
                     </button>
                   ) : (
-                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn-action-square danger" title="Arresta">
+                    <button onClick={() => handleAction(c.Id, 'stop')} className="btn-action-square danger" title="Stop">
                       <Square size={22} />
                     </button>
                   )}
-                  <button onClick={() => setLogsContainer({ id: c.Id, name: getContainerName(c) })} className="btn-action-square neutral" title="Log">
+                  <button onClick={() => setLogsContainer({ id: c.Id, name: getContainerName(c) })} className="btn-action-square neutral" title="Logs">
                     <FileText size={22} />
                   </button>
                   <button onClick={() => {
@@ -672,21 +672,21 @@ export default function Dashboard({ togglePanel, activePanel }) {
                     } else {
                       setEditingContainerId(c.Id);
                     }
-                  }} className="btn-action-square neutral" title="Impostazioni">
+                  }} className="btn-action-square neutral" title="Settings">
                     <Settings size={22} color="var(--primary)" />
                   </button>
                 </div>
 
                 {editMode && (
                   <div className="card-edit-controls">
-                    <button onClick={() => moveCustom(stableId, -1)} className="btn-action-square neutral" title="Sposta Su">
+                    <button onClick={() => moveCustom(stableId, -1)} className="btn-action-square neutral" title="Move Up">
                       <ChevronUp size={20} />
                     </button>
-                    <button onClick={() => moveCustom(stableId, 1)} className="btn-action-square neutral" title="Sposta Giù">
+                    <button onClick={() => moveCustom(stableId, 1)} className="btn-action-square neutral" title="Move Down">
                       <ChevronDown size={20} />
                     </button>
                     {!isMobile && (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', padding: '0 4px' }} title="Trascina per riordinare">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, cursor: 'grab', padding: '0 4px' }} title="Drag to reorder">
                         <GripHorizontal size={16} />
                       </div>
                     )}
@@ -730,7 +730,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
                   {/* Title */}
                   <h3 className="card-title">
-                    {progressData.name || 'Operazione in corso...'}
+                    {progressData.name || 'Operation in progress...'}
                   </h3>
 
                   {/* Disabled Action Button */}

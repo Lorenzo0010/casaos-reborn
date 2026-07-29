@@ -60,7 +60,7 @@ export default function NetworkModal({ isOpen, onClose }) {
         <div style={{ padding: '20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Globe size={24} color="var(--primary)" />
-            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Dettagli Rete</h2>
+            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Network Details</h2>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={24} />
@@ -70,7 +70,7 @@ export default function NetworkModal({ isOpen, onClose }) {
         {/* Content */}
         <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
           {loading && containers.length === 0 && interfaces.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Caricamento dati di rete...</div>
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Loading network data...</div>
           ) : (
             <div style={{ overflowX: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
@@ -78,16 +78,16 @@ export default function NetworkModal({ isOpen, onClose }) {
               {interfaces.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
                   <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    Interfacce di Rete
+                    Network Interfaces
                   </h3>
                   <div className="modal-table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                        <th style={{ padding: '8px' }}>Interfaccia</th>
-                        <th style={{ padding: '8px' }}>Indirizzo IP</th>
-                        <th style={{ padding: '8px' }}>Stato</th>
-                        <th style={{ padding: '8px' }}>Tipo</th>
+                        <th style={{ padding: '8px' }}>Interface</th>
+                        <th style={{ padding: '8px' }}>IP Address</th>
+                        <th style={{ padding: '8px' }}>Status</th>
+                        <th style={{ padding: '8px' }}>Type</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -98,7 +98,7 @@ export default function NetworkModal({ isOpen, onClose }) {
                           <td style={{ padding: '8px', color: iface.operstate === 'up' ? 'var(--success)' : 'var(--text-muted)' }}>
                             {iface.operstate?.toUpperCase()}
                           </td>
-                          <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{iface.type || 'Sconosciuto'}</td>
+                          <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{iface.type || 'Unknown'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -112,13 +112,13 @@ export default function NetworkModal({ isOpen, onClose }) {
                 <div>
                   <h3 style={{ fontSize: '1rem', marginBottom: '10px', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ padding: '2px 6px', background: 'var(--primary)', color: 'white', borderRadius: '4px', fontSize: '0.7rem', textTransform: 'uppercase' }}>Container</span>
-                    Traffico Rete Container
+                    Container Network Traffic
                   </h3>
                   <div className="modal-table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                        <th style={{ padding: '8px' }}>Nome Container</th>
+                        <th style={{ padding: '8px' }}>Container Name</th>
                         <th style={{ padding: '8px' }}>ID</th>
                         <th style={{ padding: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>

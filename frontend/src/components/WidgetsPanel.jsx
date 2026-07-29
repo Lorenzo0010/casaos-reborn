@@ -148,7 +148,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         <button onClick={(e) => { e.stopPropagation(); moveWidget(id, -1); }} className="btn-icon-only" style={{ background: 'var(--card-bg)', padding: '6px', width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
           <ChevronLeft size={18} />
         </button>
-        <div style={{ flex: 1, cursor: 'grab', height: '32px' }} title="Trascina per riordinare"></div>
+        <div style={{ flex: 1, cursor: 'grab', height: '32px' }} title="Drag to reorder"></div>
         <button onClick={(e) => { e.stopPropagation(); moveWidget(id, 1); }} className="btn-icon-only" style={{ background: 'var(--card-bg)', padding: '6px', width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
           <ChevronRight size={18} />
         </button>
@@ -170,7 +170,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       >
         {renderArrows('cpu')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Processore</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Processor</span>
           <Cpu size={16} opacity={0.7} />
         </div>
         <div className="flex-col items-center justify-center text-center my-auto">
@@ -182,7 +182,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
             <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{stats.cpu?.cores || '-'} Cores</span>
           </span>
           <span style={{ display: 'flex', flexDirection: 'column', textAlign: 'right' }}>
-            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>Temperatura</span>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>Temperature</span>
             <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{stats.cpu?.temperature != null ? `${Math.round(stats.cpu.temperature)}°C` : 'N/A'}</span>
           </span>
         </div>
@@ -204,7 +204,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       >
         {renderArrows('ram')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Memoria RAM</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>RAM Memory</span>
           <Activity size={16} opacity={0.7} />
         </div>
         <div className="flex-col items-center justify-center text-center my-auto">
@@ -212,11 +212,11 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         </div>
         <div className="flex justify-between items-end mt-2" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
           <span style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>In Uso</span>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>Used</span>
             <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{((stats.memory?.used || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
           </span>
           <span style={{ display: 'flex', flexDirection: 'column', textAlign: 'right' }}>
-            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>Totale</span>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>Total</span>
             <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{((stats.memory?.total || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
           </span>
         </div>
@@ -237,17 +237,17 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       >
         {renderArrows('storage')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Archiviazione</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Storage</span>
           <HardDrive size={16} opacity={0.7} />
         </div>
         <div className="flex justify-between items-center mb-1">
-          <span style={{ fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>Sano</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>Healthy</span>
         </div>
         <div className="flex justify-between mt-2 mb-1" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          <span>Usato: {((stats.disk?.used || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
+          <span>Used: {((stats.disk?.used || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
         </div>
         <div className="flex justify-between mb-2" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          <span>Totale: {((stats.disk?.total || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
+          <span>Total: {((stats.disk?.total || 0) / 1024 / 1024 / 1024).toFixed(2)} GB</span>
         </div>
         <div style={{ background: 'var(--border-subtle)', height: '6px', borderRadius: '3px', marginTop: '16px', overflow: 'hidden' }}>
           <div style={{ width: `${Math.min(100, Math.max(0, stats.disk?.percent || 0))}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px', transition: 'width 0.3s' }}></div>
@@ -267,8 +267,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       >
         {renderArrows('network')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stato della Rete</span>
-          <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>Attiva</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Network Status</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>Active</span>
         </div>
         <div className="flex-col justify-center my-auto gap-4" style={{ display: 'flex' }}>
           <div className="flex justify-between items-center">
@@ -300,7 +300,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       >
         {renderArrows('system')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Info di Sistema</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>System Info</span>
           <Server size={16} opacity={0.7} />
         </div>
 
@@ -310,9 +310,9 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
               <Smartphone size={20} color="#8b5cf6" />
             </div>
             <div className="flex-col">
-              <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Sistema Operativo</span>
+              <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Operating System</span>
               <span style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-color)', lineHeight: 1.2 }}>
-                {stats.os?.distro || stats.os?.platform || 'Sconosciuto'}
+                {stats.os?.distro || stats.os?.platform || 'Unknown'}
               </span>
             </div>
           </div>
@@ -322,7 +322,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
               <Clock size={20} color="var(--primary)" />
             </div>
             <div className="flex-col">
-              <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Tempo di Attività</span>
+              <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Uptime</span>
               <span style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-color)', lineHeight: 1.2 }}>
                 {formatUptime(stats.os?.uptime)}
               </span>
@@ -343,7 +343,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       >
         {renderArrows('weather')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Meteo</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Weather</span>
           <span style={{ fontSize: '1.2rem' }}>
             {weatherData?.description?.toLowerCase().includes('sun') || weatherData?.description?.toLowerCase().includes('clear') ? '☀️' : 
              weatherData?.description?.toLowerCase().includes('cloud') ? '☁️' : 
@@ -358,7 +358,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         </div>
         <div className="flex justify-between items-end mt-2" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
           <span style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>{weatherData ? weatherData.city : 'Caricamento...'}</span>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>{weatherData ? weatherData.city : 'Loading...'}</span>
             <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{weatherData ? weatherData.description : '--'}</span>
           </span>
         </div>

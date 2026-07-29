@@ -73,7 +73,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       setLogs(res.data);
     } catch (err) {
       console.error(err);
-      showAlert('Errore', 'Failed to fetch logs: ' + (err.response?.data?.error || err.message), true);
+      showAlert('Error', 'Failed to fetch logs: ' + (err.response?.data?.error || err.message), true);
     } finally {
       setLogsLoading(false);
     }
@@ -110,7 +110,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   }, []);
 
   const clearLogs = async () => {
-    const confirmed = await showConfirm('Svuota Log', 'Sei sicuro di voler svuotare tutti i log di sistema? Questa azione non può essere annullata.');
+    const confirmed = await showConfirm('Clear Logs', 'Are you sure you want to clear all system logs? This action cannot be undone.');
     if (!confirmed) return;
 
     try {
@@ -120,7 +120,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       });
       setLogs('');
     } catch (err) {
-      showAlert('Errore', 'Failed to clear logs: ' + (err.response?.data?.error || err.message), true);
+      showAlert('Error', 'Failed to clear logs: ' + (err.response?.data?.error || err.message), true);
     }
   };
 
@@ -130,7 +130,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
   // Funzione per colorare le righe di errore
   const renderLogLines = () => {
-    if (!logs) return 'Nessun log disponibile.';
+    if (!logs) return 'No logs available.';
     return logs.split('\n').map((line, idx) => {
       const isError = line.includes('[ERROR]');
       return (
@@ -169,7 +169,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   const triggerUpdateCheck = async () => {
     try {
       setIsCheckingUpdates(true);
-      setCheckStatus({ container: 'Inizializzazione...', action: '' });
+      setCheckStatus({ container: 'Initializing...', action: '' });
       await axios.post('/api/docker/check-updates', {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
@@ -177,7 +177,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       console.error('Error starting update check:', error);
       setIsCheckingUpdates(false);
       setCheckStatus(null);
-      showAlert('Errore', 'Impossibile avviare la ricerca aggiornamenti.', true);
+      showAlert('Error', 'Unable to start update check.', true);
     }
   };
 
@@ -192,9 +192,9 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         await axios.post(`/api/docker/containers/${upd.id}/update`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        showAlert('Aggiornamento avviato', `L'aggiornamento per ${upd.name} è iniziato in background.`);
+        showAlert('Update started', `Update for ${upd.name} has started in the background.`);
       } catch (err) {
-        showAlert('Errore', `Impossibile aggiornare ${upd.name}: ${err.response?.data?.error || err.message}`, true);
+        showAlert('Error', `Unable to update ${upd.name}: ${err.response?.data?.error || err.message}`, true);
       }
     }
   };
@@ -221,7 +221,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </button>
         </div>
         <h1 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>
-          <Wrench /> Avanzate
+          <Wrench /> Advanced
         </h1>
         <div className="flex items-center gap-2" style={{ width: '40px' }}></div>
       </div>
@@ -231,20 +231,20 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       {/* ─── Section 1: UI Settings ─── */}
       <div className="widget">
         <h2 className="flex items-center gap-2 mb-5 m-0">
-          <Palette /> Impostazioni UI
+          <Palette /> UI Settings
         </h2>
         
         <div className="casaos-form flex-col gap-6">
           
           <div className="input-group">
             <label className="flex items-center gap-2 font-semibold">
-              Modalità Tema
+              Theme Mode
             </label>
             <div className="flex items-center gap-3 mt-3">
               {[
-                { id: 'auto', label: 'Sistema', icon: Monitor },
-                { id: 'light', label: 'Chiaro', icon: Sun },
-                { id: 'dark', label: 'Scuro', icon: Moon }
+                { id: 'auto', label: 'System', icon: Monitor },
+                { id: 'light', label: 'Light', icon: Sun },
+                { id: 'dark', label: 'Dark', icon: Moon }
               ].map(mode => {
                 const isSelected = theme === mode.id;
                 const Icon = mode.icon;
@@ -278,7 +278,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </div>
 
           <div className="input-group">
-            <label className="font-semibold">Tema Grafico</label>
+            <label className="font-semibold">Graphic Theme</label>
             <div className="flex flex-wrap gap-4 mt-3">
               {predefinedThemes.map(t => (
                 <button
@@ -318,7 +318,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
 
           <div className="flex mt-2" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
             <button type="button" className="btn btn-action danger flex items-center gap-2" onClick={handleReset} disabled={isSaving}>
-              <RefreshCcw size={16} /> Ripristina Default
+              <RefreshCcw size={16} /> Restore Default
             </button>
           </div>
         </div>
@@ -327,10 +327,10 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       {/* ─── Section 1.2: Telegram Notifications ─── */}
       <div className="widget flex-col">
         <h2 className="flex items-center gap-2 mb-5 m-0">
-          <Terminal /> Notifiche Telegram
+          <Terminal /> Telegram Notifications
         </h2>
         <div className="glass p-5 rounded-xl flex-col gap-4">
-          <p className="text-sm opacity-80 mb-2">Ricevi avvisi se la CPU o la RAM superano il 90%, o se lo spazio su disco sta per esaurirsi.</p>
+          <p className="text-sm opacity-80 mb-2">Receive alerts if CPU or RAM exceeds 90%, or if disk space is running low.</p>
           <div className="input-group">
             <label>Bot Token</label>
             <input 
@@ -353,7 +353,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </div>
           <div className="flex mt-3">
             <button className="btn btn-primary flex items-center gap-2" onClick={() => onSave({ telegramToken, telegramChatId })}>
-              <Save size={16} /> Salva Impostazioni Telegram
+              <Save size={16} /> Save Telegram Settings
             </button>
           </div>
         </div>
@@ -362,12 +362,12 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       {/* ─── Section 1.3: Widget Settings ─── */}
       <div className="widget flex-col">
         <h2 className="flex items-center gap-2 mb-5 m-0">
-          <Monitor /> Impostazioni Widget
+          <Monitor /> Widget Settings
         </h2>
         <div className="glass p-5 rounded-xl flex-col gap-4">
-          <p className="text-sm opacity-80 mb-2">Configura le opzioni per i widget della dashboard.</p>
+          <p className="text-sm opacity-80 mb-2">Configure options for dashboard widgets.</p>
           <div className="input-group">
-            <label>Città per Widget Meteo</label>
+            <label>City for Weather Widget</label>
             <input 
               type="text" 
               className="input w-full" 
@@ -378,7 +378,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </div>
           <div className="flex mt-3">
             <button className="btn btn-primary flex items-center gap-2" onClick={() => onSave({ weatherCity })}>
-              <Save size={16} /> Salva Impostazioni Widget
+              <Save size={16} /> Save Widget Settings
             </button>
           </div>
         </div>
@@ -387,10 +387,10 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       {/* ─── Section 1.5: Backup & Restore ─── */}
       <div className="widget flex-col">
         <h2 className="flex items-center gap-2 mb-5 m-0">
-          <Save /> Backup & Ripristino
+          <Save /> Backup & Restore
         </h2>
         <div className="glass p-5 rounded-xl flex-col gap-4">
-          <p className="text-sm opacity-80 mb-2">Esporta tutte le configurazioni e i docker-compose per tenerli al sicuro, oppure ripristinali da un archivio salvato.</p>
+          <p className="text-sm opacity-80 mb-2">Export all configurations and docker-compose files to keep them safe, or restore them from a saved archive.</p>
           <div className="flex flex-wrap gap-4">
             <button className="btn btn-primary" onClick={async () => {
               try {
@@ -398,7 +398,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
                 const res = await fetch('/api/system/backup', {
                   headers: { Authorization: `Bearer ${token}` }
                 });
-                if (!res.ok) throw new Error('Errore download backup');
+                if (!res.ok) throw new Error('Error downloading backup');
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -409,17 +409,17 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
               } catch (err) {
-                showAlert('Errore', 'Impossibile scaricare il backup: ' + err.message, true);
+                showAlert('Error', 'Unable to download backup: ' + err.message, true);
               }
             }}>
-              <ArrowDown size={18} /> Scarica Backup (.zip)
+              <ArrowDown size={18} /> Download Backup (.zip)
             </button>
             <label className="btn" style={{ background: 'var(--card-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ArrowUpCircle size={18} /> Ripristina da Backup
+              <ArrowUpCircle size={18} /> Restore from Backup
               <input type="file" accept=".zip" style={{ display: 'none' }} onChange={async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                const confirmed = await showConfirm('Ripristino Backup', 'Sei sicuro? Le impostazioni attuali verranno sovrascritte. I container già in esecuzione non verranno fermati ma i file verranno sostituiti.');
+                const confirmed = await showConfirm('Restore Backup', 'Are you sure? Current settings will be overwritten. Running containers will not be stopped but files will be replaced.');
                 if (!confirmed) return;
                 
                 const formData = new FormData();
@@ -429,9 +429,9 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
                   const res = await axios.post('/api/system/restore', formData, {
                     headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
                   });
-                  showAlert('Successo', res.data.message);
+                  showAlert('Success', res.data.message);
                 } catch(err) {
-                  showAlert('Errore', "Impossibile ripristinare il backup: " + (err.response?.data?.error || err.message), true);
+                  showAlert('Error', "Unable to restore backup: " + (err.response?.data?.error || err.message), true);
                 }
               }} />
             </label>
@@ -443,23 +443,23 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       <div className="widget flex-col">
         <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
           <h2 className="flex items-center gap-2 m-0">
-            <Terminal size={24} /> Log di Sistema
+            <Terminal size={24} /> System Logs
           </h2>
           <div className="flex gap-2">
-            <button className="btn" onClick={fetchLogs} title="Aggiorna Logs" style={{ background: 'var(--card-bg)' }}>
-              <RefreshCw size={18} className={logsLoading ? 'spin' : ''} style={{ marginRight: '5px' }} /> Aggiorna
+            <button className="btn" onClick={fetchLogs} title="Refresh Logs" style={{ background: 'var(--card-bg)' }}>
+              <RefreshCw size={18} className={logsLoading ? 'spin' : ''} style={{ marginRight: '5px' }} /> Refresh
             </button>
-            <button className="btn" onClick={scrollToBottom} title="Scorri alla fine" style={{ background: 'var(--card-bg)' }}>
-              <ArrowDown size={18} style={{ marginRight: '5px' }} /> Fine
+            <button className="btn" onClick={scrollToBottom} title="Scroll to bottom" style={{ background: 'var(--card-bg)' }}>
+              <ArrowDown size={18} style={{ marginRight: '5px' }} /> Bottom
             </button>
-            <button className="btn btn-danger" onClick={clearLogs} title="Svuota Logs">
-              <Trash2 size={18} style={{ marginRight: '5px' }} /> Svuota
+            <button className="btn btn-danger" onClick={clearLogs} title="Clear Logs">
+              <Trash2 size={18} style={{ marginRight: '5px' }} /> Clear
             </button>
           </div>
         </div>
 
         <div style={{ height: '350px', backgroundColor: '#1e1e1e', color: '#d4d4d4', padding: '15px', borderRadius: '8px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '13px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-          {logsLoading && !logs ? 'Caricamento logs in corso...' : renderLogLines()}
+          {logsLoading && !logs ? 'Loading logs...' : renderLogLines()}
           <div ref={logsEndRef} />
         </div>
       </div>
@@ -467,15 +467,15 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
       {/* ─── Section 3: Docker Maintenance & Updates ─── */}
       <div className="widget flex-col gap-5">
         <h2 className="flex items-center gap-2 m-0 mb-2" style={{ borderBottom: '1px solid var(--card-border)', paddingBottom: '10px' }}>
-          <ArrowUpCircle size={20} /> Gestione Docker & Aggiornamenti
+          <ArrowUpCircle size={20} /> Docker Management & Updates
         </h2>
         
         {/* Updates Section */}
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div className="flex-1" style={{ minWidth: '250px' }}>
-            <h3 className="m-0 mb-2 text-lg">Aggiornamenti Immagini</h3>
+            <h3 className="m-0 mb-2 text-lg">Image Updates</h3>
             <p className="m-0 text-sm text-muted">
-              Cerca nuove versioni delle immagini per i container in esecuzione.
+              Check for new image versions for running containers.
             </p>
           </div>
           <div className="flex gap-2">
@@ -485,7 +485,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
               disabled={isCheckingUpdates}
             >
               <RefreshCw size={16} className={isCheckingUpdates ? 'spin' : ''} />
-              {isCheckingUpdates ? 'Ricerca in corso...' : 'Controlla Ora'}
+              {isCheckingUpdates ? 'Checking...' : 'Check Now'}
             </button>
           </div>
         </div>
@@ -493,7 +493,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         {isCheckingUpdates && checkStatus && checkStatus.container && (
           <div className="p-4" style={{ background: 'var(--bg-color)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--card-border)' }}>
             <div className="flex justify-between mb-2 text-sm">
-              <span>Scansione: <strong>{checkStatus.container}</strong></span>
+              <span>Scanning: <strong>{checkStatus.container}</strong></span>
               <span className="text-muted">{checkStatus.action}</span>
             </div>
             <div style={{ height: '4px', background: 'var(--card-bg)', borderRadius: '2px', overflow: 'hidden' }}>
@@ -506,7 +506,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           <div className="p-4" style={{ background: 'rgba(239, 68, 68, 0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--danger)' }}>
             <h4 className="flex items-center gap-2 m-0 mb-2" style={{ color: 'var(--danger)' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)' }}></div>
-              Container da aggiornare ({updates.length})
+              Containers to update ({updates.length})
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
               {updates.map(upd => (
@@ -518,7 +518,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
                     style={{ width: '100%', padding: '6px' }}
                     onClick={() => handleUpdateContainer(upd)}
                   >
-                    Aggiorna
+                    Update
                   </button>
                 </div>
               ))}

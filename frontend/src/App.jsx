@@ -11,37 +11,37 @@ import AppStore from './pages/AppStore';
 
 export const predefinedThemes = [
   { 
-    id: 'navy', name: 'Oceano', 
+    id: 'navy', name: 'Ocean', 
     primary: '#3b82f6', 
     darkBg: '#020617', darkSurface: '#0f172a',
     lightBg: '#f8f9fb', lightSurface: '#ffffff'
   },
   { 
-    id: 'forest', name: 'Smeraldo', 
+    id: 'forest', name: 'Emerald', 
     primary: '#10b981', 
     darkBg: '#022c22', darkSurface: '#064e3b',
     lightBg: '#f0fdf4', lightSurface: '#ffffff'
   },
   { 
-    id: 'red', name: 'Rubino', 
+    id: 'red', name: 'Ruby', 
     primary: '#f43f5e', 
     darkBg: '#2a040d', darkSurface: '#4c0519',
     lightBg: '#fff1f2', lightSurface: '#ffffff'
   },
   { 
-    id: 'rust', name: 'Ambra', 
+    id: 'rust', name: 'Amber', 
     primary: '#f59e0b', 
     darkBg: '#451a03', darkSurface: '#78350f',
     lightBg: '#fffbeb', lightSurface: '#ffffff'
   },
   { 
-    id: 'purple', name: 'Ametista', 
+    id: 'purple', name: 'Amethyst', 
     primary: '#8b5cf6', 
     darkBg: '#2e1065', darkSurface: '#4c1d95',
     lightBg: '#f5f3ff', lightSurface: '#ffffff'
   },
   { 
-    id: 'anthracite', name: 'Antracite', 
+    id: 'anthracite', name: 'Anthracite', 
     primary: '#94a3b8', 
     darkBg: '#18181b', darkSurface: '#27272a',
     lightBg: '#f8f9fb', lightSurface: '#ffffff'
