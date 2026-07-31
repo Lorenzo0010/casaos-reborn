@@ -266,6 +266,19 @@ export default function Dashboard({ togglePanel, activePanel }) {
     return `${scheme}${customHost}:${targetPort}${path}`;
   };
 
+  const getWebPort = (container) => {
+    const labels = container.Labels || {};
+    const customPort = labels['casaos.reborn.web.port'];
+    if (customPort && customPort !== '0') {
+      return customPort;
+    }
+    const tcpMappings = (container.Ports || []).filter(p => p.PublicPort && p.Type === 'tcp');
+    if (tcpMappings.length > 0) {
+      return tcpMappings[0].PublicPort;
+    }
+    return null;
+  };
+
   const getContainerName = (c) => {
     if (c.Labels && c.Labels['casaos.reborn.name']) return c.Labels['casaos.reborn.name'];
     if (c.Labels && c.Labels['casaos.app.name']) return c.Labels['casaos.app.name'];
@@ -603,8 +616,10 @@ export default function Dashboard({ togglePanel, activePanel }) {
                 )}
 
                 {/* LED Status */}
-                <div className="card-led">
-                  <span className={`status-dot ${c.State === 'running' ? 'running' : 'exited'}`} style={{ width: '12px', height: '12px' }}></span>
+                <div className="card-led" style={{ width: 'auto', padding: '2px 8px', borderRadius: '12px', backgroundColor: c.State === 'running' ? 'rgba(0, 200, 83, 0.15)' : 'rgba(255, 60, 60, 0.15)' }}>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: c.State === 'running' ? 'var(--success)' : 'var(--error)' }}>
+                    {c.State === 'running' ? (getWebPort(c) ? `RUNNING ON ${getWebPort(c)}` : 'RUNNING') : 'STOPPED'}
+                  </span>
                 </div>
 
                 {progressData && (
@@ -625,7 +640,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
                 {isClickable ? (
                   <a
                     href={webUrl}
-                    target="_blank"
+                    target={['casaos-reborn', 'casaos-updater'].includes(stableId) ? "_self" : "_blank"}
                     rel="noopener noreferrer"
                     style={{
                       textDecoration: 'none',
@@ -729,8 +744,10 @@ export default function Dashboard({ togglePanel, activePanel }) {
                   </div>
 
                   {/* LED */}
-                  <div className="card-led">
-                    <span className="status-dot recreating" style={{ width: '12px', height: '12px' }}></span>
+                  <div className="card-led" style={{ width: 'auto', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(255, 171, 0, 0.15)' }}>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: '#ffab00' }}>
+                      UPDATING
+                    </span>
                   </div>
 
                   {/* Placeholder Icon */}

@@ -64,6 +64,15 @@ router.get('/containers/:id/inspect', async (req, res) => {
     const container = docker.getContainer(req.params.id);
     const data = await container.inspect();
     
+    try {
+      const image = docker.getImage(data.Image);
+      const imageData = await image.inspect();
+      data.ImageEnv = imageData.Config?.Env || [];
+    } catch (e) {
+      console.warn("Could not fetch image info for", data.Image, e.message);
+      data.ImageEnv = [];
+    }
+    
     const { injectCasaOSMetadata } = require('../utils/yamlBuilder');
     injectCasaOSMetadata(data, CASAOS_APPS_DIR);
     

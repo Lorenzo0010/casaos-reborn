@@ -241,6 +241,34 @@ export default function NewContainer({ togglePanel }) {
       showAlert('Warning', 'Image is required');
       return;
     }
+
+    try {
+      const token = localStorage.getItem('token');
+
+      // Validate Ports
+      const requestedPorts = [];
+      if (formData.webUI.port && formData.webUI.port !== '0') requestedPorts.push(String(formData.webUI.port));
+      formData.ports.forEach(p => {
+        if (p.host) requestedPorts.push(String(p.host));
+      });
+
+      if (requestedPorts.length > 0) {
+        const resContainers = await fetch('/api/docker/containers', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (resContainers.ok) {
+          const allContainers = await resContainers.json();
+          const conflict = requestedPorts.find(port => {
+            return allContainers.some(c => {
+              if (formData.name && c.Names && c.Names.includes(`/${formData.name}`)) return false;
+              return c.Ports && c.Ports.some(cp => String(cp.PublicPort) === port);
+            });
+          });
+
+          if (conflict) {
+            showAlert('Port Conflict', `Port ${conflict} is already in use by another container.`, true);
+            return;
+          }
+        }
+      }
     
     const portsObj = {};
     formData.ports.forEach(p => {
@@ -287,8 +315,6 @@ export default function NewContainer({ togglePanel }) {
       capAdd: formData.capAdd
     };
 
-    try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/docker/containers/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

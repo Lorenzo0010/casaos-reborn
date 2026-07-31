@@ -36,11 +36,15 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
         const info = res.data;
         
         // Parse data
+        const imageEnv = info?.ImageEnv || [];
         const IGNORED_ENV_VARS = ['PATH', 'NODE_VERSION', 'YARN_VERSION', 'HOSTNAME', 'PWD', 'HOME', 'SHLVL', 'DEBUG'];
-        const parsedEnv = (info?.Config?.Env || []).map(e => {
-          const idx = e.indexOf('=');
-          return { key: e.substring(0, idx), value: e.substring(idx + 1) };
-        }).filter(e => !IGNORED_ENV_VARS.includes(e.key));
+        const parsedEnv = (info?.Config?.Env || [])
+          .filter(e => !imageEnv.includes(e))
+          .map(e => {
+            const idx = e.indexOf('=');
+            return { key: e.substring(0, idx), value: e.substring(idx + 1) };
+          })
+          .filter(e => !IGNORED_ENV_VARS.includes(e.key));
 
         const parsedPorts = [];
         const portBindings = info?.HostConfig?.PortBindings || {};
@@ -147,6 +151,32 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           payload.ports[key] = [{ HostPort: p.hostPort }];
         }
       });
+
+      const resContainers = await axios.get('/api/docker/containers', { headers: { Authorization: `Bearer ${token}` } });
+      const allContainers = resContainers.data;
+
+      // Validate Ports
+      const requestedPorts = [];
+      if (data.webUI.port && data.webUI.port !== '0') requestedPorts.push(String(data.webUI.port));
+      data.ports.forEach(p => {
+        if (p.hostPort) requestedPorts.push(String(p.hostPort));
+      });
+
+      if (requestedPorts.length > 0) {
+        const conflict = requestedPorts.find(port => {
+          return allContainers.some(c => {
+            if (c.Id.startsWith(containerId)) return false;
+            if (c.Names && c.Names.includes(`/${data.name}`)) return false;
+            return c.Ports && c.Ports.some(cp => String(cp.PublicPort) === port);
+          });
+        });
+
+        if (conflict) {
+          showAlert('Port Conflict', `Port ${conflict} is already in use by another container.`, true);
+          setSaving(false);
+          return;
+        }
+      }
 
       const res = await axios.post(`/api/docker/containers/${containerId}/recreate`, payload, {
         headers: { Authorization: `Bearer ${token}` }
