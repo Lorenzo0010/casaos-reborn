@@ -81,18 +81,22 @@ function buildCasaOSCompose(data) {
     service.cpu_shares = data.cpuQuota; // simplified equivalent
   }
 
-  // Ports
-  const validPorts = [];
-  if (data.ports) {
-    for (const key of Object.keys(data.ports)) {
-      const [containerPort, protocol] = key.split('/');
-      for (const p of data.ports[key]) {
-        const protoStr = protocol === 'tcp' ? '' : `/${protocol}`;
-        validPorts.push(`${p.HostPort}:${containerPort}${protoStr}`);
+  if (data.ports && Object.keys(data.ports).length > 0) {
+    service.ports = [];
+    for (const [containerPortProto, hostBindings] of Object.entries(data.ports)) {
+      const proto = containerPortProto.split('/')[1] || 'tcp';
+      const containerPort = containerPortProto.split('/')[0];
+      for (const b of hostBindings) {
+        if (b.HostPort) {
+          service.ports.push({
+            target: parseInt(containerPort),
+            published: String(b.HostPort),
+            protocol: proto
+          });
+        }
       }
     }
   }
-  if (validPorts.length > 0) service.ports = validPorts;
 
   // Volumes
   if (data.volumes && data.volumes.length > 0) {
