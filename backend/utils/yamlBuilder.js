@@ -274,8 +274,17 @@ function injectCasaOSMetadata(containers, appsDir) {
     const targetLabels = isInspectFormat ? c.Config.Labels : c.Labels;
 
     // Skip reading stale net.casaos labels. We MUST read the YAML on disk.
-    const projectName = labels['com.docker.compose.project'];
+    let projectName = labels['com.docker.compose.project'];
     const workingDir = labels['com.docker.compose.project.working_dir'];
+    
+    if (!projectName) {
+      // Se creato tramite le API native di CasaOS, le etichette compose potrebbero mancare.
+      // In questo caso, il nome del container corrisponde solitamente al nome della cartella in appsDir.
+      const rawName = isInspectFormat ? c.Name : (c.Names && c.Names[0]);
+      if (rawName) {
+        projectName = rawName.replace(/^\//, '');
+      }
+    }
     
     if (projectName) {
       let appDir = null;
