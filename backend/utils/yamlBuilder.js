@@ -184,60 +184,54 @@ function buildCasaOSCompose(data) {
 }
 
 /**
- * Extracts x-casaos metadata from a compose file string using regex
+ * Extracts x-casaos metadata from a compose file string using js-yaml
  */
 function parseCasaOSMetadata(yamlStr) {
   const metadata = {};
   
-  // Extract root name
-  const nameMatch = yamlStr.match(/^name:\s*(.+)$/im);
-  if (nameMatch) metadata.name = nameMatch[1].replace(/["']/g, '').trim();
-
-  // Find x-casaos block
-  const casaosIdx = yamlStr.indexOf('x-casaos:');
-  if (casaosIdx !== -1) {
-    const casaosBlock = yamlStr.substring(casaosIdx);
+  try {
+    const yaml = require('js-yaml');
+    const doc = yaml.load(yamlStr);
     
-    // Extract title (handling empty custom titles)
-    let extractedTitle = '';
-    const titleMatch = casaosBlock.match(/custom:\s*(.+)$/im);
-    if (titleMatch) {
-      extractedTitle = titleMatch[1].replace(/["']/g, '').trim();
-    }
-    
-    if (!extractedTitle) {
-      const fallbackMatch = casaosBlock.match(/en_us:\s*(.+)$/im) || casaosBlock.match(/en:\s*(.+)$/im) || casaosBlock.match(/it:\s*(.+)$/im);
-      if (fallbackMatch) {
-        extractedTitle = fallbackMatch[1].replace(/["']/g, '').trim();
+    if (doc) {
+      if (doc.name) {
+        metadata.name = String(doc.name).trim();
+      }
+      
+      const xCasaos = doc['x-casaos'];
+      if (xCasaos && typeof xCasaos === 'object') {
+        if (xCasaos.title) {
+          const titleCustom = xCasaos.title.custom;
+          const titleEn = xCasaos.title.en_US || xCasaos.title.en_us || xCasaos.title.en || xCasaos.title.it;
+          
+          if (titleCustom && String(titleCustom).trim() !== '') {
+            metadata.title = String(titleCustom).trim();
+          } else if (titleEn && String(titleEn).trim() !== '') {
+            metadata.title = String(titleEn).trim();
+          } else if (typeof xCasaos.title === 'string' && xCasaos.title.trim() !== '') {
+            metadata.title = xCasaos.title.trim();
+          }
+        }
+        
+        if (xCasaos.icon) {
+          metadata.icon = String(xCasaos.icon).trim();
+        }
+        
+        if (xCasaos.scheme) {
+          metadata.scheme = String(xCasaos.scheme).trim();
+        }
+        
+        if (xCasaos.index) {
+          metadata.path = String(xCasaos.index).trim();
+        }
+        
+        if (xCasaos.port_map) {
+          metadata.port = String(xCasaos.port_map).trim();
+        }
       }
     }
-    
-    if (!extractedTitle) {
-      const directTitleMatch = casaosBlock.match(/title:\s*([^ \n][^\n]*)$/im);
-      if (directTitleMatch) {
-        extractedTitle = directTitleMatch[1].replace(/["']/g, '').trim();
-      }
-    }
-    
-    if (extractedTitle) {
-      metadata.title = extractedTitle;
-    }
-
-    // Extract icon
-    const iconMatch = casaosBlock.match(/icon:\s*(.+)$/im);
-    if (iconMatch) metadata.icon = iconMatch[1].replace(/["']/g, '').trim();
-
-    // Extract scheme
-    const schemeMatch = casaosBlock.match(/scheme:\s*(.+)$/im);
-    if (schemeMatch) metadata.scheme = schemeMatch[1].replace(/["']/g, '').trim();
-
-    // Extract index/path
-    const indexMatch = casaosBlock.match(/index:\s*(.+)$/im);
-    if (indexMatch) metadata.path = indexMatch[1].replace(/["']/g, '').trim();
-
-    // Extract port_map
-    const portMapMatch = casaosBlock.match(/port_map:\s*(.+)$/im);
-    if (portMapMatch) metadata.port = portMapMatch[1].replace(/["']/g, '').trim();
+  } catch (err) {
+    console.warn('YAML Parse Error in parseCasaOSMetadata:', err.message);
   }
 
   return metadata;
@@ -260,37 +254,46 @@ function injectCasaOSMetadata(containers, appsDir) {
     const labels = isInspectFormat ? (c.Config.Labels || {}) : (c.Labels || {});
     
     const projectName = labels['com.docker.compose.project'];
-    if (projectName && appsDir) {
-      const appDir = path.join(appsDir, projectName);
-      let composePath = path.join(appDir, 'docker-compose.yml');
-      
-      if (!fs.existsSync(composePath)) {
-        composePath = path.join(appDir, 'docker-compose.yaml');
+    const workingDir = labels['com.docker.compose.project.working_dir'];
+    
+    if (projectName) {
+      let appDir = null;
+      if (workingDir && fs.existsSync(workingDir)) {
+        appDir = workingDir;
+      } else if (appsDir) {
+        appDir = path.join(appsDir, projectName);
       }
       
-      if (fs.existsSync(composePath)) {
-        try {
-          const yamlStr = fs.readFileSync(composePath, 'utf8');
-          const metadata = parseCasaOSMetadata(yamlStr);
-          
-          if (isInspectFormat && !c.Config.Labels) c.Config.Labels = {};
-          if (!isInspectFormat && !c.Labels) c.Labels = {};
-          
-          const targetLabels = isInspectFormat ? c.Config.Labels : c.Labels;
-          
-          if (metadata.title) {
-            targetLabels['casaos.reborn.name'] = metadata.title;
-          } else if (metadata.name && !targetLabels['casaos.app.name']) {
-            targetLabels['casaos.reborn.name'] = metadata.name;
+      if (appDir) {
+        let composePath = path.join(appDir, 'docker-compose.yml');
+        
+        if (!fs.existsSync(composePath)) {
+          composePath = path.join(appDir, 'docker-compose.yaml');
+        }
+        
+        if (fs.existsSync(composePath)) {
+          try {
+            const yamlStr = fs.readFileSync(composePath, 'utf8');
+            const metadata = parseCasaOSMetadata(yamlStr);
+            
+            if (isInspectFormat && !c.Config.Labels) c.Config.Labels = {};
+            if (!isInspectFormat && !c.Labels) c.Labels = {};
+            
+            const targetLabels = isInspectFormat ? c.Config.Labels : c.Labels;
+            
+            if (metadata.title) {
+              targetLabels['casaos.reborn.name'] = metadata.title;
+            } else if (metadata.name && !targetLabels['casaos.app.name']) {
+              targetLabels['casaos.reborn.name'] = metadata.name;
+            }
+            
+            if (metadata.icon) targetLabels['casaos.reborn.icon'] = metadata.icon;
+            if (metadata.scheme) targetLabels['casaos.reborn.web.scheme'] = metadata.scheme;
+            if (metadata.path) targetLabels['casaos.reborn.web.path'] = metadata.path;
+            if (metadata.port) targetLabels['casaos.reborn.web.port'] = metadata.port;
+          } catch (err) {
+            console.warn(`Failed to parse docker-compose.yml for project ${projectName}:`, err.message);
           }
-          
-          if (metadata.icon) targetLabels['casaos.reborn.icon'] = metadata.icon;
-          if (metadata.scheme) targetLabels['casaos.reborn.web.scheme'] = metadata.scheme;
-          if (metadata.path) targetLabels['casaos.reborn.web.path'] = metadata.path;
-          if (metadata.port) targetLabels['casaos.reborn.web.port'] = metadata.port;
-          if (metadata.port) targetLabels['casaos.reborn.web.port'] = metadata.port;
-        } catch (err) {
-          console.warn(`Failed to parse docker-compose.yml for project ${projectName}:`, err.message);
         }
       }
     }
