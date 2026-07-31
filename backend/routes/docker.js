@@ -301,53 +301,98 @@ router.post('/containers/:id/update', async (req, res) => {
     }
 
     // Fallback: Legacy / Standalone Container Update
+    // Se il container è legacy, lo convertiamo in un'app CasaOS Nativa!
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Converting Legacy container to Native...', taskId });
+    
+    // Costruiamo il payload per buildCasaOSCompose partendo da oldInspect
+    const payload = {
+      name: containerName,
+      image: image.split(':')[0],
+      tag: image.split(':')[1] || 'latest',
+      restartPolicy: oldInspect.HostConfig?.RestartPolicy?.Name || 'unless-stopped',
+      networkMode: oldInspect.HostConfig?.NetworkMode || 'bridge',
+      privileged: !!oldInspect.HostConfig?.Privileged,
+      memory: oldInspect.HostConfig?.Memory,
+      cpuQuota: oldInspect.HostConfig?.CpuShares,
+      cmd: oldInspect.Config?.Cmd,
+      capAdd: oldInspect.HostConfig?.CapAdd,
+      ports: {},
+      volumes: [],
+      env: oldInspect.Config?.Env || [],
+      displayName: oldInspect.Config?.Labels?.['casaos.app.name'] || containerName,
+      icon: oldInspect.Config?.Labels?.['icon']
+    };
+
+    if (oldInspect.HostConfig?.PortBindings) {
+      for (const [key, bindings] of Object.entries(oldInspect.HostConfig.PortBindings)) {
+        if (bindings) {
+          payload.ports[key] = bindings.map(b => ({ HostPort: b.HostPort }));
+        }
+      }
+    }
+
+    if (oldInspect.HostConfig?.Binds) {
+      payload.volumes = oldInspect.HostConfig.Binds;
+    }
+    if (oldInspect.HostConfig?.Devices) {
+      payload.devices = oldInspect.HostConfig.Devices;
+    }
+
+    // Aggiungiamo i label webUI se presenti
+    if (oldInspect.Config?.Labels?.['casaos.reborn.web.port']) {
+      payload.webUI = {
+        scheme: oldInspect.Config.Labels['casaos.reborn.web.scheme'] || 'http',
+        path: oldInspect.Config.Labels['casaos.reborn.web.path'] || '/',
+        port: oldInspect.Config.Labels['casaos.reborn.web.port']
+      };
+    }
+
+    const composeYaml = buildCasaOSCompose(payload);
+    const appDir = path.join(CASAOS_APPS_DIR, containerName);
+    
+    if (!fs.existsSync(appDir)) {
+      fs.mkdirSync(appDir, { recursive: true });
+    }
+    
+    const composePath = path.join(appDir, 'docker-compose.yml');
+    fs.writeFileSync(composePath, composeYaml, 'utf8');
+
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Pulling latest image...', taskId });
     try {
       await new Promise((resolve, reject) => {
-        docker.pull(image, (err, stream) => {
-          if (err) return reject(err);
-          docker.modem.followProgress(stream, (err, output) => {
-            if (err) return reject(err);
-            resolve(output);
-          });
+        exec('docker compose pull -q', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error) => resolve());
+      });
+    } catch(e) {}
+
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Removing old container...', taskId });
+    try { await oldContainer.remove({ force: true }); } catch (removeErr) {}
+
+    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Recreating container as Native CasaOS app...', taskId });
+    
+    let syncSuccess = false;
+    try {
+      await syncWithCasaOS(composePath, io);
+      syncSuccess = true;
+    } catch (err) {
+      console.warn('Sincronizzazione CasaOS fallita durante conversione Legacy->Native:', err.message);
+    }
+
+    if (!syncSuccess) {
+      await new Promise((resolve, reject) => {
+        exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout) => {
+          if (error) return reject(error);
+          resolve(stdout);
         });
       });
-    } catch (pullError) {
-      console.warn(`[Update] Failed to pull image ${image}: ${pullError.message}`);
     }
-
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Stopping old container...', taskId });
-    try { await oldContainer.stop({ t: 10 }); } catch (e) {}
-
-    if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Removing old container...';
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Removing old container...', taskId });
-    try { await oldContainer.remove({ v: false }); } catch (e) {
-      await oldContainer.remove({ force: true, v: false }).catch(() => {});
-    }
-
-    if (global.activeTasks[taskId]) global.activeTasks[taskId].status = 'Creating updated container...';
-    if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Creating updated container...', taskId });
     
-    const createOptions = {
-      name: containerName,
-      Image: image,
-      Env: oldInspect.Config.Env,
-      Labels: oldInspect.Config.Labels,
-      ExposedPorts: oldInspect.Config.ExposedPorts,
-      HostConfig: oldInspect.HostConfig,
-      NetworkingConfig: {
-        EndpointsConfig: oldInspect.NetworkSettings.Networks
-      }
-    };
-
-    if (createOptions.NetworkingConfig?.EndpointsConfig) {
-      for (const net of Object.values(createOptions.NetworkingConfig.EndpointsConfig)) {
-        delete net.MacAddress;
-      }
-    }
-
-    const newContainer = await docker.createContainer(createOptions);
-    await newContainer.start();
+    // Find the new container ID to return it
+    const containers = await docker.listContainers();
+    const newContainerInfo = containers.find(c => 
+      c.Names.includes(`/${containerName}`) || 
+      (c.Labels && c.Labels['com.docker.compose.project'] === containerName)
+    );
+    const newContainerId = newContainerInfo ? newContainerInfo.Id : id;
 
     // Remove from available updates cache
     if (global.availableUpdates && global.availableUpdates[id]) {
@@ -356,7 +401,7 @@ router.post('/containers/:id/update', async (req, res) => {
     }
 
     if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
-    if (io) io.emit('container.recreate.success', { id: newContainer.id, oldId: id, name: containerName, taskId });
+    if (io) io.emit('container.recreate.success', { id: newContainerId, oldId: id, name: containerName, taskId });
   } catch (error) {
     console.error('Error updating container:', error);
     const taskId = `recreate_${id}`;
