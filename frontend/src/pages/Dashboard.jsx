@@ -265,7 +265,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
   const getContainerName = (container) => {
     const stableId = container.Names ? container.Names[0].replace('/', '') : container.Id;
     if (containerOverrides[stableId] && containerOverrides[stableId].displayName) return containerOverrides[stableId].displayName;
-    return container.Labels?.['casaos.reborn.name'] || stableId;
+    return container.Labels?.['casaos.reborn.name'] || container.Labels?.['casaos.app.name'] || stableId;
   };
 
   const getContainerIcon = (container) => {
@@ -273,7 +273,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
     if (containerOverrides[stableId] && containerOverrides[stableId].icon) return containerOverrides[stableId].icon;
 
     const labels = container.Labels || {};
-    const iconUrl = labels['casaos.reborn.icon'];
+    const iconUrl = labels['casaos.reborn.icon'] || labels['icon'];
     if (iconUrl) return iconUrl;
 
     const name = stableId;
