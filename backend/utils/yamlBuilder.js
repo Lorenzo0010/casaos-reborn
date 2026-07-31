@@ -120,16 +120,24 @@ function buildCasaOSCompose(data) {
   }
 
   // x-casaos metadata (official CasaOS schema)
+  const titleStr = data.displayName || data.name;
   const xCasaos = {
     author: "casaos-reborn",
     category: data.webUI ? "Web" : "App",
     main: data.name,
     title: {
-      custom: data.displayName || data.name
+      custom: titleStr,
+      en_us: titleStr
     }
   };
 
-  if (data.icon) xCasaos.icon = data.icon;
+  service.labels = {};
+  if (data.icon) {
+    xCasaos.icon = data.icon;
+    service.labels['icon'] = data.icon;
+  }
+  // Standard casaos label for fallback compatibility
+  service.labels['casaos.app.name'] = titleStr;
 
   if (data.webUI) {
     xCasaos.scheme = data.webUI.scheme ? data.webUI.scheme.replace('://', '') : 'http';
