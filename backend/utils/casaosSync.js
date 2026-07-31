@@ -31,7 +31,6 @@ function syncWithCasaOS(composePath, io) {
         reject(error);
       } else {
         console.log(`[CasaOS Sync] Avviato con successo come app Nativa CasaOS:`, stdout);
-        if (io) io.emit('casaos.sync.success', { message: 'App avviata nativamente su CasaOS Originale con successo!' });
         resolve(stdout);
       }
     });
