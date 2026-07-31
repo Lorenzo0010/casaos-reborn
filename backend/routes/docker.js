@@ -271,12 +271,24 @@ router.post('/containers/:id/update', async (req, res) => {
 
         if (io) io.emit('container.recreate.progress', { id, name: containerName, image, status: 'Recreating container via Compose...', taskId });
         
-        await new Promise((resolve, reject) => {
-          exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout) => {
-            if (error) return reject(error);
-            resolve(stdout);
+        const composePath = path.join(appDir, 'docker-compose.yml');
+        let syncSuccess = false;
+        
+        try {
+          await syncWithCasaOS(composePath, io);
+          syncSuccess = true;
+        } catch (err) {
+          console.warn('Sincronizzazione CasaOS fallita durante update, fallback su docker compose locale:', err.message);
+        }
+
+        if (!syncSuccess) {
+          await new Promise((resolve, reject) => {
+            exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout) => {
+              if (error) return reject(error);
+              resolve(stdout);
+            });
           });
-        });
+        }
         
         if (global.availableUpdates && global.availableUpdates[id]) {
           delete global.availableUpdates[id];
