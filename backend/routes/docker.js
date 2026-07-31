@@ -8,6 +8,7 @@ const router = express.Router();
 const Docker = require('dockerode');
 const { checkUpdates, getUpdaterStatus } = require('../services/updater');
 const { buildCasaOSCompose } = require('../utils/yamlBuilder');
+const { syncWithCasaOS, unsyncFromCasaOS } = require('../utils/casaosSync');
 
 // Base directory for CasaOS compose apps
 const CASAOS_APPS_DIR = process.env.CASAOS_APPS_DIR || (process.platform === 'win32' ? path.join(os.homedir(), 'casaos-apps') : '/var/lib/casaos/apps');
@@ -172,6 +173,11 @@ router.post('/containers/:id/recreate', async (req, res) => {
           console.error(`docker compose up error: ${error.message}`);
           return reject(error);
         }
+        
+        // Sincronizzazione "Fantasma" con CasaOS Originale
+        const composePath = path.join(appDir, 'docker-compose.yml');
+        syncWithCasaOS(composePath);
+        
         resolve(stdout);
       });
     });
@@ -370,6 +376,10 @@ router.post('/containers/:id/:action', async (req, res) => {
          // It's a compose app, we should docker compose down and remove directory
          const appDir = path.join(CASAOS_APPS_DIR, composeProject);
          if (fs.existsSync(appDir)) {
+           
+           // Rimuoviamo dal DB di CasaOS Originale in background
+           unsyncFromCasaOS(composeProject);
+           
            await new Promise((resolve, reject) => {
              exec('docker compose down', { cwd: appDir }, (error) => {
                if (error) console.warn('docker compose down error:', error.message);
@@ -497,6 +507,10 @@ router.post('/containers/create', async (req, res) => {
           console.error(`docker compose error: ${error.message}`);
           return reject(error);
         }
+        
+        // Sincronizzazione "Fantasma" con CasaOS Originale
+        syncWithCasaOS(composePath);
+
         resolve(stdout);
       });
     });
