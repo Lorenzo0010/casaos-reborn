@@ -133,7 +133,7 @@ function buildCasaOSCompose(data) {
     is_uncontrolled: false,
     title: {
       custom: titleStr,
-      en_us: titleStr
+      en_US: titleStr
     }
   };
 
