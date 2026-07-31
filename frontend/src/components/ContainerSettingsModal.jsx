@@ -23,7 +23,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     pidMode: '',
     privileged: false,
     memory: 0,
-    webUI: { scheme: 'http', port: '', path: '/' }
+    webUI: { scheme: 'http', domain: '', port: '', path: '/' }
   });
 
   useEffect(() => {
@@ -96,6 +96,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
           memory: info?.HostConfig?.Memory ? Math.round(info.HostConfig.Memory / (1024 * 1024)) : 0,
           webUI: {
             scheme: (labels['casaos.reborn.web.scheme'] || 'http').replace('://', ''),
+            domain: labels['casaos.reborn.web.host'] || '',
             port: labels['casaos.reborn.web.port'] || '',
             path: labels['casaos.reborn.web.path'] || '/'
           },
@@ -308,15 +309,22 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
               <p style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '8px', marginTop: '-4px' }}>
                 Note: This field is only for the link on the main screen. To physically expose the port, add it to the "Ports" section below.
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '0', borderRadius: '6px', border: '1px solid var(--card-border)', overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 1fr 1fr', gap: '0', borderRadius: '6px', border: '1px solid var(--card-border)', overflow: 'hidden' }}>
                 <select 
-                  style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
+                  style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0, padding: '0 8px' }} 
                   value={data.webUI.scheme} 
                   onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, scheme: e.target.value } }))}
                 >
                   <option value="http">http://</option>
                   <option value="https">https://</option>
                 </select>
+                <input 
+                  type="text" 
+                  placeholder="Domain (auto)" 
+                  style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
+                  value={data.webUI.domain} 
+                  onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, domain: e.target.value } }))} 
+                />
                 <input 
                   type="text" 
                   list="mapped-ports"

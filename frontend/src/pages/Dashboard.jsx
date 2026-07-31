@@ -249,10 +249,11 @@ export default function Dashboard({ togglePanel, activePanel }) {
     if (!path.startsWith('/')) path = '/' + path;
 
     const customPort = labels['casaos.reborn.web.port'];
+    const customHost = labels['casaos.reborn.web.host'] || window.location.hostname;
     
     // 1. Explicit User Override (Priorità 1)
     if (customPort && customPort !== '0') {
-      return `${scheme}${window.location.hostname}:${customPort}${path}`;
+      return `${scheme}${customHost}:${customPort}${path}`;
     }
     
     // 2. Filter ONLY TCP ports, ignoring all UDP mappings (Priorità 2)
@@ -262,7 +263,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
     const defaultFallbackPort = scheme === 'https://' ? 443 : 80;
     const targetPort = tcpMappings.length > 0 ? tcpMappings[0].PublicPort : defaultFallbackPort;
     
-    return `${scheme}${window.location.hostname}:${targetPort}${path}`;
+    return `${scheme}${customHost}:${targetPort}${path}`;
   };
 
   const getContainerName = (c) => {

@@ -153,6 +153,7 @@ function buildCasaOSCompose(data) {
     xCasaos.scheme = data.webUI.scheme ? data.webUI.scheme.replace('://', '') : 'http';
     xCasaos.index = data.webUI.path || '/';
     xCasaos.port_map = String(data.webUI.port);
+    xCasaos.host = data.webUI.domain || '';
     xCasaos.ports = [{
       ui: true,
       scheme: xCasaos.scheme,
@@ -162,6 +163,7 @@ function buildCasaOSCompose(data) {
     service.labels['net.casaos.web_ui_scheme'] = xCasaos.scheme;
     service.labels['net.casaos.web_ui_port'] = xCasaos.port_map;
     service.labels['net.casaos.web_ui_path'] = xCasaos.index;
+    if (xCasaos.host) service.labels['net.casaos.web_ui_host'] = xCasaos.host;
   }
 
   const compose = {
@@ -241,8 +243,16 @@ function parseCasaOSMetadata(yamlStr) {
           metadata.path = String(xCasaos.index).trim();
         }
         
+        if (xCasaos.path) {
+          metadata.path = String(xCasaos.path).trim();
+        }
+        
         if (xCasaos.port_map) {
           metadata.port = String(xCasaos.port_map).trim();
+        }
+
+        if (xCasaos.host) {
+          metadata.host = String(xCasaos.host).trim();
         }
       }
     }
@@ -329,6 +339,7 @@ function injectCasaOSMetadata(containers, appsDir) {
             if (metadata.scheme) targetLabels['casaos.reborn.web.scheme'] = metadata.scheme;
             if (metadata.path) targetLabels['casaos.reborn.web.path'] = metadata.path;
             if (metadata.port) targetLabels['casaos.reborn.web.port'] = metadata.port;
+            if (metadata.host) targetLabels['casaos.reborn.web.host'] = metadata.host;
           } catch (err) {
             console.warn(`Failed to parse docker-compose.yml for project ${projectName}:`, err.message);
           }
