@@ -200,7 +200,12 @@ function parseCasaOSMetadata(yamlStr) {
     
     // Extract custom title
     const titleMatch = casaosBlock.match(/custom:\s*(.+)$/m);
-    if (titleMatch && !metadata.name) metadata.name = titleMatch[1].replace(/["']/g, '').trim();
+    if (titleMatch) {
+      metadata.name = titleMatch[1].replace(/["']/g, '').trim();
+    } else {
+      const enUsMatch = casaosBlock.match(/en_us:\s*(.+)$/m);
+      if (enUsMatch) metadata.name = enUsMatch[1].replace(/["']/g, '').trim();
+    }
 
     // Extract icon
     const iconMatch = casaosBlock.match(/icon:\s*(.+)$/m);
