@@ -166,21 +166,31 @@ router.post('/containers/:id/recreate', async (req, res) => {
       console.warn('Failed to remove old container (might be already gone):', removeErr.message);
     }
 
-    // Execute Docker Compose
-    await new Promise((resolve, reject) => {
-      exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`docker compose up error: ${error.message}`);
-          return reject(error);
-        }
-        
-        // Sincronizzazione "Fantasma" con CasaOS Originale
-        const composePath = path.join(appDir, 'docker-compose.yml');
-        syncWithCasaOS(composePath, io);
-        
-        resolve(stdout);
+    // 3. Eseguiamo la sincronizzazione con CasaOS Originale.
+    // Se ha successo, CasaOS originale eseguirà "docker compose up" nativamente e inietterà
+    // i suoi label segreti (es. working_dir), rendendo l'app ufficialmente Nativa.
+    const composePath = path.join(appDir, 'docker-compose.yml');
+    let syncSuccess = false;
+    
+    try {
+      await syncWithCasaOS(composePath, io);
+      syncSuccess = true;
+    } catch (err) {
+      console.warn('Sincronizzazione CasaOS fallita, fallback su docker compose locale:', err.message);
+    }
+
+    // Se la sincronizzazione nativa ha fallito (es. CasaOS non installato), eseguiamo in locale.
+    if (!syncSuccess) {
+      await new Promise((resolve, reject) => {
+        exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`docker compose up error: ${error.message}`);
+            return reject(error);
+          }
+          resolve(stdout);
+        });
       });
-    });
+    }
 
     // Find the new container ID to return it
     const containers = await docker.listContainers();
@@ -500,20 +510,27 @@ router.post('/containers/create', async (req, res) => {
     const composePath = path.join(appDir, 'docker-compose.yml');
     fs.writeFileSync(composePath, composeYaml, 'utf8');
 
-    // 3. Execute Docker Compose
-    await new Promise((resolve, reject) => {
-      exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`docker compose error: ${error.message}`);
-          return reject(error);
-        }
-        
-        // Sincronizzazione "Fantasma" con CasaOS Originale
-        syncWithCasaOS(composePath, io);
+    // 3. Eseguiamo la sincronizzazione con CasaOS Originale.
+    let syncSuccess = false;
+    try {
+      await syncWithCasaOS(composePath, io);
+      syncSuccess = true;
+    } catch (err) {
+      console.warn('Sincronizzazione CasaOS fallita, fallback su docker compose locale:', err.message);
+    }
 
-        resolve(stdout);
+    // Se la sincronizzazione nativa ha fallito (es. CasaOS non installato), eseguiamo in locale.
+    if (!syncSuccess) {
+      await new Promise((resolve, reject) => {
+        exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`docker compose error: ${error.message}`);
+            return reject(error);
+          }
+          resolve(stdout);
+        });
       });
-    });
+    }
     
     // Find the new container ID to return it
     const containers = await docker.listContainers();
