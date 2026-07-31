@@ -125,6 +125,7 @@ function buildCasaOSCompose(data) {
 
   // x-casaos metadata (official CasaOS schema)
   const titleStr = data.displayName || data.name;
+  const isCustom = titleStr !== data.name;
   const xCasaos = {
     author: "casaos-reborn",
     category: data.webUI ? "Web" : "App",
@@ -132,7 +133,7 @@ function buildCasaOSCompose(data) {
     store_app_id: data.name,
     is_uncontrolled: false,
     title: {
-      custom: titleStr,
+      custom: isCustom ? titleStr : "",
       en_US: titleStr
     }
   };
@@ -261,7 +262,20 @@ function injectCasaOSMetadata(containers, appsDir) {
       if (workingDir && fs.existsSync(workingDir)) {
         appDir = workingDir;
       } else if (appsDir) {
-        appDir = path.join(appsDir, projectName);
+        // Fallback: case-insensitive search in appsDir
+        if (fs.existsSync(appsDir)) {
+          const files = fs.readdirSync(appsDir);
+          const lowerProject = projectName.toLowerCase();
+          for (const file of files) {
+            if (file.toLowerCase() === lowerProject) {
+              appDir = path.join(appsDir, file);
+              break;
+            }
+          }
+        }
+        if (!appDir) {
+          appDir = path.join(appsDir, projectName); // strict fallback
+        }
       }
       
       if (appDir) {
