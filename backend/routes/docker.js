@@ -523,7 +523,7 @@ router.post('/containers/create', async (req, res) => {
       await new Promise((resolve, reject) => {
         exec('docker compose up -d --quiet-pull', { cwd: appDir, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
           if (error) {
-            console.error(`docker compose error: ${error.message}`);
+            console.error(`docker compose up error: ${error.message}`);
             return reject(error);
           }
           resolve(stdout);
