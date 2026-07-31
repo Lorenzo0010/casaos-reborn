@@ -4,7 +4,7 @@ import { X, Plus, Check, Image as ImageIcon, Download, Copy } from 'lucide-react
 import { useDialog } from '../contexts/DialogContext';
 import { generateYamlFromData, downloadYamlFile } from '../utils/yamlHelper';
 
-export default function ContainerSettingsModal({ containerId, containerOverrides, onUpdateOverride, onClose, onSaved }) {
+export default function ContainerSettingsModal({ containerId, onClose, onSaved }) {
   const { showAlert, showConfirm } = useDialog();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -79,15 +79,14 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
         }
 
         const stableId = (info?.Name || '').replace('/', '');
-        const currentOverride = (containerOverrides && containerOverrides[stableId]) || {};
         const labels = info?.Config?.Labels || {};
         
         setData({
           image: imageName,
           tag: imageTag,
           name: stableId,
-          displayName: currentOverride.displayName || labels['casaos.reborn.name'] || labels['casaos.app.name'] || '',
-          icon: currentOverride.icon || labels['casaos.reborn.icon'] || labels['icon'] || '',
+          displayName: labels['casaos.reborn.name'] || labels['casaos.app.name'] || '',
+          icon: labels['casaos.reborn.icon'] || labels['icon'] || '',
           env: parsedEnv,
           ports: parsedPorts,
           volumes: parsedVolumes,
@@ -114,7 +113,7 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
       }
     };
     fetchInspect();
-  }, [containerId, containerOverrides]);
+  }, [containerId]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -147,13 +146,6 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
           payload.ports[key] = [{ HostPort: p.hostPort }];
         }
       });
-
-      if (onUpdateOverride) {
-        onUpdateOverride(data.name, {
-          displayName: data.displayName,
-          icon: data.icon
-        });
-      }
 
       const res = await axios.post(`/api/docker/containers/${containerId}/recreate`, payload, {
         headers: { Authorization: `Bearer ${token}` }

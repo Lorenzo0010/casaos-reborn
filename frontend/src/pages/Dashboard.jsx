@@ -22,7 +22,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
   const [sortMode, setSortMode] = useState('date');
   const [pinnedContainers, setPinnedContainers] = useState([]);
   const [customOrder, setCustomOrder] = useState([]);
-  const [containerOverrides, setContainerOverrides] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [draggedItem, setDraggedItem] = useState(null);
@@ -45,7 +44,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
         if (res.data.sortMode) setSortMode(res.data.sortMode);
         if (Array.isArray(res.data.pinnedContainers)) setPinnedContainers(res.data.pinnedContainers);
         if (Array.isArray(res.data.customOrder)) setCustomOrder(res.data.customOrder);
-        if (res.data.containerOverrides) setContainerOverrides(res.data.containerOverrides);
         if (res.data.showSystemContainers !== undefined) setShowSystemContainers(res.data.showSystemContainers);
         if (Array.isArray(res.data.widgetsOrder) && res.data.widgetsOrder.length > 0) setWidgetsOrder(res.data.widgetsOrder);
       } catch (e) {
@@ -70,7 +68,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
           sortMode,
           pinnedContainers,
           customOrder,
-          containerOverrides,
           showSystemContainers,
           widgetsOrder
         }, {
@@ -84,7 +81,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
     // Basic debounce to avoid too many requests while dragging
     const timeout = setTimeout(savePrefs, 500);
     return () => clearTimeout(timeout);
-  }, [sortMode, pinnedContainers, customOrder, containerOverrides, showSystemContainers, widgetsOrder, prefsLoaded]);
+  }, [sortMode, pinnedContainers, customOrder, showSystemContainers, widgetsOrder, prefsLoaded]);
 
   const fetchContainers = async () => {
     try {
@@ -268,23 +265,17 @@ export default function Dashboard({ togglePanel, activePanel }) {
     return `${scheme}${window.location.hostname}:${targetPort}${path}`;
   };
 
-
-
-  const getContainerName = (container) => {
-    const stableId = container.Names ? container.Names[0].replace('/', '') : container.Id;
-    if (containerOverrides[stableId] && containerOverrides[stableId].displayName) return containerOverrides[stableId].displayName;
-    return container.Labels?.['casaos.reborn.name'] || container.Labels?.['casaos.app.name'] || stableId;
+  const getContainerName = (c) => {
+    if (c.Labels && c.Labels['casaos.reborn.name']) return c.Labels['casaos.reborn.name'];
+    if (c.Labels && c.Labels['casaos.app.name']) return c.Labels['casaos.app.name'];
+    return c.Names ? c.Names[0].replace(/^\//, '') : c.Id;
   };
 
-  const getContainerIcon = (container) => {
-    const stableId = container.Names ? container.Names[0].replace('/', '') : container.Id;
-    if (containerOverrides[stableId] && containerOverrides[stableId].icon) return containerOverrides[stableId].icon;
+  const getContainerIcon = (c) => {
+    if (c.Labels && c.Labels['casaos.reborn.icon']) return c.Labels['casaos.reborn.icon'];
+    if (c.Labels && c.Labels['icon']) return c.Labels['icon'];
 
-    const labels = container.Labels || {};
-    const iconUrl = labels['casaos.reborn.icon'] || labels['icon'];
-    if (iconUrl) return iconUrl;
-
-    const name = stableId;
+    const name = c.Names ? c.Names[0].replace('/', '') : c.Id;
     const initial = name.charAt(0).toUpperCase();
 
     let hash = 0;
@@ -768,13 +759,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
       {editingContainerId && (
         <ContainerSettingsModal
           containerId={editingContainerId}
-          containerOverrides={containerOverrides}
-          onUpdateOverride={(stableId, overrides) => {
-            setContainerOverrides(prev => ({
-              ...prev,
-              [stableId]: { ...(prev[stableId] || {}), ...overrides }
-            }));
-          }}
           onClose={() => setEditingContainerId(null)}
           onSaved={() => {
             setEditingContainerId(null);
