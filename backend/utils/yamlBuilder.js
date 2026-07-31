@@ -125,7 +125,6 @@ function buildCasaOSCompose(data) {
 
   // x-casaos metadata (official CasaOS schema)
   const titleStr = data.displayName || data.name;
-  const isCustom = titleStr !== data.name;
   const xCasaos = {
     author: "casaos-reborn",
     category: data.webUI ? "Web" : "App",
@@ -133,8 +132,7 @@ function buildCasaOSCompose(data) {
     store_app_id: data.name,
     is_uncontrolled: false,
     title: {
-      custom: isCustom ? titleStr : "",
-      en_US: titleStr
+      en_us: titleStr
     }
   };
 
@@ -220,10 +218,10 @@ function parseCasaOSMetadata(yamlStr) {
           const titleCustom = xCasaos.title.custom;
           const titleEn = xCasaos.title.en_US || xCasaos.title.en_us || xCasaos.title.en || xCasaos.title.it;
           
-          if (titleCustom && String(titleCustom).trim() !== '') {
-            metadata.title = String(titleCustom).trim();
-          } else if (titleEn && String(titleEn).trim() !== '') {
+          if (titleEn && String(titleEn).trim() !== '') {
             metadata.title = String(titleEn).trim();
+          } else if (titleCustom && String(titleCustom).trim() !== '') {
+            metadata.title = String(titleCustom).trim();
           } else if (typeof xCasaos.title === 'string' && xCasaos.title.trim() !== '') {
             metadata.title = xCasaos.title.trim();
           }
