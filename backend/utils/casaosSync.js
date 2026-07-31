@@ -16,10 +16,12 @@ function syncWithCasaOS(composePath, io) {
     const hostAppDir = `/var/lib/casaos/apps/${appName}`;
     const hostComposePath = `${hostAppDir}/docker-compose.yml`;
     const yamlContent = fs.readFileSync(composePath, 'utf8');
+    const yamlBase64 = Buffer.from(yamlContent).toString('base64');
 
-    const cmd = `docker run --rm -i --privileged --pid=host alpine nsenter -t 1 -m -u -n -i sh -c "mkdir -p '${hostAppDir}' && cat > '${hostComposePath}' && casaos-cli app-management install -f '${hostComposePath}'"`;
+    // Creiamo la cartella sull'host, decodifichiamo lo YAML in base64 nel file e lanciamo casaos-cli
+    const cmd = `docker run --rm --privileged --pid=host alpine nsenter -t 1 -m -u -n sh -c "mkdir -p '${hostAppDir}' && echo '${yamlBase64}' | base64 -d > '${hostComposePath}' && casaos-cli app-management install -f '${hostComposePath}'"`;
     
-    const child = exec(cmd, (error, stdout, stderr) => {
+    exec(cmd, (error, stdout, stderr) => {
       if (error) {
         console.warn(`[CasaOS Sync] Errore durante la registrazione silenziosa:`, error.message);
         if (io) io.emit('casaos.sync.error', { message: error.message, stderr: stderr });
@@ -30,9 +32,6 @@ function syncWithCasaOS(composePath, io) {
         resolve(stdout);
       }
     });
-
-    child.stdin.write(yamlContent);
-    child.stdin.end();
   });
 }
 
