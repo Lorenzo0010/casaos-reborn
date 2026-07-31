@@ -169,7 +169,6 @@ router.post('/containers/:id/recreate', async (req, res) => {
     // 3. Eseguiamo la sincronizzazione con CasaOS Originale.
     // Se ha successo, CasaOS originale eseguirà "docker compose up" nativamente e inietterà
     // i suoi label segreti (es. working_dir), rendendo l'app ufficialmente Nativa.
-    const composePath = path.join(appDir, 'docker-compose.yml');
     let syncSuccess = false;
     
     try {
