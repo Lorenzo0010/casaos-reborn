@@ -198,20 +198,29 @@ function parseCasaOSMetadata(yamlStr) {
   if (casaosIdx !== -1) {
     const casaosBlock = yamlStr.substring(casaosIdx);
     
-    // Extract custom title
+    // Extract title (handling empty custom titles)
+    let extractedTitle = '';
     const titleMatch = casaosBlock.match(/custom:\s*(.+)$/im);
     if (titleMatch) {
-      metadata.title = titleMatch[1].replace(/["']/g, '').trim();
-    } else {
+      extractedTitle = titleMatch[1].replace(/["']/g, '').trim();
+    }
+    
+    if (!extractedTitle) {
       const fallbackMatch = casaosBlock.match(/en_us:\s*(.+)$/im) || casaosBlock.match(/en:\s*(.+)$/im) || casaosBlock.match(/it:\s*(.+)$/im);
       if (fallbackMatch) {
-        metadata.title = fallbackMatch[1].replace(/["']/g, '').trim();
-      } else {
-        const directTitleMatch = casaosBlock.match(/title:\s*([^ \n][^\n]*)$/im);
-        if (directTitleMatch && directTitleMatch[1].trim() !== '') {
-          metadata.title = directTitleMatch[1].replace(/["']/g, '').trim();
-        }
+        extractedTitle = fallbackMatch[1].replace(/["']/g, '').trim();
       }
+    }
+    
+    if (!extractedTitle) {
+      const directTitleMatch = casaosBlock.match(/title:\s*([^ \n][^\n]*)$/im);
+      if (directTitleMatch) {
+        extractedTitle = directTitleMatch[1].replace(/["']/g, '').trim();
+      }
+    }
+    
+    if (extractedTitle) {
+      metadata.title = extractedTitle;
     }
 
     // Extract icon
