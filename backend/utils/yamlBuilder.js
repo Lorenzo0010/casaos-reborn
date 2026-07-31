@@ -253,7 +253,11 @@ function injectCasaOSMetadata(containers, appsDir) {
     const projectName = labels['com.docker.compose.project'];
     if (projectName && appsDir) {
       const appDir = path.join(appsDir, projectName);
-      const composePath = path.join(appDir, 'docker-compose.yml');
+      let composePath = path.join(appDir, 'docker-compose.yml');
+      
+      if (!fs.existsSync(composePath)) {
+        composePath = path.join(appDir, 'docker-compose.yaml');
+      }
       
       if (fs.existsSync(composePath)) {
         try {
