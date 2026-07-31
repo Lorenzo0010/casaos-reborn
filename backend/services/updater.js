@@ -35,10 +35,9 @@ const checkUpdates = async (io) => {
       console.log(`[Updater] Checking ${containerInfo.Name.replace('/', '')} (${fullImage})`);
       
       try {
-        // Notifica l'inizio del controllo
         currentTask = {
           container: containerInfo.Name.replace('/', ''),
-          action: 'Checking registry...',
+          action: 'Pulling latest image...',
           percentage: 0
         };
 
@@ -49,47 +48,36 @@ const checkUpdates = async (io) => {
           });
         }
 
-        // 1. Ottieni il digest remoto tramite API distribution
-        const remoteInfo = await new Promise((resolve, reject) => {
-          docker.modem.dial({
-            path: `/distribution/${fullImage}/json`,
-            method: 'GET',
-            statusCodes: {
-              200: true,
-              401: 'unauthorized',
-              404: 'not found',
-              500: 'server error'
-            }
-          }, (err, data) => {
+        const oldImageId = containerInfo.Image; // The sha256 of the image currently running
+
+        // Eseguiamo il pull dell'immagine (se non ci sono update, finisce quasi istantaneamente)
+        await new Promise((resolve, reject) => {
+          docker.pull(fullImage, (err, stream) => {
             if (err) return reject(err);
-            resolve(data);
+            docker.modem.followProgress(stream, (err, output) => {
+              if (err) return reject(err);
+              resolve(output);
+            });
           });
         });
 
-        const remoteDigest = remoteInfo?.Descriptor?.digest;
-        if (!remoteDigest) {
-          throw new Error('No remote digest found for ' + fullImage);
-        }
+        // Otteniamo le info dell'immagine appena scaricata o verificata
+        const newImageInspect = await docker.getImage(fullImage).inspect();
+        const newImageId = newImageInspect.Id;
 
-        // 2. Confronta con i RepoDigests locali
-        const oldImageInspect = await docker.getImage(containerInfo.Image).inspect();
-        const repoDigests = oldImageInspect.RepoDigests || [];
-        
-        // Verifica se il remoteDigest è presente nei repoDigests locali
-        const isUpToDate = repoDigests.some(digestStr => digestStr.includes(remoteDigest));
-
-        if (!isUpToDate) {
-          console.log(`[Updater] Update found for ${containerInfo.Name}! Remote: ${remoteDigest}`);
+        // Se l'ID dell'immagine del container è diverso dall'ID scaricato per quel tag, c'è un aggiornamento
+        if (oldImageId !== newImageId) {
+          console.log(`[Updater] Update found for ${containerInfo.Name}! New ID: ${newImageId}`);
           global.availableUpdates[container.Id] = {
             id: container.Id,
             name: containerInfo.Name.replace('/', ''),
             image: fullImage,
-            oldHash: repoDigests[0] || 'unknown',
-            newHash: remoteDigest,
+            oldHash: oldImageId,
+            newHash: newImageId,
             timestamp: new Date().toISOString()
           };
         } else {
-          // Se era precedentemente marcato come da aggiornare ma ora corrisponde, rimuovilo
+          // Rimuove se era segnalato un aggiornamento ma ora coincidono
           if (global.availableUpdates[container.Id]) {
             delete global.availableUpdates[container.Id];
           }
@@ -100,7 +88,7 @@ const checkUpdates = async (io) => {
       }
     }));
 
-    // Pulisce le immagini dangling (inutilizzate) per non accumulare spazzatura
+    // Pulisce le immagini dangling (inutilizzate) per non accumulare spazzatura (ad es. le vecchie immagini dopo un update)
     console.log('[Updater] Pruning unused dangling images...');
     await docker.pruneImages({ filters: { dangling: ["true"] } });
 
