@@ -201,10 +201,17 @@ function parseCasaOSMetadata(yamlStr) {
     // Extract custom title
     const titleMatch = casaosBlock.match(/custom:\s*(.+)$/m);
     if (titleMatch) {
-      metadata.name = titleMatch[1].replace(/["']/g, '').trim();
+      metadata.title = titleMatch[1].replace(/["']/g, '').trim();
     } else {
-      const enUsMatch = casaosBlock.match(/en_us:\s*(.+)$/m);
-      if (enUsMatch) metadata.name = enUsMatch[1].replace(/["']/g, '').trim();
+      const fallbackMatch = casaosBlock.match(/en_us:\s*(.+)$/m) || casaosBlock.match(/en:\s*(.+)$/m) || casaosBlock.match(/it:\s*(.+)$/m);
+      if (fallbackMatch) {
+        metadata.title = fallbackMatch[1].replace(/["']/g, '').trim();
+      } else {
+        const directTitleMatch = casaosBlock.match(/title:\s*([^ \n][^\n]*)$/m);
+        if (directTitleMatch && directTitleMatch[1].trim() !== '') {
+          metadata.title = directTitleMatch[1].replace(/["']/g, '').trim();
+        }
+      }
     }
 
     // Extract icon
@@ -258,7 +265,12 @@ function injectCasaOSMetadata(containers, appsDir) {
           
           const targetLabels = isInspectFormat ? c.Config.Labels : c.Labels;
           
-          if (metadata.name) targetLabels['casaos.reborn.name'] = metadata.name;
+          if (metadata.title) {
+            targetLabels['casaos.reborn.name'] = metadata.title;
+          } else if (metadata.name && !targetLabels['casaos.app.name']) {
+            targetLabels['casaos.reborn.name'] = metadata.name;
+          }
+          
           if (metadata.icon) targetLabels['casaos.reborn.icon'] = metadata.icon;
           if (metadata.scheme) targetLabels['casaos.reborn.web.scheme'] = metadata.scheme;
           if (metadata.path) targetLabels['casaos.reborn.web.path'] = metadata.path;
