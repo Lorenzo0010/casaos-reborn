@@ -1,5 +1,5 @@
 const Docker = require('dockerode');
-const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+const docker = new Docker();
 
 // In-memory cache for available updates
 // Format: { containerId: { name, currentImage, newImage, timestamp } }

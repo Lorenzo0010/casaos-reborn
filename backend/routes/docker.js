@@ -16,7 +16,7 @@ if (!fs.existsSync(CASAOS_APPS_DIR)) {
 }
 
 // Connect to local docker socket
-const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+const docker = new Docker();
 
 global.activeTasks = global.activeTasks || {};
 
@@ -48,26 +48,8 @@ router.get('/containers', async (req, res) => {
   try {
     const containers = await docker.listContainers({ all: true });
     
-    // Inject x-casaos metadata from docker-compose.yml if available
-    for (const c of containers) {
-      const projectName = c.Labels?.['com.docker.compose.project'];
-      if (projectName) {
-        const appDir = path.join(CASAOS_APPS_DIR, projectName);
-        const composePath = path.join(appDir, 'docker-compose.yml');
-        if (fs.existsSync(composePath)) {
-          const yamlStr = fs.readFileSync(composePath, 'utf8');
-          const { parseCasaOSMetadata } = require('../utils/yamlBuilder');
-          const metadata = parseCasaOSMetadata(yamlStr);
-          
-          if (!c.Labels) c.Labels = {};
-          if (metadata.name) c.Labels['casaos.reborn.name'] = metadata.name;
-          if (metadata.icon) c.Labels['casaos.reborn.icon'] = metadata.icon;
-          if (metadata.scheme) c.Labels['casaos.reborn.web.scheme'] = metadata.scheme;
-          if (metadata.path) c.Labels['casaos.reborn.web.path'] = metadata.path;
-          if (metadata.port) c.Labels['casaos.reborn.web.port'] = metadata.port;
-        }
-      }
-    }
+    const { injectCasaOSMetadata } = require('../utils/yamlBuilder');
+    injectCasaOSMetadata(containers, CASAOS_APPS_DIR);
     
     res.json(containers);
   } catch (error) {
@@ -81,23 +63,8 @@ router.get('/containers/:id/inspect', async (req, res) => {
     const container = docker.getContainer(req.params.id);
     const data = await container.inspect();
     
-    const projectName = data.Config?.Labels?.['com.docker.compose.project'];
-    if (projectName) {
-      const appDir = path.join(CASAOS_APPS_DIR, projectName);
-      const composePath = path.join(appDir, 'docker-compose.yml');
-      if (fs.existsSync(composePath)) {
-        const yamlStr = fs.readFileSync(composePath, 'utf8');
-        const { parseCasaOSMetadata } = require('../utils/yamlBuilder');
-        const metadata = parseCasaOSMetadata(yamlStr);
-        
-        if (!data.Config.Labels) data.Config.Labels = {};
-        if (metadata.name) data.Config.Labels['casaos.reborn.name'] = metadata.name;
-        if (metadata.icon) data.Config.Labels['casaos.reborn.icon'] = metadata.icon;
-        if (metadata.scheme) data.Config.Labels['casaos.reborn.web.scheme'] = metadata.scheme;
-        if (metadata.path) data.Config.Labels['casaos.reborn.web.path'] = metadata.path;
-        if (metadata.port) data.Config.Labels['casaos.reborn.web.port'] = metadata.port;
-      }
-    }
+    const { injectCasaOSMetadata } = require('../utils/yamlBuilder');
+    injectCasaOSMetadata(data, CASAOS_APPS_DIR);
     
     res.json(data);
   } catch (error) {

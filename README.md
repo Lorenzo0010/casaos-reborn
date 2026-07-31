@@ -86,7 +86,7 @@ services:
 - **Frontend**: React, Vite, Lucide-React (Icons), xterm.js (Terminal)
 - **Backend**: Node.js, Express, Socket.io (Real-time updates), Dockerode (Docker API integration)
 
-**Running Locally:**
+**Running Locally (Full Stack):**
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Lorenzo0010/casaos-reborn.git
@@ -106,6 +106,20 @@ services:
    ```
 
 *Note: The backend requires access to the Docker daemon. If you are developing on Windows/macOS, ensure Docker Desktop is running and the socket is accessible.*
+
+**Testing Frontend with a Remote Backend:**
+If you want to run the UI locally on your development machine (e.g., Windows/macOS) but connect it to your actual server running the CasaOS-Reborn backend:
+1. Navigate to the `frontend` folder and create a `.env` file.
+2. Add your server's URL like this:
+   ```env
+   VITE_BACKEND_URL=http://<YOUR_SERVER_IP>:1111
+   ```
+3. Run the frontend:
+   ```bash
+   npm install
+   npm run dev
+   ```
+   *The frontend will automatically proxy all API and WebSocket connections to your remote server.*
 
 ---
 

@@ -236,20 +236,28 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
   const getWebUrl = (container) => {
     const labels = container.Labels || {};
-    const port = labels['casaos.reborn.web.port'];
-    if (port) {
-      let scheme = labels['casaos.reborn.web.scheme'] || 'http';
-      // Normalize: ensure scheme always has ://
-      if (!scheme.includes('://')) scheme = scheme + '://';
-      const path = labels['casaos.reborn.web.path'] || '/';
-      return `${scheme}${window.location.hostname}:${port}${path}`;
+    let scheme = labels['casaos.reborn.web.scheme'] || 'http';
+    // Normalize: ensure scheme always has ://
+    if (!scheme.includes('://')) scheme = scheme + '://';
+    
+    let path = labels['casaos.reborn.web.path'] || '/';
+    if (!path.startsWith('/')) path = '/' + path;
+
+    const customPort = labels['casaos.reborn.web.port'];
+    
+    // 1. Explicit User Override (Priorità 1)
+    if (customPort && customPort !== '0') {
+      return `${scheme}${window.location.hostname}:${customPort}${path}`;
     }
-    if (!container.Ports) return null;
-    const publicPortInfo = container.Ports.find(p => p.PublicPort);
-    if (publicPortInfo) {
-      return `http://${window.location.hostname}:${publicPortInfo.PublicPort}/`;
-    }
-    return null;
+    
+    // 2. Filter ONLY TCP ports, ignoring all UDP mappings (Priorità 2)
+    const tcpMappings = (container.Ports || []).filter(p => p.PublicPort && p.Type === 'tcp');
+    
+    // 3. Fallback to first TCP port or default port 80/443 (Priorità 3)
+    const defaultFallbackPort = scheme === 'https://' ? 443 : 80;
+    const targetPort = tcpMappings.length > 0 ? tcpMappings[0].PublicPort : defaultFallbackPort;
+    
+    return `${scheme}${window.location.hostname}:${targetPort}${path}`;
   };
 
 

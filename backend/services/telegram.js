@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const si = require('systeminformation');
 const Docker = require('dockerode');
-const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+const docker = new Docker();
 const http = require('http');
 const https = require('https');
 const { exec } = require('child_process');

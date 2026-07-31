@@ -36,10 +36,11 @@ export default function ContainerSettingsModal({ containerId, containerOverrides
         const info = res.data;
         
         // Parse data
+        const IGNORED_ENV_VARS = ['PATH', 'NODE_VERSION', 'YARN_VERSION', 'HOSTNAME', 'PWD', 'HOME', 'SHLVL', 'DEBUG'];
         const parsedEnv = (info?.Config?.Env || []).map(e => {
           const idx = e.indexOf('=');
           return { key: e.substring(0, idx), value: e.substring(idx + 1) };
-        });
+        }).filter(e => !IGNORED_ENV_VARS.includes(e.key));
 
         const parsedPorts = [];
         const portBindings = info?.HostConfig?.PortBindings || {};

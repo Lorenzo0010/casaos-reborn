@@ -1,6 +1,12 @@
 const si = require('systeminformation');
 const Docker = require('dockerode');
-const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { injectCasaOSMetadata } = require('../utils/yamlBuilder');
+
+const docker = new Docker();
+const CASAOS_APPS_DIR = process.env.CASAOS_APPS_DIR || (process.platform === 'win32' ? path.join(os.homedir(), 'casaos-apps') : '/var/lib/casaos/apps');
 
 let intervalId = null;
 
@@ -109,6 +115,7 @@ const initBroadcaster = (io) => {
     try {
       // 2. Fetch Containers
       const containers = await docker.listContainers({ all: true });
+      injectCasaOSMetadata(containers, CASAOS_APPS_DIR);
       io.emit('docker.containers', containers);
     } catch (e) {
       console.error('[Broadcaster] Error fetching containers:', e.message);

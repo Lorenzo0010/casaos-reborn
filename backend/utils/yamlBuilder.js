@@ -123,6 +123,7 @@ function buildCasaOSCompose(data) {
   const xCasaos = {
     author: "casaos-reborn",
     category: data.webUI ? "Web" : "App",
+    main: data.name,
     title: {
       custom: data.displayName || data.name
     }
@@ -207,8 +208,55 @@ function parseCasaOSMetadata(yamlStr) {
   return metadata;
 }
 
+/**
+ * Injects CasaOS metadata directly into container objects.
+ * Modifies the containers array in place.
+ */
+function injectCasaOSMetadata(containers, appsDir) {
+  const fs = require('fs');
+  const path = require('path');
+  
+  if (!Array.isArray(containers)) {
+    containers = [containers];
+  }
+
+  for (const c of containers) {
+    const isInspectFormat = !!c.Config; // docker.getContainer(id).inspect() returns an object with Config
+    const labels = isInspectFormat ? (c.Config.Labels || {}) : (c.Labels || {});
+    
+    const projectName = labels['com.docker.compose.project'];
+    if (projectName && appsDir) {
+      const appDir = path.join(appsDir, projectName);
+      const composePath = path.join(appDir, 'docker-compose.yml');
+      
+      if (fs.existsSync(composePath)) {
+        try {
+          const yamlStr = fs.readFileSync(composePath, 'utf8');
+          const metadata = parseCasaOSMetadata(yamlStr);
+          
+          if (isInspectFormat && !c.Config.Labels) c.Config.Labels = {};
+          if (!isInspectFormat && !c.Labels) c.Labels = {};
+          
+          const targetLabels = isInspectFormat ? c.Config.Labels : c.Labels;
+          
+          if (metadata.name) targetLabels['casaos.reborn.name'] = metadata.name;
+          if (metadata.icon) targetLabels['casaos.reborn.icon'] = metadata.icon;
+          if (metadata.scheme) targetLabels['casaos.reborn.web.scheme'] = metadata.scheme;
+          if (metadata.path) targetLabels['casaos.reborn.web.path'] = metadata.path;
+          if (metadata.port) targetLabels['casaos.reborn.web.port'] = metadata.port;
+        } catch (err) {
+          console.warn(`Failed to parse docker-compose.yml for project ${projectName}:`, err.message);
+        }
+      }
+    }
+  }
+  
+  return containers;
+}
+
 module.exports = {
   buildCasaOSCompose,
   dumpYAML,
-  parseCasaOSMetadata
+  parseCasaOSMetadata,
+  injectCasaOSMetadata
 };
