@@ -142,9 +142,12 @@ function buildCasaOSCompose(data) {
   if (data.icon) {
     xCasaos.icon = data.icon;
     service.labels['icon'] = data.icon;
+    service.labels['net.casaos.icon'] = data.icon;
   }
   // Standard casaos label for fallback compatibility
   service.labels['casaos.app.name'] = titleStr;
+  service.labels['net.casaos.title'] = titleStr;
+  service.labels['net.casaos.last_modified_by'] = 'casaos-reborn';
 
   if (data.webUI) {
     xCasaos.scheme = data.webUI.scheme ? data.webUI.scheme.replace('://', '') : 'http';
@@ -156,6 +159,9 @@ function buildCasaOSCompose(data) {
       target: xCasaos.port_map,
       path: xCasaos.index
     }];
+    service.labels['net.casaos.web_ui_scheme'] = xCasaos.scheme;
+    service.labels['net.casaos.web_ui_port'] = xCasaos.port_map;
+    service.labels['net.casaos.web_ui_path'] = xCasaos.index;
   }
 
   const compose = {
@@ -254,6 +260,20 @@ function injectCasaOSMetadata(containers, appsDir) {
     const isInspectFormat = !!c.Config; // docker.getContainer(id).inspect() returns an object with Config
     const labels = isInspectFormat ? (c.Config.Labels || {}) : (c.Labels || {});
     
+    if (isInspectFormat && !c.Config.Labels) c.Config.Labels = {};
+    if (!isInspectFormat && !c.Labels) c.Labels = {};
+    const targetLabels = isInspectFormat ? c.Config.Labels : c.Labels;
+
+    // Se il container espone nativamente i metadati CasaOS, li usiamo ignorando lo YAML!
+    if (labels['net.casaos.title']) {
+      targetLabels['casaos.reborn.name'] = labels['net.casaos.title'];
+      if (labels['net.casaos.icon']) targetLabels['casaos.reborn.icon'] = labels['net.casaos.icon'];
+      if (labels['net.casaos.web_ui_scheme']) targetLabels['casaos.reborn.web.scheme'] = labels['net.casaos.web_ui_scheme'];
+      if (labels['net.casaos.web_ui_path']) targetLabels['casaos.reborn.web.path'] = labels['net.casaos.web_ui_path'];
+      if (labels['net.casaos.web_ui_port']) targetLabels['casaos.reborn.web.port'] = labels['net.casaos.web_ui_port'];
+      continue; // Metadati estratti con successo, saltiamo la lettura dello YAML su disco!
+    }
+    
     const projectName = labels['com.docker.compose.project'];
     const workingDir = labels['com.docker.compose.project.working_dir'];
     
@@ -289,11 +309,6 @@ function injectCasaOSMetadata(containers, appsDir) {
           try {
             const yamlStr = fs.readFileSync(composePath, 'utf8');
             const metadata = parseCasaOSMetadata(yamlStr);
-            
-            if (isInspectFormat && !c.Config.Labels) c.Config.Labels = {};
-            if (!isInspectFormat && !c.Labels) c.Labels = {};
-            
-            const targetLabels = isInspectFormat ? c.Config.Labels : c.Labels;
             
             if (metadata.title) {
               targetLabels['casaos.reborn.name'] = metadata.title;
