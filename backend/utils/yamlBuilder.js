@@ -125,6 +125,8 @@ function buildCasaOSCompose(data) {
     author: "casaos-reborn",
     category: data.webUI ? "Web" : "App",
     main: data.name,
+    store_app_id: data.name,
+    is_uncontrolled: false,
     title: {
       custom: titleStr,
       en_us: titleStr
