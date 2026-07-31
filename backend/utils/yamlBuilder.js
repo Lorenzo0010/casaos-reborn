@@ -190,7 +190,7 @@ function parseCasaOSMetadata(yamlStr) {
   const metadata = {};
   
   // Extract root name
-  const nameMatch = yamlStr.match(/^name:\s*(.+)$/m);
+  const nameMatch = yamlStr.match(/^name:\s*(.+)$/im);
   if (nameMatch) metadata.name = nameMatch[1].replace(/["']/g, '').trim();
 
   // Find x-casaos block
@@ -199,15 +199,15 @@ function parseCasaOSMetadata(yamlStr) {
     const casaosBlock = yamlStr.substring(casaosIdx);
     
     // Extract custom title
-    const titleMatch = casaosBlock.match(/custom:\s*(.+)$/m);
+    const titleMatch = casaosBlock.match(/custom:\s*(.+)$/im);
     if (titleMatch) {
       metadata.title = titleMatch[1].replace(/["']/g, '').trim();
     } else {
-      const fallbackMatch = casaosBlock.match(/en_us:\s*(.+)$/m) || casaosBlock.match(/en:\s*(.+)$/m) || casaosBlock.match(/it:\s*(.+)$/m);
+      const fallbackMatch = casaosBlock.match(/en_us:\s*(.+)$/im) || casaosBlock.match(/en:\s*(.+)$/im) || casaosBlock.match(/it:\s*(.+)$/im);
       if (fallbackMatch) {
         metadata.title = fallbackMatch[1].replace(/["']/g, '').trim();
       } else {
-        const directTitleMatch = casaosBlock.match(/title:\s*([^ \n][^\n]*)$/m);
+        const directTitleMatch = casaosBlock.match(/title:\s*([^ \n][^\n]*)$/im);
         if (directTitleMatch && directTitleMatch[1].trim() !== '') {
           metadata.title = directTitleMatch[1].replace(/["']/g, '').trim();
         }
@@ -215,19 +215,19 @@ function parseCasaOSMetadata(yamlStr) {
     }
 
     // Extract icon
-    const iconMatch = casaosBlock.match(/icon:\s*(.+)$/m);
+    const iconMatch = casaosBlock.match(/icon:\s*(.+)$/im);
     if (iconMatch) metadata.icon = iconMatch[1].replace(/["']/g, '').trim();
 
     // Extract scheme
-    const schemeMatch = casaosBlock.match(/scheme:\s*(.+)$/m);
+    const schemeMatch = casaosBlock.match(/scheme:\s*(.+)$/im);
     if (schemeMatch) metadata.scheme = schemeMatch[1].replace(/["']/g, '').trim();
 
     // Extract index/path
-    const indexMatch = casaosBlock.match(/index:\s*(.+)$/m);
+    const indexMatch = casaosBlock.match(/index:\s*(.+)$/im);
     if (indexMatch) metadata.path = indexMatch[1].replace(/["']/g, '').trim();
 
     // Extract port_map
-    const portMapMatch = casaosBlock.match(/port_map:\s*(.+)$/m);
+    const portMapMatch = casaosBlock.match(/port_map:\s*(.+)$/im);
     if (portMapMatch) metadata.port = portMapMatch[1].replace(/["']/g, '').trim();
   }
 
