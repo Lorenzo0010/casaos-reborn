@@ -8,8 +8,8 @@ const fs = require('fs');
 function syncWithCasaOS(composePath, io) {
   if (fs.existsSync(composePath)) {
     console.log(`[CasaOS Sync] Tentativo di registrazione per: ${composePath}`);
-    // Try multiple paths since the PATH env might be stripped
-    const cmd = `(/usr/bin/casaos-cli app-management install -f "${composePath}" || /usr/local/bin/casaos-cli app-management install -f "${composePath}" || casaos-cli app-management install -f "${composePath}")`;
+    // Eseguiamo il comando SULL'HOST fisico tramite un escape dal container usando nsenter
+    const cmd = `docker run --rm --privileged --pid=host alpine nsenter -t 1 -m -u -n -i casaos-cli app-management install -f "${composePath}"`;
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
         console.warn(`[CasaOS Sync] Errore durante la registrazione silenziosa:`, error.message);
@@ -28,7 +28,7 @@ function syncWithCasaOS(composePath, io) {
  */
 function unsyncFromCasaOS(appName) {
   if (appName) {
-    const cmd = `(/usr/bin/casaos-cli app-management uninstall "${appName}" || /usr/local/bin/casaos-cli app-management uninstall "${appName}" || casaos-cli app-management uninstall "${appName}")`;
+    const cmd = `docker run --rm --privileged --pid=host alpine nsenter -t 1 -m -u -n -i casaos-cli app-management uninstall "${appName}"`;
     exec(cmd, (error) => {
       // Ignoriamo l'errore se CasaOS non è presente.
     });
