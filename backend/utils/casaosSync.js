@@ -5,12 +5,17 @@ const fs = require('fs');
  * Tenta di registrare silenziosamente l'app nel database di CasaOS originale.
  * Se fallisce (es. CasaOS non è installato), l'errore viene soppresso per non bloccare Reborn.
  */
-function syncWithCasaOS(composePath) {
+function syncWithCasaOS(composePath, io) {
   if (fs.existsSync(composePath)) {
-    exec(`casaos-cli app-management install -f "${composePath}"`, (error) => {
+    console.log(`[CasaOS Sync] Tentativo di registrazione per: ${composePath}`);
+    exec(`casaos-cli app-management install -f "${composePath}"`, (error, stdout, stderr) => {
       if (error) {
-        // Ignoriamo silenziosamente l'errore. Reborn continuerà a funzionare
-        // come gestore Docker indipendente.
+        console.warn(`[CasaOS Sync] Errore durante la registrazione silenziosa:`, error.message);
+        console.warn(`[CasaOS Sync] Dettagli stderr:`, stderr);
+        if (io) io.emit('casaos.sync.error', { message: error.message, stderr: stderr });
+      } else {
+        console.log(`[CasaOS Sync] Registrazione completata con successo:`, stdout);
+        if (io) io.emit('casaos.sync.success', { message: 'App registrata nativamente su CasaOS Originale con successo!' });
       }
     });
   }

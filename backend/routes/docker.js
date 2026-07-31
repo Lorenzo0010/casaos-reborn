@@ -176,7 +176,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
         
         // Sincronizzazione "Fantasma" con CasaOS Originale
         const composePath = path.join(appDir, 'docker-compose.yml');
-        syncWithCasaOS(composePath);
+        syncWithCasaOS(composePath, io);
         
         resolve(stdout);
       });
@@ -509,7 +509,7 @@ router.post('/containers/create', async (req, res) => {
         }
         
         // Sincronizzazione "Fantasma" con CasaOS Originale
-        syncWithCasaOS(composePath);
+        syncWithCasaOS(composePath, io);
 
         resolve(stdout);
       });

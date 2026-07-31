@@ -151,6 +151,14 @@ export default function Dashboard({ togglePanel, activePanel }) {
     socket.on('container.recreate.success', handleSuccess);
     socket.on('container.update.success', handleSuccess);
     socket.on('container.create.success', handleSuccess);
+    
+    socket.on('casaos.sync.success', (data) => {
+      showAlert('Sync Success', data.message);
+    });
+
+    socket.on('casaos.sync.error', (data) => {
+      showAlert('CasaOS Sync Error', `Errore durante la registrazione: ${data.message}\n${data.stderr || ''}`);
+    });
 
     // Error: clean up by both id and taskId
     socket.on('container.recreate.error', (data) => {
