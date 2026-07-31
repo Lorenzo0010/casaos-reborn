@@ -258,10 +258,25 @@ function injectCasaOSMetadata(containers, appsDir) {
           if (metadata.scheme) targetLabels['casaos.reborn.web.scheme'] = metadata.scheme;
           if (metadata.path) targetLabels['casaos.reborn.web.path'] = metadata.path;
           if (metadata.port) targetLabels['casaos.reborn.web.port'] = metadata.port;
+          if (metadata.port) targetLabels['casaos.reborn.web.port'] = metadata.port;
         } catch (err) {
           console.warn(`Failed to parse docker-compose.yml for project ${projectName}:`, err.message);
         }
       }
+    }
+    
+    // Filtro variabili d'ambiente di sistema per pulire l'interfaccia utente (mobile e web)
+    const systemVars = ['PATH', 'HOME', 'HOSTNAME', 'TERM', 'SHLVL', 'PWD', 'SUDO_USER', 'SUDO_UID', 'SUDO_GID', 'SUDO_COMMAND', 'DEBIAN_FRONTEND'];
+    if (isInspectFormat && c.Config && Array.isArray(c.Config.Env)) {
+      c.Config.Env = c.Config.Env.filter(env => {
+        const key = env.split('=')[0];
+        return !systemVars.includes(key);
+      });
+    } else if (!isInspectFormat && Array.isArray(c.Env)) {
+      c.Env = c.Env.filter(env => {
+        const key = env.split('=')[0];
+        return !systemVars.includes(key);
+      });
     }
   }
   
