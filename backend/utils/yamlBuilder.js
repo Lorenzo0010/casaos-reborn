@@ -205,7 +205,16 @@ function parseCasaOSMetadata(yamlStr) {
         metadata.name = String(doc.name).trim();
       }
       
-      const xCasaos = doc['x-casaos'];
+      let xCasaos = doc['x-casaos'];
+      
+      // Se non c'è al root, prova a cercarlo dentro il primo servizio
+      if (!xCasaos && doc.services) {
+        const services = Object.values(doc.services);
+        if (services.length > 0 && services[0]['x-casaos']) {
+          xCasaos = services[0]['x-casaos'];
+        }
+      }
+
       if (xCasaos && typeof xCasaos === 'object') {
         if (xCasaos.title) {
           const titleCustom = xCasaos.title.custom;

@@ -266,14 +266,12 @@ export default function Dashboard({ togglePanel, activePanel }) {
   };
 
   const getContainerName = (c) => {
-    if (c.Labels && c.Labels['net.casaos.title']) return c.Labels['net.casaos.title'];
     if (c.Labels && c.Labels['casaos.reborn.name']) return c.Labels['casaos.reborn.name'];
     if (c.Labels && c.Labels['casaos.app.name']) return c.Labels['casaos.app.name'];
     return c.Names ? c.Names[0].replace(/^\//, '') : c.Id;
   };
 
   const getContainerIcon = (c) => {
-    if (c.Labels && c.Labels['net.casaos.icon']) return c.Labels['net.casaos.icon'];
     if (c.Labels && c.Labels['casaos.reborn.icon']) return c.Labels['casaos.reborn.icon'];
     if (c.Labels && c.Labels['icon']) return c.Labels['icon'];
 
