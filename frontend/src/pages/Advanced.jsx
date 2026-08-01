@@ -503,14 +503,14 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
         )}
 
         {updates.length > 0 && !isCheckingUpdates && (
-          <div className="p-4" style={{ background: 'rgba(239, 68, 68, 0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--danger)' }}>
-            <h4 className="flex items-center gap-2 m-0 mb-2" style={{ color: 'var(--danger)' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)' }}></div>
+          <div className="p-4" style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary-alpha)' }}>
+            <h4 className="flex items-center gap-2 m-0 mb-2" style={{ color: 'var(--primary)' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)' }}></div>
               Containers to update ({updates.length})
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
               {updates.map(upd => (
-                <div key={upd.id} style={{ background: 'var(--bg-color)', padding: '10px', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
+                <div key={upd.id} style={{ background: 'var(--bg-color)', padding: '10px', borderRadius: '6px', border: '1px solid var(--primary-alpha)' }}>
                   <div style={{ fontWeight: '600', marginBottom: '2px' }}>{upd.name}</div>
                   <div style={{ fontSize: '0.75rem', opacity: 0.6, wordBreak: 'break-all', marginBottom: '8px' }}>{upd.image}</div>
                   <button 
