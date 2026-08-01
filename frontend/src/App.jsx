@@ -17,10 +17,10 @@ export const predefinedThemes = [
     lightBg: '#e4e4e7', lightSurface: '#ffffff'
   },
   { 
-    id: 'dark_gray', name: 'Dark Gray', 
-    primary: '#6b7280', 
-    darkBg: '#111827', darkSurface: '#1f2937',
-    lightBg: '#e5e7eb', lightSurface: '#ffffff'
+    id: 'dark_gray', name: 'Grigio Scuro', 
+    primary: '#737373', 
+    darkBg: '#1e1e1e', darkSurface: '#2d2d2d',
+    lightBg: '#e5e5e5', lightSurface: '#ffffff'
   },
   { 
     id: 'navy', name: 'Ocean', 
@@ -168,8 +168,14 @@ function App() {
     
     if (isDark) {
       root.style.setProperty('--text-color', '#f9fafb');
+      root.style.setProperty('--success', '#10b981');
+      root.style.setProperty('--error', '#ef4444');
+      root.style.setProperty('--danger', '#ef4444');
     } else {
       root.style.setProperty('--text-color', '#1f2937');
+      root.style.setProperty('--success', '#16a34a');
+      root.style.setProperty('--error', '#dc2626');
+      root.style.setProperty('--danger', '#dc2626');
     }
   };
 
