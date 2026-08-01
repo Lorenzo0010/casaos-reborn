@@ -14,43 +14,43 @@ export const predefinedThemes = [
     id: 'monochrome', name: 'Monochrome', 
     primary: '#71717a', 
     darkBg: '#000000', darkSurface: '#121212',
-    lightBg: '#f4f4f5', lightSurface: '#ffffff'
+    lightBg: '#e4e4e7', lightSurface: '#ffffff'
   },
   { 
     id: 'dark_gray', name: 'Dark Gray', 
     primary: '#6b7280', 
     darkBg: '#111827', darkSurface: '#1f2937',
-    lightBg: '#f3f4f6', lightSurface: '#ffffff'
+    lightBg: '#e5e7eb', lightSurface: '#ffffff'
   },
   { 
     id: 'navy', name: 'Ocean', 
     primary: '#3b82f6', 
     darkBg: '#020617', darkSurface: '#0f172a',
-    lightBg: '#f8f9fb', lightSurface: '#ffffff'
+    lightBg: '#e2e8f0', lightSurface: '#ffffff'
   },
   { 
     id: 'forest', name: 'Emerald', 
     primary: '#10b981', 
     darkBg: '#022c22', darkSurface: '#064e3b',
-    lightBg: '#f0fdf4', lightSurface: '#ffffff'
+    lightBg: '#d1fae5', lightSurface: '#ffffff'
   },
   { 
     id: 'red', name: 'Ruby', 
     primary: '#f43f5e', 
     darkBg: '#2a040d', darkSurface: '#4c0519',
-    lightBg: '#fff1f2', lightSurface: '#ffffff'
+    lightBg: '#ffe4e6', lightSurface: '#ffffff'
   },
   { 
     id: 'rust', name: 'Amber', 
     primary: '#f59e0b', 
     darkBg: '#451a03', darkSurface: '#78350f',
-    lightBg: '#fffbeb', lightSurface: '#ffffff'
+    lightBg: '#fef3c7', lightSurface: '#ffffff'
   },
   { 
     id: 'purple', name: 'Amethyst', 
     primary: '#8b5cf6', 
     darkBg: '#2e1065', darkSurface: '#4c1d95',
-    lightBg: '#f5f3ff', lightSurface: '#ffffff'
+    lightBg: '#ede9fe', lightSurface: '#ffffff'
   }
 ];
 
