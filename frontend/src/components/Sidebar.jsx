@@ -47,7 +47,13 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
             <NavLink to="/advanced" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
               <Wrench /> <span className="sidebar-link-text">Advanced</span>
             </NavLink>
-            <a href="#" onClick={(e) => { e.preventDefault(); window.location.href = window.location.origin.replace(':1111', ':1112'); closeMobile(); }} className="sidebar-link">
+            <a href="#" onClick={(e) => { 
+              e.preventDefault(); 
+              const actualTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+              const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+              window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/?mode=' + actualTheme + '&primary=' + encodeURIComponent(primaryColor); 
+              closeMobile(); 
+            }} className="sidebar-link">
               <Rocket /> <span className="sidebar-link-text">System Update</span>
             </a>
           </div>

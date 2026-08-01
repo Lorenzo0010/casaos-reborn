@@ -691,7 +691,9 @@ export default function Dashboard({ togglePanel, activePanel }) {
                   </button>
                   <button onClick={() => {
                     if (stableId === 'casaos-reborn') {
-                      window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/';
+                      const actualTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                      const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+                      window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/?mode=' + actualTheme + '&primary=' + encodeURIComponent(primaryColor);
                     } else {
                       setEditingContainerId(c.Id);
                     }
