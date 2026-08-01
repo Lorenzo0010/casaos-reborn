@@ -537,7 +537,14 @@ export default function Dashboard({ togglePanel, activePanel }) {
       ) : (
         <div className="grid grid-cols-cards">
           {sortedContainers.map((c, index) => {
-            const webUrl = getWebUrl(c);
+            const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
+            let webUrl = getWebUrl(c);
+            if (webUrl && ['casaos-reborn', 'casaos-updater'].includes(stableId)) {
+                const actualTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+                const separator = webUrl.includes('?') ? '&' : '?';
+                webUrl = `${webUrl}${separator}mode=${actualTheme}&primary=${encodeURIComponent(primaryColor)}`;
+            }
             const isClickable = webUrl && c.State === 'running';
             const progressData = recreating[c.Id];
 
@@ -548,7 +555,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
               progressPercent = (progressData.progressDetail.current / progressData.progressDetail.total) * 100;
             }
 
-            const stableId = c.Names ? c.Names[0].replace('/', '') : c.Id;
             const isPinned = pinnedContainers.includes(stableId);
 
             const getRepositoryUrl = () => {
