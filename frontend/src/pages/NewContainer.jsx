@@ -335,27 +335,13 @@ export default function NewContainer({ togglePanel }) {
   const updateList = (field, index, key, value) => {
     const list = [...formData[field]];
     list[index][key] = value;
-    let newWebUI = { ...formData.webUI };
-    if (field === 'ports' && key === 'host' && formData.networkMode === 'bridge') {
-        const validPorts = list.map(p => p.host).filter(Boolean);
-        if (newWebUI.port && !validPorts.includes(newWebUI.port)) {
-            newWebUI.port = '';
-        }
-    }
-    setFormData({ ...formData, [field]: list, webUI: newWebUI });
+    setFormData({ ...formData, [field]: list });
   };
 
   const addList = (field, emptyObj) => setFormData({ ...formData, [field]: [...formData[field], emptyObj] });
   const removeList = (field, index) => {
       const newList = formData[field].filter((_, i) => i !== index);
-      let newWebUI = { ...formData.webUI };
-      if (field === 'ports' && formData.networkMode === 'bridge') {
-          const validPorts = newList.map(p => p.host).filter(Boolean);
-          if (newWebUI.port && !validPorts.includes(newWebUI.port)) {
-              newWebUI.port = '';
-          }
-      }
-      setFormData({ ...formData, [field]: newList, webUI: newWebUI });
+      setFormData({ ...formData, [field]: newList });
   };
 
   const handleCapToggle = (cap) => {
@@ -473,19 +459,18 @@ export default function NewContainer({ togglePanel }) {
                 </div>
                 <div>
                   <label>Web UI Port</label>
-                  {formData.networkMode === 'bridge' ? (
-                    <select value={formData.webUI.port} onChange={e => setFormData({...formData, webUI: {...formData.webUI, port: e.target.value}})}>
-                      <option value="">(Select a port)</option>
-                      {formData.ports.filter(p => p.host).map((p, i) => (
-                        <option key={i} value={p.host}>{p.host}</option>
-                      ))}
-                      {formData.ports.filter(p => p.host).length === 0 && (
-                        <option value="" disabled>Map a port first...</option>
-                      )}
-                    </select>
-                  ) : (
-                    <input type="text" value={formData.webUI.port} onChange={e => setFormData({...formData, webUI: {...formData.webUI, port: e.target.value}})} placeholder="e.g. 8080" />
-                  )}
+                  <input 
+                    type="text" 
+                    value={formData.webUI.port} 
+                    onChange={e => setFormData({...formData, webUI: {...formData.webUI, port: e.target.value}})} 
+                    placeholder="e.g. 8080" 
+                    list="mapped-ports-new"
+                  />
+                  <datalist id="mapped-ports-new">
+                    {formData.ports.filter(p => p.host).map((p, i) => (
+                      <option key={i} value={p.host} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label>Web UI Path</label>

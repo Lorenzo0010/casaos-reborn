@@ -235,14 +235,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     setData(prev => {
       const newList = [...prev[listName]];
       newList[index][field] = value;
-      let newWebUI = { ...prev.webUI };
-      if (listName === 'ports' && field === 'hostPort' && prev.networkMode === 'bridge') {
-        const validPorts = newList.map(p => p.hostPort).filter(Boolean);
-        if (newWebUI.port && !validPorts.includes(newWebUI.port)) {
-          newWebUI.port = '';
-        }
-      }
-      return { ...prev, [listName]: newList, webUI: newWebUI };
+      return { ...prev, [listName]: newList };
     });
   };
 
@@ -250,14 +243,7 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
     setData(prev => {
       const newList = [...prev[listName]];
       newList.splice(index, 1);
-      let newWebUI = { ...prev.webUI };
-      if (listName === 'ports' && prev.networkMode === 'bridge') {
-        const validPorts = newList.map(p => p.hostPort).filter(Boolean);
-        if (newWebUI.port && !validPorts.includes(newWebUI.port)) {
-          newWebUI.port = '';
-        }
-      }
-      return { ...prev, [listName]: newList, webUI: newWebUI };
+      return { ...prev, [listName]: newList };
     });
   };
 
@@ -369,29 +355,19 @@ export default function ContainerSettingsModal({ containerId, onClose, onSaved }
                   value={data.webUI.domain} 
                   onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, domain: e.target.value } }))} 
                 />
-                {data.networkMode === 'bridge' ? (
-                  <select 
-                    style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
-                    value={data.webUI.port} 
-                    onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, port: e.target.value } }))} 
-                  >
-                    <option value="">(Select a port)</option>
-                    {data.ports.filter(p => p.hostPort).map((p, i) => (
-                      <option key={i} value={p.hostPort}>{p.hostPort}</option>
-                    ))}
-                    {data.ports.filter(p => p.hostPort).length === 0 && (
-                      <option value="" disabled>Map a port first...</option>
-                    )}
-                  </select>
-                ) : (
-                  <input 
-                    type="text" 
-                    placeholder="Port (auto)" 
-                    style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
-                    value={data.webUI.port} 
-                    onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, port: e.target.value } }))} 
-                  />
-                )}
+                <input 
+                  type="text" 
+                  list="mapped-ports-edit"
+                  placeholder="Port (auto)" 
+                  style={{ border: 'none', borderRight: '1px solid var(--card-border)', borderRadius: 0 }} 
+                  value={data.webUI.port} 
+                  onChange={e => setData(p => ({ ...p, webUI: { ...p.webUI, port: e.target.value } }))} 
+                />
+                <datalist id="mapped-ports-edit">
+                  {data.ports.filter(p => p.hostPort).map((p, i) => (
+                    <option key={i} value={p.hostPort} />
+                  ))}
+                </datalist>
                 <input 
                   type="text" 
                   placeholder="Path (e.g. /)" 
