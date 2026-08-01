@@ -1,9 +1,9 @@
 /* Global CSS Variables for Theming */
 :root {
-  --bg-color: #f8f9fb;
-  --text-color: #1f2937;
+  --bg-color: color-mix(in srgb, var(--primary) 4%, #f1f5f9);
+  --text-color: #0f172a;
   --card-bg: #ffffff;
-  --card-border: rgba(0, 0, 0, 0.08);
+  --card-border: rgba(0, 0, 0, 0.06);
   --primary: #3b82f6;
   --primary-hover: color-mix(in srgb, var(--primary) 85%, black);
   --primary-alpha: color-mix(in srgb, var(--primary) 10%, transparent);
@@ -12,10 +12,10 @@
   --sidebar-bg: #ffffff;
   --border: rgba(0, 0, 0, 0.08);
   --border-subtle: rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.12);
-  --text-muted: #6b7280;
-  --chart-grid: rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.08);
+  --text-muted: #64748b;
+  --chart-grid: rgba(0, 0, 0, 0.08);
 
   /* Spacing Variables */
   --space-1: 4px;
@@ -39,18 +39,18 @@
 }
 
 [data-theme='dark'] {
-  --bg-color: #0f1117;
-  --text-color: #f9fafb;
-  --card-bg: #1a1d27;
-  --card-border: rgba(255, 255, 255, 0.06);
-  --sidebar-bg: #1a1d27;
+  --bg-color: color-mix(in srgb, var(--primary) 12%, #040810);
+  --text-color: #f8fafc;
+  --card-bg: color-mix(in srgb, var(--primary) 15%, #101622);
+  --card-border: rgba(255, 255, 255, 0.04);
+  --sidebar-bg: var(--card-bg);
   --border: rgba(255, 255, 255, 0.06);
   --border-subtle: rgba(255, 255, 255, 0.03);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.4);
   --primary-alpha: color-mix(in srgb, var(--primary) 20%, transparent);
-  --text-muted: #9ca3af;
-  --chart-grid: rgba(255, 255, 255, 0.15);
+  --text-muted: #94a3b8;
+  --chart-grid: rgba(255, 255, 255, 0.1);
 }
 
 * {
