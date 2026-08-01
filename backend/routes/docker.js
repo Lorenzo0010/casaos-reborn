@@ -112,14 +112,41 @@ router.post('/containers/:id/recreate', async (req, res) => {
   
   let containerName = (name || '').replace('/', '').replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
-  res.status(202).json({ success: true, message: 'Recreate started', id });
-
   try {
     const oldContainer = docker.getContainer(id);
     const oldInspect = await oldContainer.inspect();
     if (!containerName) {
       containerName = oldInspect.Name.replace('/', '').replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9_-]/g, '');
     }
+    
+    // Port Validation
+    const requestedPorts = [];
+    if (req.body.webUI && req.body.webUI.port && req.body.webUI.port !== '0') {
+        requestedPorts.push(String(req.body.webUI.port));
+    }
+    if (req.body.ports) {
+        Object.values(req.body.ports).forEach(bindings => {
+            bindings.forEach(b => {
+                if (b.HostPort) requestedPorts.push(String(b.HostPort));
+            });
+        });
+    }
+
+    if (requestedPorts.length > 0) {
+        const allContainers = await docker.listContainers({ all: true });
+        const conflict = requestedPorts.find(port => {
+            return allContainers.some(c => {
+                if (c.Id.startsWith(id)) return false;
+                if (containerName && c.Names && c.Names.includes(`/${containerName}`)) return false;
+                return c.Ports && c.Ports.some(cp => String(cp.PublicPort) === port);
+            });
+        });
+        if (conflict) {
+            return res.status(409).json({ error: `Port ${conflict} is already in use by another container.` });
+        }
+    }
+
+    res.status(202).json({ success: true, message: 'Recreate started', id });
     req.body.name = containerName;
     const oldImage = oldInspect.Config.Image;
     
@@ -492,10 +519,36 @@ router.post('/containers/create', async (req, res) => {
   const fullImage = tag ? `${image}:${tag}` : image;
   const io = req.io;
   
-  res.status(202).json({ success: true, message: 'Creation started' });
+  let containerName = (name || '').replace('/', '').replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
   try {
-    let containerName = (name || '').replace('/', '').replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    // Port Validation
+    const requestedPorts = [];
+    if (webUI && webUI.port && webUI.port !== '0') {
+        requestedPorts.push(String(webUI.port));
+    }
+    if (ports) {
+        Object.values(ports).forEach(bindings => {
+            bindings.forEach(b => {
+                if (b.HostPort) requestedPorts.push(String(b.HostPort));
+            });
+        });
+    }
+
+    if (requestedPorts.length > 0) {
+        const allContainers = await docker.listContainers({ all: true });
+        const conflict = requestedPorts.find(port => {
+            return allContainers.some(c => {
+                if (containerName && c.Names && c.Names.includes(`/${containerName}`)) return false;
+                return c.Ports && c.Ports.some(cp => String(cp.PublicPort) === port);
+            });
+        });
+        if (conflict) {
+            return res.status(409).json({ error: `Port ${conflict} is already in use by another container.` });
+        }
+    }
+
+    res.status(202).json({ success: true, message: 'Creation started' });
     req.body.name = containerName;
     const taskId = `create_${containerName}`;
     
