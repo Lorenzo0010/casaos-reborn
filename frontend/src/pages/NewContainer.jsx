@@ -383,14 +383,14 @@ export default function NewContainer({ togglePanel }) {
         <div className="flex" style={{ borderBottom: '1px solid var(--card-border)' }}>
           <button 
             className="btn" 
-            style={{ flex: 1, borderRadius: 0, padding: '15px', background: activeTab === 'manual' ? 'var(--primary)' : 'transparent', color: activeTab === 'manual' ? 'white' : 'var(--text-color)' }}
+            style={{ flex: 1, borderRadius: 0, padding: '15px', background: activeTab === 'manual' ? 'var(--primary)' : 'transparent', color: activeTab === 'manual' ? 'var(--primary-text, white)' : 'var(--text-color)' }}
             onClick={() => setActiveTab('manual')}
           >
             <FileText size={18} /> Manual Configuration
           </button>
           <button 
             className="btn" 
-            style={{ flex: 1, borderRadius: 0, padding: '15px', background: activeTab === 'yaml' ? 'var(--primary)' : 'transparent', color: activeTab === 'yaml' ? 'white' : 'var(--text-color)' }}
+            style={{ flex: 1, borderRadius: 0, padding: '15px', background: activeTab === 'yaml' ? 'var(--primary)' : 'transparent', color: activeTab === 'yaml' ? 'var(--primary-text, white)' : 'var(--text-color)' }}
             onClick={() => setActiveTab('yaml')}
           >
             <Code size={18} /> Import docker-compose
@@ -643,13 +643,12 @@ export default function NewContainer({ togglePanel }) {
                             key={cap} 
                             onClick={() => handleCapToggle(cap)}
                             style={{ 
-                                padding: '5px 10px', 
-                                borderRadius: '4px', 
-                                border: '1px solid var(--card-border)', 
-                                fontSize: '0.8rem',
+                                padding: '8px 12px',
+                                border: '1px solid var(--border)',
+                                borderRadius: 'var(--radius-sm)',
                                 cursor: 'pointer',
                                 background: formData.capAdd.includes(cap) ? 'var(--primary)' : 'transparent',
-                                color: formData.capAdd.includes(cap) ? 'white' : 'inherit'
+                                color: formData.capAdd.includes(cap) ? 'var(--primary-text, white)' : 'inherit'
                             }}
                         >
                             {cap}
