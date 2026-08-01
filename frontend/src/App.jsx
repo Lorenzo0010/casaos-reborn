@@ -11,6 +11,18 @@ import AppStore from './pages/AppStore';
 
 export const predefinedThemes = [
   { 
+    id: 'monochrome', name: 'Monochrome', 
+    primary: '#71717a', 
+    darkBg: '#000000', darkSurface: '#121212',
+    lightBg: '#f4f4f5', lightSurface: '#ffffff'
+  },
+  { 
+    id: 'dark_gray', name: 'Dark Gray', 
+    primary: '#6b7280', 
+    darkBg: '#111827', darkSurface: '#1f2937',
+    lightBg: '#f3f4f6', lightSurface: '#ffffff'
+  },
+  { 
     id: 'navy', name: 'Ocean', 
     primary: '#3b82f6', 
     darkBg: '#020617', darkSurface: '#0f172a',
@@ -39,12 +51,6 @@ export const predefinedThemes = [
     primary: '#8b5cf6', 
     darkBg: '#2e1065', darkSurface: '#4c1d95',
     lightBg: '#f5f3ff', lightSurface: '#ffffff'
-  },
-  { 
-    id: 'anthracite', name: 'Anthracite', 
-    primary: '#94a3b8', 
-    darkBg: '#18181b', darkSurface: '#27272a',
-    lightBg: '#f8f9fb', lightSurface: '#ffffff'
   }
 ];
 
