@@ -20,7 +20,7 @@ services:
       - JWT_SECRET=supersecretcasaoskey
       - ADMIN_USER=admin
       - ADMIN_PASS=casaos
-      # Set your actual host home folder here to use it as the default "Home" shortcut
+      # The "Home" shortcut defaults to /home. Set this if you want to target a specific user folder (e.g. /home/username)
       - HOST_HOMEDIR=/home
 
   casaos-updater:
