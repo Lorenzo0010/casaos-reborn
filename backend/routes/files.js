@@ -111,16 +111,7 @@ router.get('/read', (req, res) => {
 
     const stats = fs.statSync(targetPath);
     if (stats.isDirectory()) {
-      const archive = archiver('zip', { zlib: { level: 9 } });
-      archive.on('error', (err) => {
-        res.status(500).send({ error: err.message });
-      });
-
-      res.attachment(`${path.basename(targetPath)}.zip`);
-      archive.pipe(res);
-      archive.directory(targetPath, false);
-      archive.finalize();
-      return;
+      return res.status(400).json({ error: 'Downloading entire folders is not allowed.' });
     }
 
     res.sendFile(targetPath);
