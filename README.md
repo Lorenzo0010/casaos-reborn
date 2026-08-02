@@ -65,11 +65,17 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       # Replace /home/username with your actual server path
       - /home/username/casaos-reborn-config:/app/backend/data
+      # Mount host directories to browse them from the File Manager
+      - /home:/home
+      - /media:/media
+      - /mnt:/mnt
     environment:
       - PORT=3000
       - JWT_SECRET=supersecretcasaoskey
       - ADMIN_USER=admin
       - ADMIN_PASS=casaos
+      # Set your actual host home folder here to use it as the default "Home" shortcut
+      - HOST_HOMEDIR=/home
 ```
 
 3. Open your terminal in the same folder and run the following command to start the container in the background:
