@@ -704,7 +704,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
                       setEditingContainerId(c.Id);
                     }
                   }} className="btn-action-square neutral" title="Settings">
-                    <Settings size={22} color="var(--primary)" />
+                    <Settings size={22} />
                   </button>
                 </div>
 

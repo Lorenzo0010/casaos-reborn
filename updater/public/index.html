@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CasaOS Updater - Impostazioni</title>
+  <title>CasaOS Updater - Settings</title>
   <style>
     :root {
       --primary: #3b82f6;
@@ -192,39 +192,39 @@
 
   <div class="container" id="mainContainer">
     <div id="loading" class="loading">
-      Caricamento configurazione in corso...
+      Loading configuration...
     </div>
 
     <div id="editor" style="display: none;">
       
       <!-- Ports -->
       <div class="section">
-        <h3>Porte (Port Bindings)</h3>
+        <h3>Ports (Port Bindings)</h3>
         <div id="portsList"></div>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addPort()">+ Aggiungi Porta</button>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addPort()">+ Add Port</button>
       </div>
 
       <!-- Volumes -->
       <div class="section">
-        <h3>Volumi (Binds)</h3>
+        <h3>Volumes (Binds)</h3>
         <div id="volumesList"></div>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addVolume()">+ Aggiungi Volume</button>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addVolume()">+ Add Volume</button>
       </div>
 
       <!-- Environment -->
       <div class="section">
-        <h3>Variabili d'Ambiente (Env)</h3>
+        <h3>Environment Variables (Env)</h3>
         <div id="envList"></div>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addEnv()">+ Aggiungi Variabile</button>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addEnv()">+ Add Variable</button>
       </div>
 
       <!-- Advanced -->
       <div class="section">
-        <h3>Avanzate</h3>
+        <h3>Advanced</h3>
         <div class="form-group">
           <label>PID Mode</label>
           <select id="pidMode">
-            <option value="">Predefinito</option>
+            <option value="">Default</option>
             <option value="host">Host</option>
           </select>
         </div>
@@ -238,12 +238,12 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Limite Memoria (MB) - 0 per illimitata</label>
+          <label>Memory Limit (MB) - 0 for unlimited</label>
           <input type="number" id="memoryLimit" value="0" min="0">
         </div>
         <div class="checkbox-group">
           <input type="checkbox" id="privilegedMode">
-          <label for="privilegedMode" style="margin:0;">Modalità Privilegiata (Privileged)</label>
+          <label for="privilegedMode" style="margin:0;">Privileged Mode</label>
         </div>
       </div>
 
@@ -251,7 +251,7 @@
         <div id="waitMessage" style="display: none; color: var(--primary); font-weight: bold; margin-right: auto; align-self: center;">
           Please wait until the system restarts...
         </div>
-        <button id="updateBtn" class="btn" style="padding: 12px 24px;">Salva & Aggiorna Container</button>
+        <button id="updateBtn" class="btn" style="padding: 12px 24px;">Save & Update Container</button>
       </div>
     </div>
 
@@ -298,7 +298,7 @@
     async function fetchConfig() {
       try {
         const res = await fetch('/api/config');
-        if (!res.ok) throw new Error('Errore nel caricamento della configurazione');
+        if (!res.ok) throw new Error('Error loading configuration');
         const info = await res.json();
         
         // Parse Ports
@@ -350,7 +350,7 @@
         editorEl.style.display = 'block';
 
       } catch (err) {
-        loadingEl.innerHTML = `<span style="color:#ef4444;">Errore: ${err.message}</span>`;
+        loadingEl.innerHTML = `<span style="color:#ef4444;">Error: ${err.message}</span>`;
       }
     }
 
@@ -362,8 +362,8 @@
         const row = document.createElement('div');
         row.className = 'list-row';
         row.innerHTML = `
-          <input type="text" placeholder="Host Port (es. 1111)" value="${p.hostPort}" onchange="updateData('ports', ${idx}, 'hostPort', this.value)">
-          <input type="text" placeholder="Container Port (es. 3000)" value="${p.containerPort}" onchange="updateData('ports', ${idx}, 'containerPort', this.value)">
+          <input type="text" placeholder="Host Port (e.g. 1111)" value="${p.hostPort}" onchange="updateData('ports', ${idx}, 'hostPort', this.value)">
+          <input type="text" placeholder="Container Port (e.g. 3000)" value="${p.containerPort}" onchange="updateData('ports', ${idx}, 'containerPort', this.value)">
           <select style="flex: 0.5;" onchange="updateData('ports', ${idx}, 'protocol', this.value)">
             <option value="tcp" ${p.protocol==='tcp'?'selected':''}>TCP</option>
             <option value="udp" ${p.protocol==='udp'?'selected':''}>UDP</option>
@@ -379,8 +379,8 @@
         const row = document.createElement('div');
         row.className = 'list-row';
         row.innerHTML = `
-          <input type="text" placeholder="/path/su/host" value="${v.hostPath}" onchange="updateData('volumes', ${idx}, 'hostPath', this.value)">
-          <input type="text" placeholder="/path/nel/container" value="${v.containerPath}" onchange="updateData('volumes', ${idx}, 'containerPath', this.value)">
+          <input type="text" placeholder="/path/on/host" value="${v.hostPath}" onchange="updateData('volumes', ${idx}, 'hostPath', this.value)">
+          <input type="text" placeholder="/path/in/container" value="${v.containerPath}" onchange="updateData('volumes', ${idx}, 'containerPath', this.value)">
           <button class="btn btn-danger" onclick="removeData('volumes', ${idx})">X</button>
         `;
         volumesListEl.appendChild(row);
@@ -392,8 +392,8 @@
         const row = document.createElement('div');
         row.className = 'list-row';
         row.innerHTML = `
-          <input type="text" placeholder="CHIAVE" value="${e.key}" onchange="updateData('env', ${idx}, 'key', this.value)">
-          <input type="text" placeholder="Valore" value="${e.value}" onchange="updateData('env', ${idx}, 'value', this.value)">
+          <input type="text" placeholder="KEY" value="${e.key}" onchange="updateData('env', ${idx}, 'key', this.value)">
+          <input type="text" placeholder="Value" value="${e.value}" onchange="updateData('env', ${idx}, 'value', this.value)">
           <button class="btn btn-danger" onclick="removeData('env', ${idx})">X</button>
         `;
         envListEl.appendChild(row);
@@ -495,7 +495,7 @@
           }
         }
       } catch (err) {
-        appendLog('Errore di rete: ' + err.message, 'error');
+        appendLog('Network error: ' + err.message, 'error');
       } finally {
         updateBtn.disabled = false;
         document.querySelectorAll('input, select, button').forEach(el => el.disabled = false);

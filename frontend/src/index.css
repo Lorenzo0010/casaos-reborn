@@ -601,16 +601,15 @@ h3 {
   height: 40px;
   border-radius: var(--radius-sm);
   background-color: transparent;
-  color: var(--text-color);
+  color: var(--text-muted);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  opacity: 0.7;
 }
 
 .btn-icon-only:hover {
-  background-color: var(--card-bg);
-  opacity: 1;
+  background-color: var(--card-border);
+  color: var(--text-color);
 }
 
 .btn-action-square.success:hover {

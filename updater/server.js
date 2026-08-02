@@ -30,20 +30,20 @@ app.post('/api/update', async (req, res) => {
   };
 
   try {
-    send({ status: 'info', message: 'Iniziando la procedura di aggiornamento per casaos-reborn...' });
+    send({ status: 'info', message: 'Starting update procedure for casaos-reborn...' });
     
     let containerInfo = null;
     try {
       const oldContainer = docker.getContainer('casaos-reborn');
       containerInfo = await oldContainer.inspect();
     } catch (e) {
-      send({ status: 'error', message: 'Container casaos-reborn non trovato!' });
+      send({ status: 'error', message: 'Container casaos-reborn not found!' });
       return res.end();
     }
 
     const image = 'ghcr.io/lorenzo0010/casaos-reborn:latest';
     
-    send({ status: 'info', message: `Pulling dell'immagine ${image}...` });
+    send({ status: 'info', message: `Pulling image ${image}...` });
     
     await new Promise((resolve, reject) => {
       docker.pull(image, (err, stream) => {
@@ -59,19 +59,19 @@ app.post('/api/update', async (req, res) => {
       });
     });
 
-    send({ status: 'info', message: 'Fermando il container casaos-reborn...' });
+    send({ status: 'info', message: 'Stopping casaos-reborn container...' });
     try {
       const oldContainer = docker.getContainer('casaos-reborn');
       await oldContainer.stop({ t: 10 });
     } catch (e) {}
 
-    send({ status: 'info', message: 'Rimuovendo il vecchio container...' });
+    send({ status: 'info', message: 'Removing old container...' });
     try {
       const oldContainer = docker.getContainer('casaos-reborn');
       await oldContainer.remove({ force: true });
     } catch (e) {}
 
-    send({ status: 'info', message: 'Creando il nuovo container...' });
+    send({ status: 'info', message: 'Creating new container...' });
     
     const overrides = req.body || {};
 
@@ -98,7 +98,7 @@ app.post('/api/update', async (req, res) => {
 
     const newContainer = await docker.createContainer(createOptions);
     
-    send({ status: 'info', message: 'Avviando il nuovo container...' });
+    send({ status: 'info', message: 'Starting new container...' });
     await newContainer.start();
 
     // Pulizia immagini orfane opzionale
@@ -106,12 +106,12 @@ app.post('/api/update', async (req, res) => {
       await docker.pruneImages({ filters: { dangling: ["true"] } });
     } catch(e) {}
 
-    send({ status: 'success', message: 'Aggiornamento completato con successo! CasaOS Reborn è tornato online.' });
+    send({ status: 'success', message: 'Update completed successfully! CasaOS Reborn is back online.' });
     res.end();
 
   } catch (error) {
     console.error(error);
-    send({ status: 'error', message: `Errore durante l'aggiornamento: ${error.message}` });
+    send({ status: 'error', message: `Error during update: ${error.message}` });
     res.end();
   }
 });

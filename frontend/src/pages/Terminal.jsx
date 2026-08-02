@@ -90,7 +90,7 @@ export default function TerminalPage({ togglePanel }) {
             </button>
           </div>
           <h1 className="m-0 text-center font-bold flex items-center justify-center gap-2" style={{ flexGrow: 1 }}>
-            <TermIcon size={24} color="var(--primary)" /> SSH Terminal
+            <TermIcon size={24} /> SSH Terminal
           </h1>
           <div className="flex items-center gap-2" style={{ width: '40px' }}></div>
         </div>
