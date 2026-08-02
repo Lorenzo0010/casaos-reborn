@@ -1,0 +1,49 @@
+services:
+  casaos-reborn:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: casaos-reborn
+    privileged: true
+    pid: "host"
+    restart: always
+    ports:
+      - "1111:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./local-config:/app/backend/data
+    environment:
+      - PORT=3000
+      - JWT_SECRET=supersecretcasaoskey
+      - ADMIN_USER=admin
+      - ADMIN_PASS=casaos
+
+  casaos-updater:
+    build:
+      context: ./updater
+      dockerfile: Dockerfile
+    container_name: casaos-updater
+    restart: always
+    ports:
+      - "1112:1112"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    x-casaos:
+      ports:
+        - container: "3000"
+          description:
+            en_us: Web UI Port
+      volumes:
+        - container: /var/run/docker.sock
+          description:
+            en_us: Docker socket for container management
+        - container: /app/backend/data
+          description:
+            en_us: Persistent config storage
+      title:
+        en_us: CasaOS Reborn
+      description:
+        en_us: A lightweight, modern, and powerful web-based interface for managing Docker containers.
+      icon: https://raw.githubusercontent.com/Lorenzo0010/casaos-reborn/main/frontend/public/favicon.svg
+      category: Utilities
+      port_map: "1111"
