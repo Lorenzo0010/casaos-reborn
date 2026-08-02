@@ -1,0 +1,16 @@
+{
+  "theme": "auto",
+  "sortMode": "date",
+  "pinnedContainers": [],
+  "customOrder": [],
+  "showSystemContainers": true,
+  "widgetsOrder": [
+    "cpu",
+    "ram",
+    "storage",
+    "network",
+    "system"
+  ],
+  "mobileTheme": "dark_gray",
+  "themeMode": "system"
+}

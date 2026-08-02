@@ -1,0 +1,15 @@
+[2026-08-02T09:31:40.428Z] [INFO] Server running on port 3000
+[2026-08-02T09:31:50.415Z] [INFO] [Updater] Checking for Docker image updates...
+[2026-08-02T09:31:50.518Z] [INFO] [Updater] Checking casaos-updater (casaos-reborn-casaos-updater:latest)
+[2026-08-02T09:31:50.524Z] [INFO] [Updater] Checking casaos-reborn (casaos-reborn-casaos-reborn:latest)
+[2026-08-02T09:31:52.577Z] [INFO] [Updater] Pruning unused dangling images...
+[2026-08-02T09:31:52.591Z] [INFO] [Updater] Check completed. Found: 0
+[2026-08-02T09:32:59.810Z] [INFO] [Updater] Checking for Docker image updates...
+[2026-08-02T09:32:59.878Z] [INFO] [Updater] Checking casaos-updater (casaos-reborn-casaos-updater:latest)
+[2026-08-02T09:33:00.025Z] [INFO] [Updater] Checking casaos-reborn (casaos-reborn-casaos-reborn:latest)
+[2026-08-02T09:33:01.556Z] [INFO] [Updater] Pruning unused dangling images...
+[2026-08-02T09:33:01.570Z] [INFO] [Updater] Check completed. Found: 0
+[2026-08-02T09:35:22.116Z] [ERROR] Error fetching weather: TypeError: fetch failed
+    at node:internal/deps/undici/undici:14976:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /app/backend/routes/system.js:250:22

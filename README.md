@@ -86,26 +86,34 @@ services:
 - **Frontend**: React, Vite, Lucide-React (Icons), xterm.js (Terminal)
 - **Backend**: Node.js, Express, Socket.io (Real-time updates), Dockerode (Docker API integration)
 
-**Running Locally (Full Stack):**
+**Running and Testing Locally (Full Stack):**
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Lorenzo0010/casaos-reborn.git
    cd casaos-reborn
    ```
-2. **Install Frontend Dependencies**:
+2. **Testing via Docker Compose (Recommended)**:
+   The easiest way to test the full stack locally is using the local Docker Compose file:
    ```bash
-   cd frontend
-   npm install
-   npm run dev
+   docker compose -f docker-compose.local.yml up -d --build
    ```
-3. **Install Backend Dependencies**:
-   ```bash
-   cd backend
-   npm install
-   node server.js
-   ```
+   This will spin up the backend, frontend, and updater containers. You can then access the WebUI at `http://localhost:1111`.
 
-*Note: The backend requires access to the Docker daemon. If you are developing on Windows/macOS, ensure Docker Desktop is running and the socket is accessible.*
+3. **Running without Docker (Manual setup)**:
+   - **Backend**:
+     ```bash
+     cd backend
+     npm install
+     node server.js
+     ```
+     *(Requires access to the Docker daemon. On Windows/macOS, ensure Docker Desktop is running).*
+   - **Frontend**:
+     ```bash
+     cd frontend
+     npm install
+     npm run dev
+     ```
+     *The frontend will run on a local dev server (usually `http://localhost:5173`) and proxy requests to the backend.*
 
 **Testing Frontend with a Remote Backend:**
 If you want to run the UI locally on your development machine (e.g., Windows/macOS) but connect it to your actual server running the CasaOS-Reborn backend:
