@@ -24,11 +24,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Get correct home dir (support Docker host mapping)
+const getHomeDir = () => process.env.HOST_HOMEDIR || os.homedir();
+
 // Helper to safely resolve paths
 const resolvePath = (reqPath) => {
-  if (!reqPath || reqPath === '~') return os.homedir();
+  if (!reqPath || reqPath === '~') return getHomeDir();
   if (reqPath.startsWith('~/') || reqPath.startsWith('~\\')) {
-    return path.resolve(os.homedir(), reqPath.slice(2));
+    return path.resolve(getHomeDir(), reqPath.slice(2));
   }
   // Note: in a real production environment, you'd want to jail this path
   // to a specific root (e.g., /data) to prevent escaping. 
@@ -86,7 +89,7 @@ router.get('/list', (req, res) => {
       path: targetPath,
       parent: path.dirname(targetPath) !== targetPath ? path.dirname(targetPath) : null,
       files: fileDetails,
-      homedir: os.homedir()
+      homedir: getHomeDir()
     });
   } catch (e) {
     res.status(500).json({ error: e.message });

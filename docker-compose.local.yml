@@ -20,6 +20,8 @@ services:
       - JWT_SECRET=supersecretcasaoskey
       - ADMIN_USER=admin
       - ADMIN_PASS=casaos
+      # Imposta qui la TUA vera cartella home dell'host se non vuoi /root come default
+      - HOST_HOMEDIR=/home
 
   casaos-updater:
     build:
