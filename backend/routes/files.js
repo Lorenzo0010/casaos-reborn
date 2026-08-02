@@ -25,7 +25,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Get correct home dir (support Docker host mapping)
-const getHomeDir = () => process.env.HOST_HOMEDIR || os.homedir();
+const getHomeDir = () => {
+  if (process.env.HOST_HOMEDIR) return process.env.HOST_HOMEDIR;
+  const sysHome = os.homedir();
+  // If running in docker as root, fallback to /home instead of /root
+  return sysHome === '/root' ? '/home' : sysHome;
+};
 
 // Helper to safely resolve paths
 const resolvePath = (reqPath) => {
