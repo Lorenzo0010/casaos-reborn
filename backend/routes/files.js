@@ -26,7 +26,10 @@ const upload = multer({ storage: storage });
 
 // Helper to safely resolve paths
 const resolvePath = (reqPath) => {
-  if (!reqPath) return os.homedir();
+  if (!reqPath || reqPath === '~') return os.homedir();
+  if (reqPath.startsWith('~/') || reqPath.startsWith('~\\')) {
+    return path.resolve(os.homedir(), reqPath.slice(2));
+  }
   // Note: in a real production environment, you'd want to jail this path
   // to a specific root (e.g., /data) to prevent escaping. 
   // For CasaOS MVP we allow browsing the whole system like the user requested.

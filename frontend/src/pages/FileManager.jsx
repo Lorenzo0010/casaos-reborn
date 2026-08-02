@@ -325,10 +325,10 @@ export default function FileManager({ togglePanel }) {
       <div className="flex items-center gap-2" style={{ padding: '0 0 10px 0', overflowX: 'auto', whiteSpace: 'nowrap' }}>
         {(currentPath.includes('\\') || /^[A-Za-z]:/.test(currentPath) ? [
           { name: 'System (C:)', path: 'C:\\', icon: <Archive size={14} /> },
-          { name: 'Home', path: homedir || 'C:\\Users', icon: <Folder size={14} /> },
+          { name: 'Home', path: '~', icon: <Folder size={14} /> },
         ] : [
           { name: 'Root', path: '/', icon: <Archive size={14} /> },
-          { name: 'Home', path: homedir || '/home', icon: <Folder size={14} /> },
+          { name: 'Home', path: '~', icon: <Folder size={14} /> },
           { name: 'Media', path: '/media', icon: <ImageIcon size={14} /> },
           { name: 'Mounts', path: '/mnt', icon: <File size={14} /> },
         ]).map(s => (
