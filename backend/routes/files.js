@@ -8,22 +8,6 @@ const tar = require('tar');
 const extractZip = require('extract-zip');
 const os = require('os');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const targetPath = req.query.path || '/';
-    // Validate path exists
-    if (!fs.existsSync(targetPath)) {
-      return cb(new Error('Target directory does not exist'));
-    }
-    cb(null, targetPath);
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  }
-});
-const upload = multer({ storage: storage });
-
 // Get correct home dir (support Docker host mapping)
 const getHomeDir = () => {
   if (process.env.HOST_HOMEDIR) return process.env.HOST_HOMEDIR;
@@ -43,6 +27,22 @@ const resolvePath = (reqPath) => {
   // For CasaOS MVP we allow browsing the whole system like the user requested.
   return path.resolve(reqPath);
 };
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const targetPath = resolvePath(req.query.path);
+    // Validate path exists
+    if (!fs.existsSync(targetPath)) {
+      return cb(new Error('Target directory does not exist'));
+    }
+    cb(null, targetPath);
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
 
 // GET /api/files/list - List files in a directory
 router.get('/list', (req, res) => {
