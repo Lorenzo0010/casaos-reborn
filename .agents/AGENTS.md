@@ -18,3 +18,12 @@ By default, ALL modifications, file creations, and searches must be performed st
 **Instructions for the Agent:**
 1. If the user asks for a modification without explicitly mentioning a different project, you MUST restrict your actions entirely to the currently open project.
 2. Only exit the current project's scope if the user explicitly specifies another project by name or path in their request.
+
+# English Language Rule
+
+All additions to the codebase (including new UI strings, comments, variable names, and documentation) MUST be written in English.
+
+**Instructions for the Agent:**
+1. When adding new features, modals, alerts, or any user-facing text, use English by default.
+2. If modifying an existing file that contains non-English text, preserve the existing text unless instructed otherwise, but ensure your new additions are in English.
+3. If requested to translate existing text, convert it to English to maintain consistency.

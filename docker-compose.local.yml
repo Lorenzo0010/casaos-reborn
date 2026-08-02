@@ -1,6 +1,6 @@
 services:
   casaos-reborn:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: casaos-reborn
@@ -12,6 +12,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./local-config:/app/backend/data
+      - /home:/home
+      - /media:/media
+      - /mnt:/mnt
     environment:
       - PORT=3000
       - JWT_SECRET=supersecretcasaoskey

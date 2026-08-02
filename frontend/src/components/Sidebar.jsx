@@ -35,12 +35,12 @@ export default function Sidebar({ activePanel, togglePanel, isMobile }) {
             <NavLink to="/" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
               <Monitor /> <span className="sidebar-link-text">Dashboard</span>
             </NavLink>
-{/* <NavLink to="/store" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
-  <ShoppingBag /> <span className="sidebar-link-text">App Store</span>
-</NavLink>
-<NavLink to="/files" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
-  <Folder /> <span className="sidebar-link-text">Files</span>
-</NavLink> */}
+            {/* <NavLink to="/store" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
+              <ShoppingBag /> <span className="sidebar-link-text">App Store</span>
+            </NavLink> */}
+            <NavLink to="/files" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
+              <Folder /> <span className="sidebar-link-text">Files</span>
+            </NavLink>
             <NavLink to="/terminal" onClick={closeMobile} className={({isActive}) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
               <TermIcon /> <span className="sidebar-link-text">Terminal</span>
             </NavLink>

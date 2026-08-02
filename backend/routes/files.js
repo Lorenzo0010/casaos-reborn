@@ -26,7 +26,7 @@ const upload = multer({ storage: storage });
 
 // Helper to safely resolve paths
 const resolvePath = (reqPath) => {
-  if (!reqPath) return os.platform() === 'win32' ? 'C:\\' : '/';
+  if (!reqPath) return os.homedir();
   // Note: in a real production environment, you'd want to jail this path
   // to a specific root (e.g., /data) to prevent escaping. 
   // For CasaOS MVP we allow browsing the whole system like the user requested.
@@ -82,7 +82,8 @@ router.get('/list', (req, res) => {
     res.json({
       path: targetPath,
       parent: path.dirname(targetPath) !== targetPath ? path.dirname(targetPath) : null,
-      files: fileDetails
+      files: fileDetails,
+      homedir: os.homedir()
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -99,7 +100,16 @@ router.get('/read', (req, res) => {
 
     const stats = fs.statSync(targetPath);
     if (stats.isDirectory()) {
-      return res.status(400).json({ error: 'Cannot read a directory' });
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.on('error', (err) => {
+        res.status(500).send({ error: err.message });
+      });
+
+      res.attachment(`${path.basename(targetPath)}.zip`);
+      archive.pipe(res);
+      archive.directory(targetPath, false);
+      archive.finalize();
+      return;
     }
 
     res.sendFile(targetPath);
