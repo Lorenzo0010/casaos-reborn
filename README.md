@@ -1,7 +1,11 @@
 # 🚀 CasaOS Reborn
 
 <div align="center">
-  <img src="frontend/public/mockup.png" alt="CasaOS Reborn Dashboard" width="800"/>
+  <img src="frontend/public/mockup-dashboard.png" alt="Dashboard" width="48%"/>
+  <img src="frontend/public/mockup-terminal.png" alt="Terminal" width="48%"/>
+  <br/>
+  <img src="frontend/public/mockup-files.png" alt="Files" width="48%"/>
+  <img src="frontend/public/mockup-advanced.png" alt="Advanced Settings" width="48%"/>
 </div>
 CasaOS Reborn is a lightweight, modern, and powerful web-based interface for managing Docker containers. Built as a sleek alternative to CasaOS, it allows you to orchestrate your homelab environment with ease, directly from your browser.
 
