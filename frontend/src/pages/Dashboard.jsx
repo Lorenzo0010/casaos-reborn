@@ -248,35 +248,10 @@ export default function Dashboard({ togglePanel, activePanel }) {
   }, []);
 
   const handleQuickSystemUpdate = async () => {
-    selfUpdatingRef.current = true;
-    setSelfUpdating(true);
-    try {
-      const port1112Url = `${window.location.protocol}//${window.location.hostname}:1112/api/update`;
-      const controller = new AbortController();
-      // Timeout is just for the fetch request connection, not the whole update process
-      const timeoutId = setTimeout(() => controller.abort(), 5000); 
-      
-      const res = await fetch(port1112Url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      
-      if (!res.ok) {
-        throw new Error('Updater returned ' + res.status);
-      }
-      // Se va a buon fine, non facciamo nulla.
-      // Il container principale verrà spento a breve dall'updater (porta 1112).
-      // Quando il container si spegne, il socket si disconnette e scatta startHealthPolling()!
-    } catch (e) {
-      console.log('Update request failed or aborted:', e);
-      // Se la chiamata fallisce (es. updater spento), sblocchiamo l'interfaccia
-      selfUpdatingRef.current = false;
-      setSelfUpdating(false);
-      showAlert('Errore', 'Impossibile contattare l\'updater di sistema sulla porta 1112.', true);
-    }
+    const actualTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = `${window.location.protocol}//${window.location.hostname}:1112/?mode=${actualTheme}&primary=${encodeURIComponent(primaryColor)}&autoUpdate=true&returnUrl=${returnUrl}`;
   };
 
   const handleAction = async (id, action) => {

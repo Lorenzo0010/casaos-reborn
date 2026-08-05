@@ -640,6 +640,14 @@
         loadingEl.style.display = 'none';
         editorEl.style.display = 'block';
 
+        // Auto Update Trigger
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('autoUpdate') === 'true') {
+          setTimeout(() => {
+            triggerQuickUpdate();
+          }, 500);
+        }
+
       } catch (err) {
         loadingEl.innerHTML = `<span style="color:var(--error);">Error: ${err.message}</span>`;
       }
@@ -861,8 +869,10 @@
               appendLog(data.message, data.status);
               
               if (data.status === 'success') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const returnUrl = urlParams.get('returnUrl');
                 setTimeout(() => {
-                  window.location.href = window.location.origin.replace(':1112', ':1111');
+                  window.location.href = returnUrl ? returnUrl : window.location.origin.replace(':1112', ':1111');
                 }, 3000);
               }
             }
