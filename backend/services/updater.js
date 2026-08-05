@@ -68,12 +68,23 @@ const checkUpdates = async (io) => {
         // Se l'ID dell'immagine del container è diverso dall'ID scaricato per quel tag, c'è un aggiornamento
         if (oldImageId !== newImageId) {
           console.log(`[Updater] Update found for ${containerInfo.Name}! New ID: ${newImageId}`);
+          
+          let oldDate = null;
+          try {
+            const oldImageInspect = await docker.getImage(oldImageId).inspect();
+            oldDate = oldImageInspect.Created;
+          } catch (e) {
+            console.warn(`[Updater] Could not get old image date for ${oldImageId}`);
+          }
+
           global.availableUpdates[container.Id] = {
             id: container.Id,
             name: containerInfo.Name.replace('/', ''),
             image: fullImage,
             oldHash: oldImageId,
             newHash: newImageId,
+            oldDate: oldDate,
+            newDate: newImageInspect.Created,
             timestamp: new Date().toISOString()
           };
         } else {

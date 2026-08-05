@@ -15,5 +15,13 @@
   "mobileTheme": "dark_gray",
   "themeMode": "system",
   "weatherCity": "Rome",
-  "activeTheme": "dark_gray"
+  "activeTheme": "dark_gray",
+  "dashboardWidgetOrder": [
+    "system",
+    "cpu",
+    "ram",
+    "disk",
+    "network",
+    "weather"
+  ]
 }
