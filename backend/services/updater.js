@@ -122,10 +122,10 @@ const checkUpdates = async (io) => {
 };
 
 const initUpdater = (io) => {
-  // Start the background job every 15 seconds (15000 ms)
+  // Start the background job every 15 minutes (900000 ms)
   setInterval(() => {
     checkUpdates(io);
-  }, 15 * 1000);
+  }, 15 * 60 * 1000);
 
   // Run first check 10 seconds after boot
   setTimeout(() => {

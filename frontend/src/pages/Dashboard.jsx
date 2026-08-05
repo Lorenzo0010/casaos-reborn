@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Play, Square, CheckSquare, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu, Github } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -528,18 +529,19 @@ export default function Dashboard({ togglePanel, activePanel }) {
         </div>
       </div>
 
-      {selfUpdating && (
+      {selfUpdating && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.75)',
           backdropFilter: 'blur(8px)',
           display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-          zIndex: 2000, color: 'white'
+          zIndex: 9999, color: 'white'
         }}>
           <Loader className="spin" size={48} style={{ marginBottom: '20px' }} />
           <h2 style={{ margin: '0 0 8px 0' }}>System updating</h2>
           <p style={{ opacity: 0.7 }}>Reconnecting...</p>
-        </div>
+        </div>,
+        document.body
       )}
 
       {systemUpdate && !selfUpdating && (
