@@ -6,3 +6,4 @@ TESTING_GUIDE.md
 casaos_container_sync.md
 .agents/
 docker-compose.local.yml
+local-config/
