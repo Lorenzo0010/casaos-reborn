@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CasaOS Updater - Settings</title>
+  <title>CasaOS Updater</title>
   <style>
     :root {
       --primary: #3b82f6;
       --bg-color: #0f1117;
       --surface-color: #1a1d27;
       --text-color: #f9fafb;
+      --text-muted: #9ca3af;
       --border-color: rgba(255, 255, 255, 0.06);
+      --success: #10b981;
+      --error: #ef4444;
     }
     body {
       margin: 0;
@@ -49,8 +52,93 @@
     .loading {
       text-align: center;
       padding: 40px;
-      color: #9ca3af;
+      color: var(--text-muted);
     }
+
+    /* Quick Update Hero */
+    .update-hero {
+      text-align: center;
+      padding: 30px 20px;
+    }
+    .update-hero h2 {
+      margin: 0 0 8px 0;
+      font-size: 22px;
+    }
+    .update-hero p {
+      margin: 0 0 24px 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .btn-update-now {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-update-now:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+    }
+    .btn-update-now:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-update-now svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 20px 0;
+    }
+
+    /* Advanced Toggle */
+    .advanced-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: transparent;
+      transition: all 0.2s;
+      width: 100%;
+      margin-bottom: 20px;
+      user-select: none;
+    }
+    .advanced-toggle:hover {
+      color: var(--text-color);
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+    .advanced-toggle .chevron {
+      transition: transform 0.3s;
+      font-size: 18px;
+    }
+    .advanced-toggle.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    /* Section */
     .section {
       margin-bottom: 30px;
       background: var(--bg-color);
@@ -72,8 +160,32 @@
       margin-bottom: 10px;
       align-items: center;
     }
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .form-grid-webui {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    @media (max-width: 600px) {
+      .form-grid-4, .form-grid-2, .form-grid-webui {
+        grid-template-columns: 1fr;
+      }
+    }
     input, select {
-      flex: 1;
+      width: 100%;
+      box-sizing: border-box;
       background: var(--surface-color);
       border: 1px solid var(--border-color);
       color: var(--text-color);
@@ -102,8 +214,8 @@
     }
     .btn-danger {
       background-color: transparent;
-      color: #ef4444;
-      border: 1px solid #ef4444;
+      color: var(--error);
+      border: 1px solid var(--error);
       padding: 8px 12px;
     }
     .btn-danger:hover {
@@ -128,7 +240,7 @@
       display: block;
       margin-bottom: 5px;
       font-size: 14px;
-      color: #9ca3af;
+      color: var(--text-muted);
     }
     .checkbox-group {
       display: flex;
@@ -161,8 +273,20 @@
       display: none;
     }
     .log-entry { margin-bottom: 4px; }
-    .log-success { color: #10b981; }
-    .log-error { color: #ef4444; }
+    .log-success { color: var(--success); }
+    .log-error { color: var(--error); }
+
+    .cap-badge {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .cap-badge.active {
+      background: var(--primary);
+      color: white;
+    }
 
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -187,7 +311,7 @@
 <body>
   
   <div class="header">
-    <h1>CasaOS Reborn - Updater & Config</h1>
+    <h1>CasaOS Reborn - System Update</h1>
   </div>
 
   <div class="container" id="mainContainer">
@@ -196,69 +320,170 @@
     </div>
 
     <div id="editor" style="display: none;">
-      
-      <!-- Ports -->
-      <div class="section">
-        <h3>Ports (Port Bindings)</h3>
-        <div id="portsList"></div>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addPort()">+ Add Port</button>
+
+      <!-- Quick Update Hero -->
+      <div class="update-hero" id="quickUpdateSection">
+        <h2>🚀 System Update</h2>
+        <p>Pull the latest image and restart your CasaOS Reborn container with the current configuration.</p>
+        <button id="quickUpdateBtn" class="btn-update-now" onclick="triggerQuickUpdate()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Update Now
+        </button>
       </div>
 
-      <!-- Volumes -->
-      <div class="section">
-        <h3>Volumes (Binds)</h3>
-        <div id="volumesList"></div>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addVolume()">+ Add Volume</button>
-      </div>
+      <div class="divider"></div>
 
-      <!-- Environment -->
-      <div class="section">
-        <h3>Environment Variables (Env)</h3>
-        <div id="envList"></div>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addEnv()">+ Add Variable</button>
-      </div>
+      <!-- Advanced Settings Toggle -->
+      <button class="advanced-toggle" id="advancedToggle" onclick="toggleAdvanced()">
+        <span>⚙️ Advanced Settings</span>
+        <span class="chevron">▼</span>
+      </button>
 
-      <!-- Advanced -->
-      <div class="section">
-        <h3>Advanced</h3>
-        <div class="form-group">
-          <label>PID Mode</label>
-          <select id="pidMode">
-            <option value="">Default</option>
-            <option value="host">Host</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Restart Policy</label>
-          <select id="restartPolicy">
-            <option value="no">No</option>
-            <option value="always">Always</option>
-            <option value="unless-stopped">Unless Stopped</option>
-            <option value="on-failure">On Failure</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Memory Limit (MB) - 0 for unlimited</label>
-          <input type="number" id="memoryLimit" value="0" min="0">
-        </div>
-        <div class="checkbox-group">
-          <input type="checkbox" id="privilegedMode">
-          <label for="privilegedMode" style="margin:0;">Privileged Mode</label>
-        </div>
-      </div>
+      <!-- Advanced Settings (hidden by default) -->
+      <div id="advancedSettings" style="display: none;">
 
-      <div class="actions">
-        <div id="waitMessage" style="display: none; color: var(--primary); font-weight: bold; margin-right: auto; align-self: center;">
-          Please wait until the system restarts...
+        <!-- Web UI -->
+        <div class="section">
+          <h3>Web UI Settings</h3>
+          <div class="form-grid-webui">
+            <div class="form-group">
+              <label>Scheme</label>
+              <select id="webUIScheme">
+                <option value="http">http://</option>
+                <option value="https">https://</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Port</label>
+              <input type="text" id="webUIPort" placeholder="e.g. 1111">
+            </div>
+            <div class="form-group">
+              <label>Path</label>
+              <input type="text" id="webUIPath" placeholder="e.g. /">
+            </div>
+          </div>
         </div>
-        <button id="updateBtn" class="btn" style="padding: 12px 24px;">Save & Update Container</button>
-      </div>
-    </div>
+
+        <!-- Advanced Config -->
+        <div class="section">
+          <h3>Container Configuration</h3>
+          <div class="form-grid-4">
+            <div class="form-group">
+              <label>Network Mode</label>
+              <select id="networkMode">
+                <option value="bridge">bridge</option>
+                <option value="host">host</option>
+                <option value="none">none</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>PID Mode</label>
+              <select id="pidMode">
+                <option value="">Default</option>
+                <option value="host">host</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Hostname</label>
+              <input type="text" id="hostname" placeholder="Optional">
+            </div>
+            <div class="form-group">
+              <label>Restart Policy</label>
+              <select id="restartPolicy">
+                <option value="no">No</option>
+                <option value="always">Always</option>
+                <option value="unless-stopped">Unless Stopped</option>
+                <option value="on-failure">On Failure</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Memory Limit (MB) - 0 for unlimited</label>
+              <input type="number" id="memoryLimit" value="0" min="0">
+            </div>
+            <div class="form-group">
+              <label>CPU Quota</label>
+              <select id="cpuQuota">
+                <option value="0">Unlimited</option>
+                <option value="1">Low (25%)</option>
+                <option value="2">Medium (50%)</option>
+                <option value="3">High (75%)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="privilegedMode">
+            <label for="privilegedMode" style="margin:0;">Privileged Mode</label>
+          </div>
+        </div>
+
+        <!-- Ports -->
+        <div class="section">
+          <h3>Ports (Port Bindings)</h3>
+          <div id="portsList"></div>
+          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addPort()">+ Add Port</button>
+        </div>
+
+        <!-- Volumes -->
+        <div class="section">
+          <h3>Volumes (Binds)</h3>
+          <div id="volumesList"></div>
+          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addVolume()">+ Add Volume</button>
+        </div>
+
+        <!-- Devices -->
+        <div class="section">
+          <h3>Devices</h3>
+          <div id="devicesList"></div>
+          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addDevice()">+ Add Device</button>
+        </div>
+
+        <!-- Environment -->
+        <div class="section">
+          <h3>Environment Variables (Env)</h3>
+          <div id="envList"></div>
+          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addEnv()">+ Add Variable</button>
+        </div>
+
+        <!-- Commands -->
+        <div class="section">
+          <h3>Container Command</h3>
+          <div id="cmdList"></div>
+          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addCmd()">+ Add Command</button>
+        </div>
+
+        <!-- Capabilities -->
+        <div class="section">
+          <h3>Capabilities (cap-add)</h3>
+          <div id="capList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        </div>
+
+        <div class="actions">
+          <div id="waitMessage" style="display: none; color: var(--primary); font-weight: bold; margin-right: auto; align-self: center;">
+            Please wait until the system restarts...
+          </div>
+          <button id="updateBtn" class="btn" style="padding: 12px 24px;">Save Settings & Update</button>
+        </div>
+      </div><!-- /advancedSettings -->
+
+    </div><!-- /editor -->
 
     <div class="logs" id="logsPanel"></div>
   </div>
 
   <script>
+    const CAPABILITIES = [
+      'AUDIT_CONTROL', 'AUDIT_READ', 'BLOCK_SUSPEND', 'BPF', 'CHECKPOINT_RESTORE',
+      'DAC_READ_SEARCH', 'IPC_LOCK', 'IPC_OWNER', 'LEASE', 'LINUX_IMMUTABLE',
+      'MAC_ADMIN', 'MAC_OVERRIDE', 'NET_ADMIN', 'NET_BROADCAST', 'PERFMON',
+      'SYS_ADMIN', 'SYS_BOOT', 'SYS_MODULE', 'SYS_NICE', 'SYS_PACCT',
+      'SYS_PTRACE', 'SYS_RAWIO', 'SYS_RESOURCE', 'SYS_TIME', 'SYS_TTY_CONFIG',
+      'SYSLOG', 'WAKE_ALARM'
+    ];
+
     // Theme Parsing
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode') || 'dark';
@@ -272,27 +497,53 @@
       document.documentElement.style.setProperty('--bg-color', '#f1f5f9');
       document.documentElement.style.setProperty('--surface-color', '#ffffff');
       document.documentElement.style.setProperty('--text-color', '#111827');
+      document.documentElement.style.setProperty('--text-muted', '#6b7280');
       document.documentElement.style.setProperty('--border-color', '#e5e7eb');
     }
 
     let containerData = {
       ports: [],
       volumes: [],
+      devices: [],
       env: [],
+      cmd: [],
+      capAdd: [],
+      webUI: { scheme: 'http', port: '', path: '/' },
+      networkMode: 'bridge',
       pidMode: '',
+      hostname: '',
       restartPolicy: 'unless-stopped',
       memory: 0,
+      cpuQuota: 0,
       privileged: false
     };
 
     // UI Elements
     const portsListEl = document.getElementById('portsList');
     const volumesListEl = document.getElementById('volumesList');
+    const devicesListEl = document.getElementById('devicesList');
     const envListEl = document.getElementById('envList');
+    const cmdListEl = document.getElementById('cmdList');
+    const capListEl = document.getElementById('capList');
+    
     const updateBtn = document.getElementById('updateBtn');
+    const quickUpdateBtn = document.getElementById('quickUpdateBtn');
     const logsPanel = document.getElementById('logsPanel');
     const loadingEl = document.getElementById('loading');
     const editorEl = document.getElementById('editor');
+
+    // Toggle Advanced Settings
+    function toggleAdvanced() {
+      const el = document.getElementById('advancedSettings');
+      const toggle = document.getElementById('advancedToggle');
+      if (el.style.display === 'none') {
+        el.style.display = 'block';
+        toggle.classList.add('open');
+      } else {
+        el.style.display = 'none';
+        toggle.classList.remove('open');
+      }
+    }
 
     // Fetch Config
     async function fetchConfig() {
@@ -324,33 +575,73 @@
           });
         }
         
+        // Parse Devices
+        let parsedDevices = [];
+        if (info?.HostConfig?.Devices && info.HostConfig.Devices.length > 0) {
+            parsedDevices = info.HostConfig.Devices.map(d => ({
+                hostPath: d.PathOnHost || '',
+                containerPath: d.PathInContainer || ''
+            }));
+        }
+
         // Parse Env
         const parsedEnv = (info?.Config?.Env || []).map(e => {
           const idx = e.indexOf('=');
           return { key: e.substring(0, idx), value: e.substring(idx + 1) };
         });
 
+        // Parse Cmd
+        const parsedCmd = (info?.Config?.Cmd || []).map(c => ({ value: c }));
+
+        // Parse WebUI Labels
+        const labels = info?.Config?.Labels || {};
+
+        let parsedCpuQuota = 0;
+        if (info?.HostConfig?.CpuQuota === 25000) parsedCpuQuota = 1;
+        else if (info?.HostConfig?.CpuQuota === 50000) parsedCpuQuota = 2;
+        else if (info?.HostConfig?.CpuQuota === 75000) parsedCpuQuota = 3;
+
         containerData.ports = parsedPorts;
         containerData.volumes = parsedVolumes;
+        containerData.devices = parsedDevices;
         containerData.env = parsedEnv;
+        containerData.cmd = parsedCmd;
+        containerData.capAdd = info?.HostConfig?.CapAdd || [];
+
+        containerData.webUI = {
+            scheme: (labels['casaos.reborn.web.scheme'] || 'http').replace('://', ''),
+            port: labels['casaos.reborn.web.port'] || '',
+            path: labels['casaos.reborn.web.path'] || '/'
+        };
+        
+        containerData.networkMode = info?.HostConfig?.NetworkMode || 'bridge';
         containerData.pidMode = info?.HostConfig?.PidMode || '';
+        containerData.hostname = info?.Config?.Hostname || '';
         containerData.privileged = !!info?.HostConfig?.Privileged;
         containerData.memory = info?.HostConfig?.Memory ? Math.round(info.HostConfig.Memory / (1024 * 1024)) : 0;
+        containerData.cpuQuota = parsedCpuQuota;
         containerData.restartPolicy = info?.HostConfig?.RestartPolicy?.Name || 'unless-stopped';
 
-        // Set Advanced UI
+        // Set UI values
+        document.getElementById('webUIScheme').value = containerData.webUI.scheme;
+        document.getElementById('webUIPort').value = containerData.webUI.port;
+        document.getElementById('webUIPath').value = containerData.webUI.path;
+        document.getElementById('networkMode').value = containerData.networkMode;
         document.getElementById('pidMode').value = containerData.pidMode;
+        document.getElementById('hostname').value = containerData.hostname;
         document.getElementById('restartPolicy').value = containerData.restartPolicy;
         document.getElementById('memoryLimit').value = containerData.memory;
+        document.getElementById('cpuQuota').value = containerData.cpuQuota;
         document.getElementById('privilegedMode').checked = containerData.privileged;
 
         renderLists();
+        renderCapabilities();
         
         loadingEl.style.display = 'none';
         editorEl.style.display = 'block';
 
       } catch (err) {
-        loadingEl.innerHTML = `<span style="color:#ef4444;">Error: ${err.message}</span>`;
+        loadingEl.innerHTML = `<span style="color:var(--error);">Error: ${err.message}</span>`;
       }
     }
 
@@ -362,13 +653,13 @@
         const row = document.createElement('div');
         row.className = 'list-row';
         row.innerHTML = `
-          <input type="text" placeholder="Host Port (e.g. 1111)" value="${p.hostPort}" onchange="updateData('ports', ${idx}, 'hostPort', this.value)">
-          <input type="text" placeholder="Container Port (e.g. 3000)" value="${p.containerPort}" onchange="updateData('ports', ${idx}, 'containerPort', this.value)">
+          <input type="text" placeholder="Host Port" value="${p.hostPort}" onchange="updateData('ports', ${idx}, 'hostPort', this.value)">
+          <input type="text" placeholder="Container Port" value="${p.containerPort}" onchange="updateData('ports', ${idx}, 'containerPort', this.value)">
           <select style="flex: 0.5;" onchange="updateData('ports', ${idx}, 'protocol', this.value)">
             <option value="tcp" ${p.protocol==='tcp'?'selected':''}>TCP</option>
             <option value="udp" ${p.protocol==='udp'?'selected':''}>UDP</option>
           </select>
-          <button class="btn btn-danger" onclick="removeData('ports', ${idx})">X</button>
+          <button class="btn btn-danger" style="flex: none;" onclick="removeData('ports', ${idx})">X</button>
         `;
         portsListEl.appendChild(row);
       });
@@ -381,9 +672,22 @@
         row.innerHTML = `
           <input type="text" placeholder="/path/on/host" value="${v.hostPath}" onchange="updateData('volumes', ${idx}, 'hostPath', this.value)">
           <input type="text" placeholder="/path/in/container" value="${v.containerPath}" onchange="updateData('volumes', ${idx}, 'containerPath', this.value)">
-          <button class="btn btn-danger" onclick="removeData('volumes', ${idx})">X</button>
+          <button class="btn btn-danger" style="flex: none;" onclick="removeData('volumes', ${idx})">X</button>
         `;
         volumesListEl.appendChild(row);
+      });
+
+      // Devices
+      devicesListEl.innerHTML = '';
+      containerData.devices.forEach((d, idx) => {
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = `
+          <input type="text" placeholder="/dev/dri" value="${d.hostPath}" onchange="updateData('devices', ${idx}, 'hostPath', this.value)">
+          <input type="text" placeholder="/dev/dri" value="${d.containerPath}" onchange="updateData('devices', ${idx}, 'containerPath', this.value)">
+          <button class="btn btn-danger" style="flex: none;" onclick="removeData('devices', ${idx})">X</button>
+        `;
+        devicesListEl.appendChild(row);
       });
 
       // Env
@@ -394,10 +698,40 @@
         row.innerHTML = `
           <input type="text" placeholder="KEY" value="${e.key}" onchange="updateData('env', ${idx}, 'key', this.value)">
           <input type="text" placeholder="Value" value="${e.value}" onchange="updateData('env', ${idx}, 'value', this.value)">
-          <button class="btn btn-danger" onclick="removeData('env', ${idx})">X</button>
+          <button class="btn btn-danger" style="flex: none;" onclick="removeData('env', ${idx})">X</button>
         `;
         envListEl.appendChild(row);
       });
+
+      // Cmd
+      cmdListEl.innerHTML = '';
+      containerData.cmd.forEach((c, idx) => {
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = `
+          <input type="text" placeholder="Command" value="${c.value}" onchange="updateData('cmd', ${idx}, 'value', this.value)">
+          <button class="btn btn-danger" style="flex: none;" onclick="removeData('cmd', ${idx})">X</button>
+        `;
+        cmdListEl.appendChild(row);
+      });
+    }
+
+    function renderCapabilities() {
+        capListEl.innerHTML = '';
+        CAPABILITIES.forEach(cap => {
+            const el = document.createElement('div');
+            el.className = 'cap-badge ' + (containerData.capAdd.includes(cap) ? 'active' : '');
+            el.textContent = cap;
+            el.onclick = () => {
+                if (containerData.capAdd.includes(cap)) {
+                    containerData.capAdd = containerData.capAdd.filter(c => c !== cap);
+                } else {
+                    containerData.capAdd.push(cap);
+                }
+                renderCapabilities();
+            };
+            capListEl.appendChild(el);
+        });
     }
 
     // Data Handlers
@@ -416,8 +750,16 @@
       containerData.volumes.push({ hostPath: '', containerPath: '' });
       renderLists();
     };
+    window.addDevice = () => {
+      containerData.devices.push({ hostPath: '', containerPath: '' });
+      renderLists();
+    };
     window.addEnv = () => {
       containerData.env.push({ key: '', value: '' });
+      renderLists();
+    };
+    window.addCmd = () => {
+      containerData.cmd.push({ value: '' });
       renderLists();
     };
 
@@ -429,31 +771,47 @@
       logsPanel.scrollTop = logsPanel.scrollHeight;
     }
 
-    updateBtn.addEventListener('click', async () => {
-      updateBtn.disabled = true;
-      updateBtn.textContent = 'Updating...';
-      document.getElementById('waitMessage').style.display = 'block';
-      document.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
-      
-      logsPanel.style.display = 'block';
-      logsPanel.innerHTML = '';
-      
-      // Update advanced fields
+    // Build payload from current state, reading advanced fields from DOM
+    function buildPayload() {
+      containerData.networkMode = document.getElementById('networkMode').value;
       containerData.pidMode = document.getElementById('pidMode').value;
+      containerData.hostname = document.getElementById('hostname').value;
       containerData.restartPolicy = document.getElementById('restartPolicy').value;
       containerData.memory = parseInt(document.getElementById('memoryLimit').value) || 0;
+      containerData.cpuQuota = parseInt(document.getElementById('cpuQuota').value) || 0;
       containerData.privileged = document.getElementById('privilegedMode').checked;
 
-      // Prepare payload
+      containerData.webUI.scheme = document.getElementById('webUIScheme').value;
+      containerData.webUI.port = document.getElementById('webUIPort').value;
+      containerData.webUI.path = document.getElementById('webUIPath').value;
+
+      let cpuQuotaObj = 0;
+      if (containerData.cpuQuota === 1) cpuQuotaObj = 25000;
+      else if (containerData.cpuQuota === 2) cpuQuotaObj = 50000;
+      else if (containerData.cpuQuota === 3) cpuQuotaObj = 75000;
+
+      const labelsOverride = {
+          'casaos.reborn.web.scheme': containerData.webUI.scheme || 'http',
+          'casaos.reborn.web.port': containerData.webUI.port || '',
+          'casaos.reborn.web.path': containerData.webUI.path || '/'
+      };
+
       const payload = {
         Env: containerData.env.filter(e => e.key).map(e => `${e.key}=${e.value}`),
         ExposedPorts: {},
+        Labels: labelsOverride,
+        Hostname: containerData.hostname || undefined,
+        Cmd: containerData.cmd.filter(c => c.value).map(c => c.value),
         HostConfig: {
           PortBindings: {},
           Binds: containerData.volumes.filter(v => v.hostPath && v.containerPath).map(v => `${v.hostPath}:${v.containerPath}`),
+          Devices: containerData.devices.filter(d => d.hostPath && d.containerPath).map(d => ({ PathOnHost: d.hostPath, PathInContainer: d.containerPath, CgroupPermissions: 'rwm' })),
+          CapAdd: containerData.capAdd,
+          NetworkMode: containerData.networkMode,
           PidMode: containerData.pidMode,
           Privileged: containerData.privileged,
           Memory: containerData.memory > 0 ? containerData.memory * 1024 * 1024 : 0,
+          CpuQuota: cpuQuotaObj,
           RestartPolicy: { Name: containerData.restartPolicy, MaximumRetryCount: 0 }
         }
       };
@@ -465,6 +823,22 @@
           payload.HostConfig.PortBindings[key] = p.hostPort ? [{ HostPort: p.hostPort }] : [];
         }
       });
+
+      return payload;
+    }
+
+    // Send update
+    async function sendUpdate(sourceBtn) {
+      sourceBtn.disabled = true;
+      const origText = sourceBtn.textContent;
+      sourceBtn.textContent = 'Updating...';
+      document.getElementById('waitMessage').style.display = 'block';
+      document.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+      
+      logsPanel.style.display = 'block';
+      logsPanel.innerHTML = '';
+
+      const payload = buildPayload();
 
       try {
         const response = await fetch('/api/update', { 
@@ -482,8 +856,8 @@
           
           const lines = decoder.decode(value).split('\n');
           for (let line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = JSON.parse(line.substring(6));
+            if (line.trim().startsWith('data: ')) {
+              const data = JSON.parse(line.trim().substring(6));
               appendLog(data.message, data.status);
               
               if (data.status === 'success') {
@@ -497,9 +871,20 @@
       } catch (err) {
         appendLog('Network error: ' + err.message, 'error');
       } finally {
-        updateBtn.disabled = false;
+        sourceBtn.disabled = false;
+        sourceBtn.textContent = origText;
         document.querySelectorAll('input, select, button').forEach(el => el.disabled = false);
       }
+    }
+
+    // Quick update (uses existing config, no changes)
+    function triggerQuickUpdate() {
+      sendUpdate(quickUpdateBtn);
+    }
+
+    // Advanced save & update
+    updateBtn.addEventListener('click', () => {
+      sendUpdate(updateBtn);
     });
 
     // Start

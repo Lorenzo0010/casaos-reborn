@@ -79,8 +79,10 @@ app.post('/api/update', async (req, res) => {
       name: 'casaos-reborn',
       Image: image,
       Env: overrides.Env || containerInfo.Config.Env,
-      Labels: containerInfo.Config.Labels,
+      Labels: overrides.Labels ? { ...containerInfo.Config.Labels, ...overrides.Labels } : containerInfo.Config.Labels,
       ExposedPorts: overrides.ExposedPorts || containerInfo.Config.ExposedPorts,
+      Hostname: overrides.Hostname !== undefined ? overrides.Hostname : containerInfo.Config.Hostname,
+      Cmd: overrides.Cmd !== undefined ? overrides.Cmd : containerInfo.Config.Cmd,
       HostConfig: {
         ...containerInfo.HostConfig,
         ...(overrides.HostConfig || {})

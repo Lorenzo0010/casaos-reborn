@@ -17,6 +17,7 @@ export default function Dashboard({ togglePanel, activePanel }) {
   const [selfUpdating, setSelfUpdating] = useState(false);
   const selfUpdatingRef = React.useRef(false);
   const [recreating, setRecreating] = useState({});
+  const [systemUpdate, setSystemUpdate] = useState(null);
 
   // Layout preferences state
   const [sortMode, setSortMode] = useState('date');
@@ -97,8 +98,23 @@ export default function Dashboard({ togglePanel, activePanel }) {
     }
   };
 
+  const fetchSystemUpdate = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/docker/updates', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const updates = res.data.updates || [];
+      const sysUpd = updates.find(u => u.name === 'casaos-reborn');
+      setSystemUpdate(sysUpd || null);
+    } catch (err) {
+      console.error('Failed to fetch updates in dashboard:', err);
+    }
+  };
+
   useEffect(() => {
     fetchContainers();
+    fetchSystemUpdate();
   }, []);
 
   useEffect(() => {
@@ -131,6 +147,11 @@ export default function Dashboard({ togglePanel, activePanel }) {
     // Ascolto lista container via WebSocket
     socket.on('docker.containers', (data) => {
       setContainers(data);
+    });
+
+    socket.on('updater.results', (data) => {
+      const sysUpd = data.find(u => u.name === 'casaos-reborn');
+      setSystemUpdate(sysUpd || null);
     });
 
     // Success: clean up by both oldId and taskId to ensure no phantoms
@@ -224,6 +245,30 @@ export default function Dashboard({ togglePanel, activePanel }) {
     fetchContainers();
     // Il polling è stato rimosso, i container si aggiornano tramite WebSocket (docker.containers)
   }, []);
+
+  const handleQuickSystemUpdate = async () => {
+    selfUpdatingRef.current = true;
+    setSelfUpdating(true);
+    try {
+      const port1112Url = `${window.location.protocol}//${window.location.hostname}:1112/api/update`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes timeout
+      
+      await fetch(port1112Url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+    } catch (e) {
+      // Expected: the server restarts mid-request, connection drops
+      console.log('System update request sent.');
+    } finally {
+      // Start polling for the server to come back online
+      startHealthPolling();
+    }
+  };
 
   const handleAction = async (id, action) => {
     try {
@@ -497,6 +542,46 @@ export default function Dashboard({ togglePanel, activePanel }) {
         </div>
       )}
 
+      {systemUpdate && !selfUpdating && (
+        <div style={{
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '16px',
+          flexWrap: 'wrap'
+        }}>
+          <div>
+            <h3 style={{ margin: '0 0 4px 0', color: 'var(--primary)' }}>🚀 Update Available for CasaOS Reborn</h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-color)' }}>
+              A new version is available. You can update now with current settings, or open advanced settings.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={() => {
+                const actualTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+                window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/?mode=' + actualTheme + '&primary=' + encodeURIComponent(primaryColor);
+              }}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-color)', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Avanzate
+            </button>
+            <button 
+              onClick={handleQuickSystemUpdate}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Aggiorna Ora
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Widgets Row */}
       <WidgetsPanel 
         className="mb-6" 
@@ -678,11 +763,6 @@ export default function Dashboard({ togglePanel, activePanel }) {
 
                 {/* Action Buttons */}
                 <div className="card-actions">
-                  {repoUrl && (
-                    <button onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')} className="btn-action-square neutral" title="Source (GitHub/DockerHub)">
-                      <Github size={22} />
-                    </button>
-                  )}
                   {c.State !== 'running' ? (
                     <button onClick={() => handleAction(c.Id, 'start')} className="btn-action-square success" title="Start">
                       <Play size={22} />

@@ -14,13 +14,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
   const [isNetworkModalOpen, setIsNetworkModalOpen] = useState(false);
   const [draggedWidget, setDraggedWidget] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
-  const scrollRef = useRef(null);
 
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: direction === 'left' ? -300 : 300, behavior: 'smooth' });
-    }
-  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -138,20 +132,12 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
 
   if (!stats) {
     return (
-      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <button onClick={() => scroll('left')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
-          <ChevronLeft size={24} />
-        </button>
-        <div className={`widgets-row ${className}`} ref={scrollRef} style={{ flex: 1, minWidth: 0, ...style }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="widget p-4 flex items-center justify-center" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', opacity: 0.5 }}>
-              <div className="spin" style={{ width: '24px', height: '24px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></div>
-            </div>
-          ))}
-        </div>
-        <button onClick={() => scroll('right')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
-          <ChevronRight size={24} />
-        </button>
+      <div className={className} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px', width: '100%', ...style }}>
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="widget p-4 flex items-center justify-center" style={{ margin: 0, padding: '24px', minHeight: '180px', opacity: 0.5 }}>
+            <div className="spin" style={{ width: '24px', height: '24px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -180,8 +166,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'cpu')}
         onClick={() => !editMode && setIsCpuModalOpen(true)} 
-        className="widget p-4" 
-        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'cpu' ? 0.5 : 1 }}
+        className="widget p-4 flex-col" 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minHeight: '180px', display: 'flex', justifyContent: 'space-between', opacity: draggedWidget === 'cpu' ? 0.5 : 1 }}
       >
         {renderArrows('cpu')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
@@ -214,8 +200,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'ram')}
         onClick={() => !editMode && setIsRamModalOpen(true)} 
-        className="widget p-4" 
-        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'ram' ? 0.5 : 1 }}
+        className="widget p-4 flex-col" 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minHeight: '180px', display: 'flex', justifyContent: 'space-between', opacity: draggedWidget === 'ram' ? 0.5 : 1 }}
       >
         {renderArrows('ram')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
@@ -247,8 +233,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragStart={(e) => handleDragStart(e, 'storage')}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'storage')}
-        className="widget p-4" 
-        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'storage' ? 0.5 : 1 }}
+        className="widget p-4 flex-col" 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minHeight: '180px', display: 'flex', justifyContent: 'space-between', opacity: draggedWidget === 'storage' ? 0.5 : 1 }}
       >
         {renderArrows('storage')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
@@ -277,8 +263,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'network')}
         onClick={() => !editMode && setIsNetworkModalOpen(true)} 
-        className="widget p-4" 
-        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'network' ? 0.5 : 1 }}
+        className="widget p-4 flex-col" 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minHeight: '180px', display: 'flex', justifyContent: 'space-between', opacity: draggedWidget === 'network' ? 0.5 : 1 }}
       >
         {renderArrows('network')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
@@ -310,8 +296,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragStart={(e) => handleDragStart(e, 'system')}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'system')}
-        className="widget p-4" 
-        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'system' ? 0.5 : 1 }}
+        className="widget p-4 flex-col" 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minHeight: '180px', display: 'flex', justifyContent: 'space-between', opacity: draggedWidget === 'system' ? 0.5 : 1 }}
       >
         {renderArrows('system')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
@@ -353,8 +339,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragStart={(e) => handleDragStart(e, 'weather')}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'weather')}
-        className="widget p-4" 
-        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'weather' ? 0.5 : 1 }}
+        className="widget p-4 flex-col" 
+        style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minHeight: '180px', display: 'flex', justifyContent: 'space-between', opacity: draggedWidget === 'weather' ? 0.5 : 1 }}
       >
         {renderArrows('weather')}
         <div className="flex items-center justify-between mb-3" style={{ opacity: 0.9, color: 'var(--text-color)', marginTop: editMode ? '20px' : '0' }}>
@@ -392,16 +378,8 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       <CpuModal isOpen={isCpuModalOpen} onClose={() => setIsCpuModalOpen(false)} />
       <RamModal isOpen={isRamModalOpen} onClose={() => setIsRamModalOpen(false)} />
       <NetworkModal isOpen={isNetworkModalOpen} onClose={() => setIsNetworkModalOpen(false)} />
-      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <button onClick={() => scroll('left')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
-          <ChevronLeft size={24} />
-        </button>
-        <div className={`widgets-row ${className}`} ref={scrollRef} style={{ flex: 1, minWidth: 0, ...style }}>
-          {finalOrder.map(widgetId => widgetComponents[widgetId])}
-        </div>
-        <button onClick={() => scroll('right')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
-          <ChevronRight size={24} />
-        </button>
+      <div className={className} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px', width: '100%', ...style }}>
+        {finalOrder.map(widgetId => widgetComponents[widgetId])}
       </div>
     </>
   );
