@@ -9,8 +9,11 @@
     "ram",
     "storage",
     "network",
-    "system"
+    "system",
+    "weather"
   ],
   "mobileTheme": "dark_gray",
-  "themeMode": "system"
+  "themeMode": "system",
+  "weatherCity": "Rome",
+  "activeTheme": "dark_gray"
 }

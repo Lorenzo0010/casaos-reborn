@@ -165,7 +165,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'cpu')}
         onClick={() => !editMode && setIsCpuModalOpen(true)} 
-        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        className="widget p-4" 
         style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'cpu' ? 0.5 : 1 }}
       >
         {renderArrows('cpu')}
@@ -199,7 +199,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'ram')}
         onClick={() => !editMode && setIsRamModalOpen(true)} 
-        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        className="widget p-4" 
         style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'ram' ? 0.5 : 1 }}
       >
         {renderArrows('ram')}
@@ -232,7 +232,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragStart={(e) => handleDragStart(e, 'storage')}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'storage')}
-        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        className="widget p-4" 
         style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'storage' ? 0.5 : 1 }}
       >
         {renderArrows('storage')}
@@ -262,7 +262,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'network')}
         onClick={() => !editMode && setIsNetworkModalOpen(true)} 
-        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        className="widget p-4" 
         style={{ position: 'relative', cursor: editMode ? 'grab' : 'pointer', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'network' ? 0.5 : 1 }}
       >
         {renderArrows('network')}
@@ -295,7 +295,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragStart={(e) => handleDragStart(e, 'system')}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'system')}
-        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        className="widget p-4" 
         style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'system' ? 0.5 : 1 }}
       >
         {renderArrows('system')}
@@ -338,7 +338,7 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
         onDragStart={(e) => handleDragStart(e, 'weather')}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'weather')}
-        className={`widget p-4 ${editMode ? 'shake-animation' : ''}`} 
+        className="widget p-4" 
         style={{ position: 'relative', cursor: editMode ? 'grab' : 'default', margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', justifyContent: 'space-between', opacity: draggedWidget === 'weather' ? 0.5 : 1 }}
       >
         {renderArrows('weather')}
