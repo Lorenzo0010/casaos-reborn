@@ -120,6 +120,67 @@ router.get('/read', (req, res) => {
   }
 });
 
+// Helper for recursive size
+const getDirSize = (dirPath) => {
+  let totalSize = 0;
+  try {
+    const files = fs.readdirSync(dirPath);
+    for (const file of files) {
+      const fullPath = path.join(dirPath, file);
+      const stats = fs.statSync(fullPath);
+      if (stats.isDirectory()) {
+        totalSize += getDirSize(fullPath);
+      } else {
+        totalSize += stats.size;
+      }
+    }
+  } catch (e) {}
+  return totalSize;
+};
+
+// POST /api/files/size - Calculate total size of items
+router.post('/size', (req, res) => {
+  try {
+    const { items } = req.body;
+    let totalSize = 0;
+    if (items && Array.isArray(items)) {
+      for (const item of items) {
+        const resolved = resolvePath(item);
+        if (fs.existsSync(resolved)) {
+          const stats = fs.statSync(resolved);
+          if (stats.isDirectory()) {
+            totalSize += getDirSize(resolved);
+          } else {
+            totalSize += stats.size;
+          }
+        }
+      }
+    }
+    res.json({ size: totalSize });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/files/download-temp - Download and delete file
+router.get('/download-temp', (req, res) => {
+  try {
+    const targetPath = resolvePath(req.query.path);
+    if (!fs.existsSync(targetPath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    res.download(targetPath, (err) => {
+      if (!err) {
+        try {
+          fs.unlinkSync(targetPath);
+        } catch (e) {}
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // POST /api/files/write - Save text file content
 router.post('/write', (req, res) => {
   try {

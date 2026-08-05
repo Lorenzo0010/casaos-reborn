@@ -81,10 +81,7 @@ export default function FileManager({ togglePanel }) {
       if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
         openViewer(file);
       } else if (['txt', 'md', 'js', 'json', 'yml', 'yaml', 'css', 'html', 'log', 'env'].includes(ext)) {
-        if (file.size > 2 * 1024 * 1024) {
-          showAlert('Warning', 'File is too large to preview (Max 2MB). Please download it instead.', true);
-          return;
-        }
+
         openEditor(file);
       } else {
         showAlert('Unsupported', 'Preview not available for this file type. Please use the menu to download it.', true);
@@ -141,17 +138,72 @@ export default function FileManager({ togglePanel }) {
     setViewerFile({ ...file, url });
   };
 
+  const processDownload = async (filesList) => {
+    if (filesList.length === 0) return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const items = filesList.map(f => f.path);
+      
+      const sizeRes = await axios.post('/api/files/size', { items }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const totalSize = sizeRes.data.size;
+      
+      if (totalSize > 1024 * 1024 * 1024) {
+        const confirmed = await showConfirm('Large Download', `The selected items are larger than 1GB (${formatSize(totalSize)}). Compressing and downloading might take a long time. Do you want to proceed?`);
+        if (!confirmed) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (filesList.length === 1 && !filesList[0].isDir) {
+         const url = `/api/files/read?path=${encodeURIComponent(filesList[0].path)}&token=${token}`;
+         const a = document.createElement('a');
+         a.href = url;
+         a.download = filesList[0].name;
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+         setLoading(false);
+         return;
+      }
+
+      const archiveName = filesList.length === 1 ? `${filesList[0].name}.zip` : 'CasaOS_Export.zip';
+      
+      const res = await axios.post('/api/files/archive', {
+        items,
+        destination: currentPath,
+        archiveName
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (res.data.success) {
+        const sep = currentPath.includes('\\') ? '\\' : '/';
+        const zipPath = currentPath + (currentPath.endsWith(sep) ? '' : sep) + archiveName;
+        const url = `/api/files/download-temp?path=${encodeURIComponent(zipPath)}&token=${token}`;
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = archiveName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        showAlert('Success', `Download for ${archiveName} started. The compressed archive will be automatically deleted from the server when finished.`);
+        setTimeout(fetchFiles, 2000);
+      }
+    } catch (err) {
+      showAlert('Error', 'Failed to process download: ' + err.message, true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const downloadFile = (file) => {
-    const token = localStorage.getItem('token');
-    const url = `/api/files/read?path=${encodeURIComponent(file.path)}&token=${token}`;
-    
-    // Direct link download is much faster and doesn't crash on large files like blob() does
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    processDownload([file]);
   };
 
   const deleteFile = async (file) => {
@@ -197,41 +249,13 @@ export default function FileManager({ togglePanel }) {
     }
   };
 
-  const bulkDownload = async () => {
-    // Filter out directories for download as requested
-    const selectedFilesList = files.filter(f => selectedFiles.has(f.path) && !f.isDir);
+  const bulkDownload = () => {
+    const selectedFilesList = files.filter(f => selectedFiles.has(f.path));
     if (selectedFilesList.length === 0) {
-      showAlert('Error', 'No downloadable files selected (folders are skipped).', true);
+      showAlert('Error', 'No files selected for download.', true);
       return;
     }
-    
-    try {
-      const token = localStorage.getItem('token');
-      const items = selectedFilesList.map(f => f.path);
-      const res = await axios.post('/api/files/archive', {
-        items,
-        destination: currentPath,
-        archiveName: 'CasaOS_Export.zip'
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (res.data.success) {
-        // Trigger download for CasaOS_Export.zip
-        const url = `/api/files/read?path=${encodeURIComponent(currentPath + (currentPath.endsWith('/') || currentPath.endsWith('\\') ? '' : '/') + 'CasaOS_Export.zip')}&token=${token}`;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'CasaOS_Export.zip';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        showAlert('Success', 'CasaOS_Export.zip created in this folder and download started. You can safely delete the file when done.');
-        fetchFiles();
-      }
-    } catch (err) {
-      showAlert('Error', 'Failed to pack files for download: ' + err.message, true);
-    }
+    processDownload(selectedFilesList);
   };
 
   const handleRename = async () => {
@@ -400,7 +424,7 @@ export default function FileManager({ togglePanel }) {
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button className="btn-icon-only flex-shrink-0" onClick={fetchFiles} title="Refresh">
+              <button className="btn-icon-only flex-shrink-0" onClick={() => fetchFiles()} title="Refresh">
                 <RefreshCw size={18} className={loading ? 'spin' : ''} />
               </button>
               <button className="btn-icon-only flex-shrink-0" onClick={() => createItem(true)} title="New Folder">
@@ -450,7 +474,7 @@ export default function FileManager({ togglePanel }) {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.05)' }}>
                   <th style={{ padding: '12px 20px', width: '40px' }}>
-                    <input type="checkbox" onChange={(e) => {
+                    <input type="checkbox" className="themed-checkbox" onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedFiles(new Set(files.map(f => f.path)));
                       } else {
@@ -473,7 +497,7 @@ export default function FileManager({ togglePanel }) {
                 {files.map((file) => (
                   <tr key={file.path} style={{ borderBottom: '1px solid var(--card-border)', transition: 'background 0.2s', backgroundColor: selectedFiles.has(file.path) ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }} className="file-row">
                     <td style={{ padding: '12px 20px' }} onClick={(e) => toggleSelection(file, e)}>
-                      <input type="checkbox" checked={selectedFiles.has(file.path)} onChange={(e) => toggleSelection(file, e)} />
+                      <input type="checkbox" className="themed-checkbox" checked={selectedFiles.has(file.path)} onChange={(e) => toggleSelection(file, e)} />
                     </td>
                     <td style={{ padding: '12px 20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => handleItemClick(file)}>
@@ -503,11 +527,9 @@ export default function FileManager({ togglePanel }) {
                           boxShadow: 'var(--shadow-lg)', minWidth: '150px',
                           background: 'var(--card-bg)', border: '1px solid var(--border)'
                         }}>
-                          {!file.isDir && (
-                            <button className="menu-item" onClick={(e) => { e.stopPropagation(); downloadFile(file); setActiveMenu(null); }}>
-                              <Download size={14} /> Download
-                            </button>
-                          )}
+                          <button className="menu-item" onClick={(e) => { e.stopPropagation(); downloadFile(file); setActiveMenu(null); }}>
+                            <Download size={14} /> Download
+                          </button>
                           {!file.isDir && (
                             <button className="menu-item" onClick={(e) => { e.stopPropagation(); openEditor(file); setActiveMenu(null); }}>
                               <Edit size={14} /> Edit

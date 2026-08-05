@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HardDrive, ArrowDown, ArrowUp, ChevronRight, ChevronLeft, Cpu, Activity, Clock, Monitor, Server, Smartphone } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -14,6 +14,13 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
   const [isNetworkModalOpen, setIsNetworkModalOpen] = useState(false);
   const [draggedWidget, setDraggedWidget] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction === 'left' ? -300 : 300, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -131,12 +138,20 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
 
   if (!stats) {
     return (
-      <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
-        {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="widget p-4 flex items-center justify-center" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', opacity: 0.5 }}>
-            <div className="spin" style={{ width: '24px', height: '24px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></div>
-          </div>
-        ))}
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <button onClick={() => scroll('left')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
+          <ChevronLeft size={24} />
+        </button>
+        <div className={`widgets-row ${className}`} ref={scrollRef} style={{ flex: 1, minWidth: 0, ...style }}>
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="widget p-4 flex items-center justify-center" style={{ margin: 0, padding: '24px', minWidth: '260px', minHeight: '180px', flex: '0 0 auto', opacity: 0.5 }}>
+              <div className="spin" style={{ width: '24px', height: '24px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></div>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => scroll('right')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
+          <ChevronRight size={24} />
+        </button>
       </div>
     );
   }
@@ -377,8 +392,16 @@ export default function WidgetsPanel({ className = '', style = {}, editMode = fa
       <CpuModal isOpen={isCpuModalOpen} onClose={() => setIsCpuModalOpen(false)} />
       <RamModal isOpen={isRamModalOpen} onClose={() => setIsRamModalOpen(false)} />
       <NetworkModal isOpen={isNetworkModalOpen} onClose={() => setIsNetworkModalOpen(false)} />
-      <div className={`widgets-row ${className}`} style={{ width: '100%', ...style }}>
-        {finalOrder.map(widgetId => widgetComponents[widgetId])}
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <button onClick={() => scroll('left')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
+          <ChevronLeft size={24} />
+        </button>
+        <div className={`widgets-row ${className}`} ref={scrollRef} style={{ flex: 1, minWidth: 0, ...style }}>
+          {finalOrder.map(widgetId => widgetComponents[widgetId])}
+        </div>
+        <button onClick={() => scroll('right')} className="btn-icon-only" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '48px', height: '48px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
+          <ChevronRight size={24} />
+        </button>
       </div>
     </>
   );
