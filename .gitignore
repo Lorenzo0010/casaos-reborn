@@ -3,6 +3,5 @@ dist/
 .env
 .DS_Store
 .agents/
-docker-compose.local.yml
 local-config/
 documentazione_personale/
