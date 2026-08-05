@@ -22,6 +22,14 @@ const checkUpdates = async (io) => {
     console.log('[Updater] Checking for Docker image updates...');
 
     const containers = await docker.listContainers({ all: true });
+    const currentContainerIds = containers.map(c => c.Id);
+
+    // Pulisce le notifiche di container non più esistenti (es. dopo un update in cui l'ID cambia)
+    for (const cachedId of Object.keys(global.availableUpdates)) {
+      if (!currentContainerIds.includes(cachedId)) {
+        delete global.availableUpdates[cachedId];
+      }
+    }
     
     await Promise.all(containers.map(async (container) => {
       const containerInfo = await docker.getContainer(container.Id).inspect();
