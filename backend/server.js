@@ -55,7 +55,7 @@ const io = new Server(server, {
 });
 
 // Environment variables
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev';
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'casaos';
