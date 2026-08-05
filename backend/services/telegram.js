@@ -203,7 +203,7 @@ const initBot = (token, chatId) => {
            const payload = JSON.stringify({ image: u.image });
            const reqOpts = {
              hostname: '127.0.0.1',
-             port: 3000,
+             port: 80,
              path: `/api/docker/containers/${u.id}/update`,
              method: 'POST',
              headers: {

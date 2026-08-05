@@ -6,7 +6,7 @@ services:
     pid: "host"
     restart: always
     ports:
-      - "1111:3000"
+      - "80:80"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/casaos-reborn-config:/app/backend/data
@@ -14,7 +14,7 @@ services:
       - /media:/media
       - /mnt:/mnt
     environment:
-      - PORT=3000
+      - PORT=80
       - JWT_SECRET=supersecretcasaoskey
       - ADMIN_USER=admin
       - ADMIN_PASS=casaos

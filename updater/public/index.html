@@ -624,7 +624,7 @@
 
         // Set UI values
         document.getElementById('webUIScheme').value = containerData.webUI.scheme;
-        document.getElementById('webUIPort').value = containerData.webUI.port;
+        document.getElementById('webUIPort').value = containerData.webUI.port || (parsedPorts.length > 0 ? parsedPorts[0].hostPort : '80');
         document.getElementById('webUIPath').value = containerData.webUI.path;
         document.getElementById('networkMode').value = containerData.networkMode;
         document.getElementById('pidMode').value = containerData.pidMode;
@@ -872,7 +872,7 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const returnUrl = urlParams.get('returnUrl');
                 setTimeout(() => {
-                  window.location.href = returnUrl ? returnUrl : window.location.origin.replace(':1112', ':1111');
+                  window.location.href = returnUrl ? returnUrl : window.location.origin.replace(':1112', ':80');
                 }, 3000);
               }
             }

@@ -30,5 +30,5 @@ COPY backend/ ./
 # Copy built frontend assets to be served by the backend
 COPY --from=frontend-builder /app/frontend/dist ./public
 
-EXPOSE 3000
+EXPOSE 80
 CMD ["node", "server.js"]
