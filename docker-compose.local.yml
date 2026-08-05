@@ -8,7 +8,7 @@ services:
     pid: "host"
     restart: always
     ports:
-      - "1111:3000"
+      - "80:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./local-config:/app/backend/data
@@ -51,4 +51,4 @@ services:
         en_us: A lightweight, modern, and powerful web-based interface for managing Docker containers.
       icon: https://raw.githubusercontent.com/Lorenzo0010/casaos-reborn/main/frontend/public/favicon.svg
       category: Utilities
-      port_map: "1111"
+      port_map: "80"
