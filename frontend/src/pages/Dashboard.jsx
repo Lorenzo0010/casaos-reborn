@@ -253,21 +253,29 @@ export default function Dashboard({ togglePanel, activePanel }) {
     try {
       const port1112Url = `${window.location.protocol}//${window.location.hostname}:1112/api/update`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes timeout
+      // Timeout is just for the fetch request connection, not the whole update process
+      const timeoutId = setTimeout(() => controller.abort(), 5000); 
       
-      await fetch(port1112Url, {
+      const res = await fetch(port1112Url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+      
+      if (!res.ok) {
+        throw new Error('Updater returned ' + res.status);
+      }
+      // Se va a buon fine, non facciamo nulla.
+      // Il container principale verrà spento a breve dall'updater (porta 1112).
+      // Quando il container si spegne, il socket si disconnette e scatta startHealthPolling()!
     } catch (e) {
-      // Expected: the server restarts mid-request, connection drops
-      console.log('System update request sent.');
-    } finally {
-      // Start polling for the server to come back online
-      startHealthPolling();
+      console.log('Update request failed or aborted:', e);
+      // Se la chiamata fallisce (es. updater spento), sblocchiamo l'interfaccia
+      selfUpdatingRef.current = false;
+      setSelfUpdating(false);
+      showAlert('Errore', 'Impossibile contattare l\'updater di sistema sulla porta 1112.', true);
     }
   };
 
