@@ -1,0 +1,32 @@
+name: Create Stable Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versione della release (es. v1.0.0)'
+        required: true
+        type: string
+      body:
+        description: 'Descrizione / Changelog della release'
+        required: false
+        type: string
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.event.inputs.version }}" \
+            --title "Release ${{ github.event.inputs.version }}" \
+            --notes "${{ github.event.inputs.body }}" \
+            --target main
