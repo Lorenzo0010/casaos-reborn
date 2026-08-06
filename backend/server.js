@@ -138,7 +138,7 @@ app.use('/api/store', authenticateToken, storeRoutes);
 
 const pty = require('node-pty');
 const os = require('os');
-const { initUpdater } = require('./services/updater');
+const { initUpdater, updateCompanionUpdater } = require('./services/updater');
 const { initBroadcaster } = require('./services/broadcaster');
 const { reloadBot } = require('./services/telegram');
 const { loadState } = require('./utils/stateManager');
@@ -148,6 +148,9 @@ loadState();
 
 // Initialize the background updater
 initUpdater(io);
+
+// Check and update the companion updater if necessary
+updateCompanionUpdater();
 
 // Initialize the websocket broadcaster
 initBroadcaster(io);

@@ -155,8 +155,82 @@ const initUpdater = (io) => {
   }, 10000);
 };
 
+const updateCompanionUpdater = async () => {
+  try {
+    const containerName = 'casaos-updater';
+    const image = 'ghcr.io/lorenzo0010/casaos-updater:latest';
+    
+    const containers = await docker.listContainers({ all: true });
+    const updaterContainer = containers.find(c => c.Names.includes(`/${containerName}`));
+    
+    if (!updaterContainer) {
+      console.log(`[Updater] ${containerName} container not found, skipping update check.`);
+      return;
+    }
+
+    const containerInfo = await docker.getContainer(updaterContainer.Id).inspect();
+    const oldImageId = containerInfo.Image;
+
+    console.log(`[Updater] Checking for updates for ${containerName}...`);
+
+    await new Promise((resolve, reject) => {
+      docker.pull(image, (err, stream) => {
+        if (err) return reject(err);
+        docker.modem.followProgress(stream, (err, output) => {
+          if (err) return reject(err);
+          resolve(output);
+        });
+      });
+    });
+
+    const newImageInspect = await docker.getImage(image).inspect();
+    const newImageId = newImageInspect.Id;
+
+    if (oldImageId !== newImageId) {
+      console.log(`[Updater] New version found for ${containerName}. Updating...`);
+      
+      const oldContainer = docker.getContainer(updaterContainer.Id);
+      try { await oldContainer.stop({ t: 10 }); } catch (e) {}
+      try { await oldContainer.remove({ force: true }); } catch (e) {}
+
+      const createOptions = {
+        name: containerName,
+        Image: image,
+        Env: containerInfo.Config.Env,
+        Labels: containerInfo.Config.Labels,
+        ExposedPorts: containerInfo.Config.ExposedPorts,
+        Hostname: containerInfo.Config.Hostname,
+        Cmd: containerInfo.Config.Cmd,
+        HostConfig: containerInfo.HostConfig,
+        NetworkingConfig: {
+          EndpointsConfig: containerInfo.NetworkSettings.Networks
+        }
+      };
+
+      if (createOptions.NetworkingConfig?.EndpointsConfig) {
+        for (const net of Object.values(createOptions.NetworkingConfig.EndpointsConfig)) {
+          delete net.MacAddress;
+        }
+      }
+
+      const newContainer = await docker.createContainer(createOptions);
+      await newContainer.start();
+      console.log(`[Updater] ${containerName} successfully updated and started.`);
+      
+      try {
+        await docker.pruneImages({ filters: { dangling: ["true"] } });
+      } catch(e) {}
+    } else {
+      console.log(`[Updater] ${containerName} is already up to date.`);
+    }
+  } catch (error) {
+    console.error(`[Updater] Error updating ${containerName}:`, error.message);
+  }
+};
+
 module.exports = {
   initUpdater,
   checkUpdates,
-  getUpdaterStatus
+  getUpdaterStatus,
+  updateCompanionUpdater
 };
