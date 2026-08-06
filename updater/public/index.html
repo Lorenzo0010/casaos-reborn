@@ -325,6 +325,13 @@
       <div class="update-hero" id="quickUpdateSection">
         <h2>🚀 System Update</h2>
         <p>Pull the latest image and restart your CasaOS Reborn container with the current configuration.</p>
+        <div style="margin: 20px 0; display: flex; flex-direction: column; align-items: center;">
+          <label for="updateChannelSelect" style="font-weight: bold; margin-bottom: 8px; color: var(--text-color);">Update Channel:</label>
+          <select id="updateChannelSelect" style="padding: 10px; width: 250px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-color); font-size: 14px;">
+            <option value="latest">Stable (Recommended)</option>
+            <option value="dev">Dev (Experimental)</option>
+          </select>
+        </div>
         <button id="quickUpdateBtn" class="btn-update-now" onclick="triggerQuickUpdate()">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Update Now
@@ -553,19 +560,36 @@
         const info = await res.json();
         
         // Parse Ports
-        const parsedPorts = [];
-        const portBindings = info?.HostConfig?.PortBindings || {};
-        for (const [key, valArray] of Object.entries(portBindings)) {
-          const [cPort, proto] = key.split('/');
-          if (valArray && valArray.length > 0) {
-            parsedPorts.push({
-              hostPort: valArray[0].HostPort || '',
+        if (info.HostConfig.PortBindings) {
+        Object.entries(info.HostConfig.PortBindings).forEach(([key, hostBindings]) => {
+          if (hostBindings && hostBindings.length > 0) {
+            const [cPort, proto] = key.split('/');
+            containerData.ports.push({
               containerPort: cPort,
-              protocol: proto
+              protocol: proto,
+              hostPort: hostBindings[0].HostPort
             });
           }
-        }
-        
+        });
+      }
+
+      // Pre-select the update channel based on URL or current container tag
+      const updateParams = new URLSearchParams(window.location.search);
+      const urlTag = updateParams.get('tag');
+      
+      let currentTag = 'latest';
+      if (info.Config.Image && info.Config.Image.includes(':')) {
+        currentTag = info.Config.Image.split(':')[1];
+      }
+      
+      const targetTag = urlTag || currentTag;
+      const selectEl = document.getElementById('updateChannelSelect');
+      if (targetTag === 'dev') {
+        selectEl.value = 'dev';
+      } else {
+        selectEl.value = 'latest';
+      }
+
         // Parse Volumes
         let parsedVolumes = [];
         if (info?.HostConfig?.Binds && info.HostConfig.Binds.length > 0) {
@@ -804,8 +828,8 @@
           'casaos.reborn.web.path': containerData.webUI.path || '/'
       };
 
-      const updateParams = new URLSearchParams(window.location.search);
-      const tag = updateParams.get('tag');
+      const selectEl = document.getElementById('updateChannelSelect');
+      const tag = selectEl ? selectEl.value : null;
 
       const payload = {
         imageTag: tag,
