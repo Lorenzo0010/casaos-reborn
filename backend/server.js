@@ -57,8 +57,7 @@ const io = new Server(server, {
 // Environment variables
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev';
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'casaos';
+const { isSetupComplete, setupUser, login } = require('./utils/authManager');
 
 app.use(cors());
 app.use(express.json());
@@ -78,11 +77,35 @@ app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
 // Basic Auth Route
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    const token = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '24h' });
-    return res.json({ token });
+  if (!isSetupComplete()) {
+    return res.status(403).json({ error: 'setup_required', setupRequired: true });
+  }
+
+  try {
+    if (login(username, password)) {
+      const token = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '24h' });
+      return res.json({ token });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
   return res.status(401).json({ error: 'Invalid credentials' });
+});
+
+// Initial Setup Route
+app.post('/api/setup', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password || password.length < 6) {
+    return res.status(400).json({ error: 'Username and password (min 6 chars) are required.' });
+  }
+
+  try {
+    setupUser(username, password);
+    const token = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '24h' });
+    return res.json({ success: true, token });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
 });
 
 // Middleware to verify JWT
@@ -118,6 +141,10 @@ const os = require('os');
 const { initUpdater } = require('./services/updater');
 const { initBroadcaster } = require('./services/broadcaster');
 const { reloadBot } = require('./services/telegram');
+const { loadState } = require('./utils/stateManager');
+
+// Load persistent state
+loadState();
 
 // Initialize the background updater
 initUpdater(io);
@@ -160,11 +187,28 @@ io.on('connection', (socket) => {
       env: process.env
     });
 
+    let idleTimeout = setTimeout(() => {
+      try {
+        ptyProcess.write('exit\r');
+        setTimeout(() => ptyProcess.kill(), 1000);
+        socket.disconnect();
+      } catch (e) {}
+    }, 60 * 60 * 1000); // 1 hour idle timeout
+
     ptyProcess.on('data', function(data) {
       socket.emit('terminal.incomingData', data);
     });
 
     socket.on('terminal.keystroke', (data) => {
+      clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(() => {
+        try {
+          ptyProcess.write('exit\r');
+          setTimeout(() => ptyProcess.kill(), 1000);
+          socket.disconnect();
+        } catch (e) {}
+      }, 60 * 60 * 1000);
+
       ptyProcess.write(data);
     });
     
@@ -175,8 +219,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-      // console.log('Terminal user disconnected:', socket.id);
-      ptyProcess.kill();
+      clearTimeout(idleTimeout);
+      try {
+        ptyProcess.write('exit\r');
+        setTimeout(() => ptyProcess.kill(), 1000);
+      } catch (e) {}
     });
   } else {
     socket.on('disconnect', () => {

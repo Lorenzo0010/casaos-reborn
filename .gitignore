@@ -5,3 +5,5 @@ dist/
 .agents/
 local-config/
 documentazione_personale/
+backend/data/
+local-scratch/

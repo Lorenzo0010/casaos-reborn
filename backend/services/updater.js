@@ -1,5 +1,6 @@
 const Docker = require('dockerode');
 const docker = new Docker();
+const { saveState } = require('../utils/stateManager');
 
 // In-memory cache for available updates
 // Format: { containerId: { name, currentImage, newImage, timestamp } }
@@ -31,7 +32,7 @@ const checkUpdates = async (io) => {
       }
     }
     
-    await Promise.all(containers.map(async (container) => {
+    for (const container of containers) {
       const containerInfo = await docker.getContainer(container.Id).inspect();
       let fullImage = containerInfo.Config.Image;
       
@@ -58,16 +59,19 @@ const checkUpdates = async (io) => {
 
         const oldImageId = containerInfo.Image; // The sha256 of the image currently running
 
-        // Eseguiamo il pull dell'immagine (se non ci sono update, finisce quasi istantaneamente)
-        await new Promise((resolve, reject) => {
-          docker.pull(fullImage, (err, stream) => {
-            if (err) return reject(err);
-            docker.modem.followProgress(stream, (err, output) => {
+        // Eseguiamo il pull dell'immagine (se non ci sono update, finisce quasi istantaneamente) con timeout
+        await Promise.race([
+          new Promise((resolve, reject) => {
+            docker.pull(fullImage, (err, stream) => {
               if (err) return reject(err);
-              resolve(output);
+              docker.modem.followProgress(stream, (err, output) => {
+                if (err) return reject(err);
+                resolve(output);
+              });
             });
-          });
-        });
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Pull timeout')), 5 * 60 * 1000))
+        ]);
 
         // Otteniamo le info dell'immagine appena scaricata o verificata
         const newImageInspect = await docker.getImage(fullImage).inspect();
@@ -105,14 +109,24 @@ const checkUpdates = async (io) => {
       } catch (err) {
         console.warn(`[Updater] Failed to check update for ${fullImage}:`, err.message);
       }
-    }));
+    }
 
-    // Pulisce le immagini dangling (inutilizzate) per non accumulare spazzatura (ad es. le vecchie immagini dopo un update)
-    console.log('[Updater] Pruning unused dangling images...');
-    await docker.pruneImages({ filters: { dangling: ["true"] } });
+    // Pulisce le immagini dangling (inutilizzate) per non accumulare spazzatura
+    // Viene eseguito solo se abbiamo trovato degli aggiornamenti (altrimenti rischia di disturbare build locali)
+    if (Object.keys(global.availableUpdates).length > 0) {
+      console.log('[Updater] Pruning unused dangling images...');
+      try {
+        await docker.pruneImages({ filters: { dangling: ["true"] } });
+      } catch (err) {
+        console.warn('[Updater] Prune images failed:', err.message);
+      }
+    }
 
     console.log('[Updater] Check completed. Found:', Object.keys(global.availableUpdates).length);
     
+    // Save state after checking updates
+    saveState();
+
     currentTask = null;
     
     if (io) {
@@ -130,10 +144,10 @@ const checkUpdates = async (io) => {
 };
 
 const initUpdater = (io) => {
-  // Start the background job every 5 minutes (300000 ms)
+  // Start the background job every 6 hours
   setInterval(() => {
     checkUpdates(io);
-  }, 5 * 60 * 1000);
+  }, 6 * 60 * 60 * 1000);
 
   // Run first check 10 seconds after boot
   setTimeout(() => {

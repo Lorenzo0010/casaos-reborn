@@ -62,6 +62,7 @@ To *use* the backend container, the only requirements are **Docker** and **Docke
 ```yaml
 services:
   casaos-reborn:
+    # Use :latest for stable releases, or :dev for automatic daily builds (prerelease)
     image: ghcr.io/lorenzo0010/casaos-reborn:latest
     container_name: casaos-reborn
     privileged: true
@@ -79,8 +80,6 @@ services:
     environment:
       - PORT=3000
       - JWT_SECRET=supersecretcasaoskey
-      - ADMIN_USER=admin
-      - ADMIN_PASS=casaos
       # The "Home" shortcut defaults to /home. Set this if you want to target a specific user folder (e.g. /home/username)
       - HOST_HOMEDIR=/home
 ```
@@ -89,7 +88,7 @@ services:
    ```bash
    docker-compose up -d
    ```
-4. Access the web interface at `http://<your-server-ip>:1111` and log in with your credentials.
+4. Access the web interface at `http://<your-server-ip>:1111`. You will be greeted by the **First Boot Setup Wizard** to create your admin account.
 
 ---
 
@@ -146,7 +145,7 @@ If you want to run the UI locally on your development machine (e.g., Windows/mac
 
 ## 🔒 Security & Authentication
 
-The application is protected by a JWT-based authentication system. By default, you can configure your credentials using the `ADMIN_USER` and `ADMIN_PASS` environment variables in your deployment configuration.
+The application is protected by a JWT-based authentication system. At the very first launch, the WebUI will prompt you with a **First Boot Setup Wizard** to create your admin account. Your credentials are encrypted and stored safely on the host machine.
 
 ---
 

@@ -9,6 +9,8 @@ const Docker = require('dockerode');
 const { checkUpdates, getUpdaterStatus } = require('../services/updater');
 const { buildCasaOSCompose } = require('../utils/yamlBuilder');
 const { syncWithCasaOS, unsyncFromCasaOS } = require('../utils/casaosSync');
+const { saveState } = require('../utils/stateManager');
+const { isLocked, withContainerLock } = require('../utils/containerLocks');
 
 // Base directory for CasaOS compose apps
 const CASAOS_APPS_DIR = process.env.CASAOS_APPS_DIR || (process.platform === 'win32' ? path.join(os.homedir(), 'casaos-apps') : '/var/lib/casaos/apps');
@@ -150,6 +152,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
     req.body.name = containerName;
     const oldImage = oldInspect.Config.Image;
     
+    withContainerLock(containerName, async () => {
     const taskId = `recreate_${id}`;
     
     global.activeTasks[taskId] = {
@@ -161,6 +164,7 @@ router.post('/containers/:id/recreate', async (req, res) => {
       status: 'Generating compose file...',
       progressDetail: null
     };
+    saveState();
 
     if (io) io.emit('container.recreate.progress', { id, name: containerName, image: fullImage, status: 'Generating compose file...', taskId });
 
@@ -238,18 +242,28 @@ router.post('/containers/:id/recreate', async (req, res) => {
       delete global.availableUpdates[id];
       if (io) io.emit('updater.results', Object.values(global.availableUpdates));
     }
-    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (global.activeTasks[taskId]) {
+      delete global.activeTasks[taskId];
+      saveState();
+    }
     if (io) io.emit('container.recreate.success', { 
       id: newContainerInfo ? newContainerInfo.Id : id, 
       oldId: id, 
       name: containerName, 
       taskId 
     });
+    }).catch(error => {
+      console.error('Error recreating container (background):', error);
+      const taskId = `recreate_${id}`;
+      if (global.activeTasks[taskId]) {
+        delete global.activeTasks[taskId];
+        saveState();
+      }
+      if (io) io.emit('container.recreate.error', { id, name: req.body.name || id, error: error.message, taskId });
+    });
   } catch (error) {
-    console.error('Error recreating container:', error);
-    const taskId = `recreate_${id}`;
-    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
-    if (io) io.emit('container.recreate.error', { id, name: req.body.name || id, error: error.message, taskId });
+    console.error('Error in recreate route (sync):', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -270,7 +284,12 @@ router.post('/containers/:id/update', async (req, res) => {
     if (!image) {
       image = oldInspect.Config.Image;
     }
+    
+    if (isLocked(containerName)) {
+        return res.status(409).json({ error: `An operation is already in progress for container: ${containerName}` });
+    }
 
+    withContainerLock(containerName, async () => {
     const taskId = `recreate_${id}`;
     
     global.activeTasks[taskId] = {
@@ -282,6 +301,7 @@ router.post('/containers/:id/update', async (req, res) => {
       status: 'Inizializzazione aggiornamento...',
       progressDetail: null
     };
+    saveState();
 
     const projectName = oldInspect.Config.Labels?.['com.docker.compose.project'];
     
@@ -330,7 +350,10 @@ router.post('/containers/:id/update', async (req, res) => {
           delete global.availableUpdates[id];
           if (io) io.emit('updater.results', Object.values(global.availableUpdates));
         }
-        if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+        if (global.activeTasks[taskId]) {
+          delete global.activeTasks[taskId];
+          saveState();
+        }
         if (io) io.emit('container.recreate.success', { id, name: containerName, taskId });
         return;
       }
@@ -436,13 +459,23 @@ router.post('/containers/:id/update', async (req, res) => {
       if (io) io.emit('updater.results', Object.values(global.availableUpdates));
     }
 
-    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (global.activeTasks[taskId]) {
+      delete global.activeTasks[taskId];
+      saveState();
+    }
     if (io) io.emit('container.recreate.success', { id: newContainerId, oldId: id, name: containerName, taskId });
+    }).catch(error => {
+      console.error('Error updating container (background):', error);
+      const taskId = `recreate_${id}`;
+      if (global.activeTasks[taskId]) {
+        delete global.activeTasks[taskId];
+        saveState();
+      }
+      if (io) io.emit('container.recreate.error', { id, error: error.message, taskId });
+    });
   } catch (error) {
-    console.error('Error updating container:', error);
-    const taskId = `recreate_${id}`;
-    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
-    if (io) io.emit('container.recreate.error', { id, error: error.message, taskId });
+    console.error('Error in update route (sync):', error);
+    if (!res.headersSent) res.status(500).json({ error: error.message });
   }
 });
 
@@ -467,6 +500,12 @@ router.post('/containers/:id/:action', async (req, res) => {
     if ((containerName === 'casaos-reborn' || containerName === 'casaos-updater') && (action === 'stop' || action === 'delete')) {
       return res.status(403).json({ error: "Azione negata: Non puoi arrestare o eliminare i container di sistema di CasaOS Reborn per evitare danni irreparabili." });
     }
+    
+    if (isLocked(containerName)) {
+      return res.status(409).json({ error: `An operation is already in progress for container: ${containerName}` });
+    }
+    
+    await withContainerLock(containerName, async () => {
     
     if (action === 'start') await container.start();
     else if (action === 'stop') await container.stop();
@@ -500,9 +539,10 @@ router.post('/containers/:id/:action', async (req, res) => {
          await container.remove({ force: true });
       }
     }
-    else return res.status(400).json({ error: 'Invalid action' });
+    else throw new Error('Invalid action');
     
     res.json({ success: true, action, id });
+    }); // end withContainerLock
   } catch (error) {
     let errorMsg = error.message;
     // Se l'engine Docker restituisce un 404 durante l'avvio, spesso è dovuto a una rete o un volume eliminato.
@@ -550,6 +590,8 @@ router.post('/containers/create', async (req, res) => {
 
     res.status(202).json({ success: true, message: 'Creation started' });
     req.body.name = containerName;
+    
+    withContainerLock(containerName, async () => {
     const taskId = `create_${containerName}`;
     
     global.activeTasks[taskId] = {
@@ -560,6 +602,7 @@ router.post('/containers/create', async (req, res) => {
       status: 'Pulling image...',
       progressDetail: null
     };
+    saveState();
 
     // Always pull the image
     if (io) io.emit('container.create.progress', global.activeTasks[taskId]);
@@ -657,17 +700,27 @@ router.post('/containers/create', async (req, res) => {
       (c.Labels && c.Labels['com.docker.compose.project'] === containerName)
     );
     
-    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
+    if (global.activeTasks[taskId]) {
+      delete global.activeTasks[taskId];
+      saveState();
+    }
     if (io) io.emit('container.create.success', { 
       id: newContainerInfo ? newContainerInfo.Id : containerName, 
       name: containerName, 
       taskId 
     });
+    }).catch(error => {
+      console.error('Error creating container (background):', error);
+      const taskId = `create_${containerName}`;
+      if (global.activeTasks[taskId]) {
+        delete global.activeTasks[taskId];
+        saveState();
+      }
+      if (io) io.emit('container.create.error', { name, error: error.message, taskId });
+    });
   } catch (error) {
-    console.error('Error creating container:', error);
-    const taskId = `create_${(name || '').replace('/', '')}`;
-    if (global.activeTasks[taskId]) delete global.activeTasks[taskId];
-    if (io) io.emit('container.create.error', { name, error: error.message, taskId });
+    console.error('Error in create route (sync):', error);
+    if (!res.headersSent) res.status(500).json({ error: error.message });
   }
 });
 

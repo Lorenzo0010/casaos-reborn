@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { Play, Square, CheckSquare, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu, Github } from 'lucide-react';
+import { Play, Square, CheckSquare, Settings, Loader, Pin, GripHorizontal, ChevronUp, ChevronDown, Edit, Check, FileText, PlusCircle, Menu, Github, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContainerSettingsModal from '../components/ContainerSettingsModal';
 import LogsModal from '../components/LogsModal';
@@ -117,6 +117,23 @@ export default function Dashboard({ togglePanel, activePanel }) {
     fetchContainers();
     fetchSystemUpdate();
   }, []);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    await fetchContainers();
+    await fetchSystemUpdate();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('/api/docker/check-updates', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // showAlert('Aggiornamento', 'Ricerca aggiornamenti avviata...', false);
+    } catch (err) {
+      console.error('Failed to trigger update check:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -493,6 +510,15 @@ export default function Dashboard({ togglePanel, activePanel }) {
         </h1>
 
         <div className="flex items-center gap-2">
+          <button
+            className="btn-icon-only"
+            onClick={handleRefresh}
+            title="Refresh"
+            disabled={loading}
+            style={{ opacity: loading ? 0.5 : 1 }}
+          >
+            <RefreshCw size={24} className={loading ? 'spin' : ''} />
+          </button>
           <Link
             to="/new"
             className="btn-icon-only"

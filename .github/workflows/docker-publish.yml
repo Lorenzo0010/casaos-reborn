@@ -4,10 +4,21 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Seleziona il tipo di build (Dev = automatico, Stable = manuale per il rilascio)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stable
 
 env:
   REGISTRY: ghcr.io
@@ -44,13 +55,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Determine Docker Tags
+        id: env_setup
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.build_type }}" = "stable" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            echo "tag=dev" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ matrix.image }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.env_setup.outputs.tag }}
+            type=ref,event=tag
             type=sha,format=short
 
       - name: Build and push Docker image

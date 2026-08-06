@@ -1,30 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LogIn } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 
 export default function Login({ setToken }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSetupMode, setIsSetupMode] = useState(false);
 
-  const handleLogin = async (e) => {
+  useEffect(() => {
+    // Check if setup is required on mount
+    axios.post('/api/login', { username: '', password: '' }).catch(err => {
+      if (err.response && err.response.data.setupRequired) {
+        setIsSetupMode(true);
+      }
+    });
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('/api/login', { username, password });
+      const endpoint = isSetupMode ? '/api/setup' : '/api/login';
+      const res = await axios.post(endpoint, { username, password });
       const token = res.data.token;
       localStorage.setItem('token', token);
       setToken(token);
     } catch (err) {
-      setError('Invalid credentials');
+      if (err.response && err.response.data.setupRequired) {
+        setIsSetupMode(true);
+        setError('Setup required. Please create an admin account.');
+      } else {
+        setError(err.response?.data?.error || 'Invalid credentials');
+      }
     }
   };
 
   return (
     <div className="login-container">
-      <form onSubmit={handleLogin} className="login-card casaos-form">
+      <form onSubmit={handleSubmit} className="login-card casaos-form">
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <h2>Welcome to CasaOS Reborn</h2>
-          <p style={{ opacity: 0.7 }}>Login to manage your server</p>
+          <h2>{isSetupMode ? 'CasaOS Reborn Setup' : 'Welcome to CasaOS Reborn'}</h2>
+          <p style={{ opacity: 0.7 }}>{isSetupMode ? 'Create your admin account to get started' : 'Login to manage your server'}</p>
         </div>
         
         {error && (
@@ -50,7 +66,7 @@ export default function Login({ setToken }) {
         </div>
 
         <button type="submit" className="btn btn-primary" style={{ justifyContent: 'center', marginTop: '10px' }}>
-          <LogIn size={18} /> Login
+          {isSetupMode ? <><UserPlus size={18} /> Complete Setup</> : <><LogIn size={18} /> Login</>}
         </button>
       </form>
     </div>
