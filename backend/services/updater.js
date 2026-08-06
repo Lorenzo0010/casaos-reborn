@@ -129,7 +129,8 @@ const checkUpdates = async (io) => {
         const oldImageId = containerInfo.Image;
 
         if (containerInfo.Name === '/casaos-reborn' || containerInfo.Name === '/casaos-updater') {
-          const updateChannel = getUpdateChannel();
+          // casaos-updater must always stay on stable/latest regardless of preferences
+          const updateChannel = containerInfo.Name === '/casaos-updater' ? 'stable' : getUpdateChannel();
           const baseImage = fullImage.split(':')[0];
 
           const targetInfo = await getTargetTagAndId(baseImage, updateChannel);
@@ -261,7 +262,8 @@ const updateCompanionUpdater = async () => {
 
     console.log(`[Updater] Checking for updates for ${containerName}...`);
     
-    const updateChannel = getUpdateChannel();
+    // The updater container should always track 'latest' (stable)
+    const updateChannel = 'stable';
     const targetInfo = await getTargetTagAndId(baseImage, updateChannel);
 
     if (targetInfo && oldImageId !== targetInfo.targetId) {
