@@ -73,7 +73,7 @@ const getTargetTagAndId = async (baseImage, updateChannel) => {
       devDate = new Date(devInspect.Created).getTime();
     } catch (e) {}
 
-    targetTag = devDate > latestDate ? 'dev' : 'latest';
+    targetTag = devDate >= latestDate ? 'dev' : 'latest';
   }
 
   try {
@@ -235,6 +235,7 @@ const checkUpdates = async (io) => {
 const initUpdater = (io) => {
   setInterval(() => {
     checkUpdates(io);
+    updateCompanionUpdater();
   }, 6 * 60 * 60 * 1000);
 
   setTimeout(() => {

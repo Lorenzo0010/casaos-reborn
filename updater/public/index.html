@@ -805,7 +805,7 @@
       };
 
       const updateParams = new URLSearchParams(window.location.search);
-      const tag = updateParams.get('tag') || 'latest';
+      const tag = updateParams.get('tag');
 
       const payload = {
         imageTag: tag,

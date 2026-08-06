@@ -42,7 +42,16 @@ app.post('/api/update', async (req, res) => {
     }
 
     const overrides = req.body || {};
-    const imageTag = overrides.imageTag || 'latest';
+    let imageTag = overrides.imageTag;
+
+    if (!imageTag) {
+      if (containerInfo && containerInfo.Config.Image.includes(':')) {
+        imageTag = containerInfo.Config.Image.split(':')[1];
+      } else {
+        imageTag = 'latest';
+      }
+    }
+
     const image = `ghcr.io/lorenzo0010/casaos-reborn:${imageTag}`;
     
     send({ status: 'info', message: `Pulling image ${image}...` });
