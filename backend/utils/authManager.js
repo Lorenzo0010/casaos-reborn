@@ -48,6 +48,16 @@ const login = (username, password) => {
   return verifyPassword(password, data.salt, data.hash);
 };
 
+// Se non c'è il file users.json ma abbiamo le variabili d'ambiente, auto-eseguiamo il setup
+if (!isSetupComplete() && process.env.ADMIN_USER && process.env.ADMIN_PASS) {
+  try {
+    setupUser(process.env.ADMIN_USER, process.env.ADMIN_PASS);
+    console.log('Credenziali migrate con successo dalle variabili d\'ambiente a users.json');
+  } catch (error) {
+    console.error('Errore durante la migrazione automatica delle credenziali:', error.message);
+  }
+}
+
 module.exports = {
   isSetupComplete,
   setupUser,
