@@ -113,6 +113,25 @@ app.post('/api/update', async (req, res) => {
     send({ status: 'info', message: 'Starting new container...' });
     await newContainer.start();
 
+    try {
+      const channel = imageTag === 'dev' ? 'dev' : 'stable';
+      const exec = await newContainer.exec({
+        Cmd: ['node', '-e', `
+          const fs = require('fs');
+          const path = '/app/backend/data/preferences.json';
+          let prefs = {};
+          try { if (fs.existsSync(path)) prefs = JSON.parse(fs.readFileSync(path, 'utf8')); } catch(e) {}
+          prefs.updateChannel = '${channel}';
+          if (fs.existsSync('/app/backend/data')) fs.writeFileSync(path, JSON.stringify(prefs, null, 2));
+        `],
+        AttachStdout: false,
+        AttachStderr: false
+      });
+      await exec.start({ detach: true });
+    } catch (e) {
+      console.error('Failed to persist update channel preference:', e);
+    }
+
     // Pulizia immagini orfane opzionale
     try {
       await docker.pruneImages({ filters: { dangling: ["true"] } });

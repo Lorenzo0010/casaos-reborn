@@ -58,7 +58,9 @@ jobs:
       - name: Determine Docker Tags
         id: env_setup
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.build_type }}" = "stable" ]; then
+          if [ "${{ matrix.image }}" = "lorenzo0010/casaos-updater" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.build_type }}" = "stable" ]; then
             echo "tag=latest" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             echo "tag=latest" >> $GITHUB_OUTPUT
