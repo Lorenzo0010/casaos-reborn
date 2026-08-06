@@ -2,31 +2,89 @@ name: Create Stable Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Versione della release (es. v1.0.0)'
-        required: true
-        type: string
-      body:
-        description: 'Descrizione / Changelog della release'
-        required: false
-        type: string
+
+env:
+  REGISTRY: ghcr.io
 
 jobs:
-  create-release:
+  create-release-and-build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed to get tags
+
+      - name: Calculate Next Version
+        id: version
+        run: |
+          # Ottieni l'ultimo tag, se non esiste usa v0.0.0
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Ultimo tag trovato: $LATEST_TAG"
+          
+          # Rimuovi la 'v' iniziale
+          VERSION=${LATEST_TAG#v}
+          
+          # Estrai MAJOR, MINOR, PATCH
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          # Calcolo versione custom (0.0.9 -> 0.1.0)
+          PATCH=$((PATCH + 1))
+          if [ $PATCH -gt 9 ]; then
+            PATCH=0
+            MINOR=$((MINOR + 1))
+          fi
+          if [ $MINOR -gt 9 ]; then
+            MINOR=0
+            MAJOR=$((MAJOR + 1))
+          fi
+          
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "Nuovo tag calcolato: $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.event.inputs.version }}" \
-            --title "Release ${{ github.event.inputs.version }}" \
-            --notes "${{ github.event.inputs.body }}" \
+          gh release create "${{ steps.version.outputs.new_tag }}" \
+            --title "Release ${{ steps.version.outputs.new_tag }}" \
+            --notes "Automated release per la versione ${{ steps.version.outputs.new_tag }}" \
             --target main
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push CasaOS Reborn
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/lorenzo0010/casaos-reborn:latest
+            ${{ env.REGISTRY }}/lorenzo0010/casaos-reborn:${{ steps.version.outputs.new_tag }}
+
+      - name: Build and push CasaOS Updater
+        uses: docker/build-push-action@v5
+        with:
+          context: ./updater
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/lorenzo0010/casaos-updater:latest
+            ${{ env.REGISTRY }}/lorenzo0010/casaos-updater:${{ steps.version.outputs.new_tag }}
