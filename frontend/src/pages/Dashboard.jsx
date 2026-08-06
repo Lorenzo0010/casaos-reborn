@@ -268,7 +268,14 @@ export default function Dashboard({ togglePanel, activePanel }) {
     const actualTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
     const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = `${window.location.protocol}//${window.location.hostname}:1112/?mode=${actualTheme}&primary=${encodeURIComponent(primaryColor)}&autoUpdate=true&returnUrl=${returnUrl}`;
+    
+    const systemUpdateData = updates.find(u => u.name === 'casaos-reborn');
+    let targetTag = 'latest';
+    if (systemUpdateData && systemUpdateData.image && systemUpdateData.image.includes(':')) {
+      targetTag = systemUpdateData.image.split(':')[1];
+    }
+    
+    window.location.href = `${window.location.protocol}//${window.location.hostname}:1112/?mode=${actualTheme}&primary=${encodeURIComponent(primaryColor)}&autoUpdate=true&tag=${targetTag}&returnUrl=${returnUrl}`;
   };
 
   const handleAction = async (id, action) => {

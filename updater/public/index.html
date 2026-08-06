@@ -844,9 +844,11 @@
 
       const selectEl = document.getElementById('updateChannelSelect');
       const tag = selectEl ? selectEl.value : null;
+      const isAutoUpdate = new URLSearchParams(window.location.search).get('autoUpdate') === 'true';
 
       const payload = {
         imageTag: tag,
+        explicitChannel: isAutoUpdate ? undefined : (tag === 'dev' ? 'dev' : 'stable'),
         Env: containerData.env.filter(e => e.key).map(e => `${e.key}=${e.value}`),
         ExposedPorts: {},
         Labels: labelsOverride,
