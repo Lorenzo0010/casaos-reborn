@@ -590,6 +590,20 @@
         selectEl.value = 'latest';
       }
 
+        // Parse Ports
+        const parsedPorts = [];
+        const portBindings = info?.HostConfig?.PortBindings || {};
+        for (const [key, valArray] of Object.entries(portBindings)) {
+          const [cPort, proto] = key.split('/');
+          if (valArray && valArray.length > 0) {
+            parsedPorts.push({
+              hostPort: valArray[0].HostPort || '',
+              containerPort: cPort,
+              protocol: proto
+            });
+          }
+        }
+
         // Parse Volumes
         let parsedVolumes = [];
         if (info?.HostConfig?.Binds && info.HostConfig.Binds.length > 0) {
