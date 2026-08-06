@@ -18,6 +18,10 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   // ─── Widgets Settings state ───
   const [weatherCity, setWeatherCity] = useState(preferences?.weatherCity || 'Roma');
   
+  // ─── System Update state ───
+  const [appVersion, setAppVersion] = useState('');
+  const [updateChannel, setUpdateChannel] = useState(preferences?.updateChannel || 'stable');
+  
   // ─── System Logs state ───
   const [logs, setLogs] = useState('');
   const [logsLoading, setLogsLoading] = useState(true);
@@ -41,6 +45,7 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
     if (preferences?.telegramToken !== undefined) setTelegramToken(preferences.telegramToken);
     if (preferences?.telegramChatId !== undefined) setTelegramChatId(preferences.telegramChatId);
     if (preferences?.weatherCity !== undefined) setWeatherCity(preferences.weatherCity);
+    if (preferences?.updateChannel !== undefined) setUpdateChannel(preferences.updateChannel);
   }, [preferences]);
 
   // ═══════════════════════════════════════
@@ -82,6 +87,19 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
   useEffect(() => {
     fetchLogs();
     fetchUpdates();
+
+    const fetchVersion = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/system/version', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAppVersion(res.data.version);
+      } catch (e) {
+        console.error('Failed to fetch version', e);
+      }
+    };
+    fetchVersion();
 
     const token = localStorage.getItem('token');
     const socket = io(window.location.origin, {
@@ -187,7 +205,8 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
     if (upd.name === 'casaos-reborn') {
       const actualTheme = document.documentElement.getAttribute('data-theme') || 'dark';
       const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-      window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/?mode=' + actualTheme + '&primary=' + encodeURIComponent(primaryColor);
+      const imageTag = upd.image.split(':')[1] || 'latest';
+      window.location.href = window.location.protocol + '//' + window.location.hostname + ':1112/?mode=' + actualTheme + '&primary=' + encodeURIComponent(primaryColor) + '&tag=' + imageTag;
     } else {
       try {
         const token = localStorage.getItem('token');
@@ -528,6 +547,41 @@ export default function Advanced({ togglePanel, theme, actualTheme, setTheme, pr
           </div>
         )}
 
+      </div>
+
+      {/* ─── Section 4: System Info & Update Channel ─── */}
+      <div className="widget flex-col">
+        <h2 className="flex items-center gap-2 mb-5 m-0">
+          <Monitor /> System Info & Updates
+        </h2>
+        <div className="glass p-5 rounded-xl flex-col gap-4">
+          <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--card-border)', paddingBottom: '15px' }}>
+            <div>
+              <div className="font-semibold text-lg">CasaOS Reborn Version</div>
+              <div className="text-sm opacity-80">Current installed build</div>
+            </div>
+            <div className="font-mono text-primary font-bold" style={{ fontSize: '1.1rem' }}>v{appVersion || '...'}</div>
+          </div>
+          
+          <div className="input-group mt-2">
+            <label className="font-semibold">Update Channel</label>
+            <p className="text-sm opacity-80 mb-3">
+              Select the update channel. <strong>Stable</strong> is recommended for most users. <strong>Dev</strong> includes experimental features and the latest builds.
+            </p>
+            <select 
+              className="input w-full" 
+              value={updateChannel}
+              onChange={(e) => {
+                const val = e.target.value;
+                setUpdateChannel(val);
+                onSave({ updateChannel: val });
+              }}
+            >
+              <option value="stable">Stable (Recommended)</option>
+              <option value="dev">Dev (Experimental)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* ─── Section 4: Logout ─── */}

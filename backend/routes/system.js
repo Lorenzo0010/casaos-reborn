@@ -237,6 +237,21 @@ router.post('/preferences', (req, res) => {
   }
 });
 
+router.get('/version', (req, res) => {
+  try {
+    const pkgPath = path.join(__dirname, '..', 'package.json');
+    let version = 'unknown';
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      version = pkg.version || 'unknown';
+    }
+    res.json({ version });
+  } catch (error) {
+    console.error('Error fetching version:', error);
+    res.status(500).json({ error: 'Failed to fetch version' });
+  }
+});
+
 router.get('/weather', async (req, res) => {
   try {
     let weatherCity = 'Roma'; // Default

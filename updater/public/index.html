@@ -804,7 +804,11 @@
           'casaos.reborn.web.path': containerData.webUI.path || '/'
       };
 
+      const updateParams = new URLSearchParams(window.location.search);
+      const tag = updateParams.get('tag') || 'latest';
+
       const payload = {
+        imageTag: tag,
         Env: containerData.env.filter(e => e.key).map(e => `${e.key}=${e.value}`),
         ExposedPorts: {},
         Labels: labelsOverride,

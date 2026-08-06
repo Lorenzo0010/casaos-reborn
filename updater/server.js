@@ -41,7 +41,9 @@ app.post('/api/update', async (req, res) => {
       return res.end();
     }
 
-    const image = 'ghcr.io/lorenzo0010/casaos-reborn:latest';
+    const overrides = req.body || {};
+    const imageTag = overrides.imageTag || 'latest';
+    const image = `ghcr.io/lorenzo0010/casaos-reborn:${imageTag}`;
     
     send({ status: 'info', message: `Pulling image ${image}...` });
     
@@ -73,8 +75,7 @@ app.post('/api/update', async (req, res) => {
 
     send({ status: 'info', message: 'Creating new container...' });
     
-    const overrides = req.body || {};
-
+    // overrides already defined above
     const createOptions = {
       name: 'casaos-reborn',
       Image: image,
