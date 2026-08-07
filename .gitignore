@@ -4,6 +4,9 @@ dist/
 .DS_Store
 .agents/
 local-config/
-documentazione_personale/
+docker-compose.local.yml
+TESTING_GUIDE.md
+casaos_container_sync.md
+homelab_setup.md
 backend/data/
 local-scratch/
